@@ -1,0 +1,21 @@
+{
+  "domain": "skill-file-organization",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/file-organization/SKILL.md",
+      "purpose": "Skill: file organization - main definition",
+      "layer": "skill",
+      "domain": "skill-file-organization",
+      "keyConcepts": [
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

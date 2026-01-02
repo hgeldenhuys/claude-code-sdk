@@ -1,0 +1,41 @@
+{
+  "$schema": "./SCHEMA.md#epistemology",
+  "title": "Epistemology",
+  "description": "How we know - knowledge confidence and provenance",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.912Z",
+  "knowledge": {},
+  "patterns": {},
+  "validations": {},
+  "confidenceModel": {
+    "scale": {
+      "speculative": "0.0-0.3",
+      "uncertain": "0.3-0.5",
+      "probable": "0.5-0.7",
+      "confident": "0.7-0.85",
+      "highly_confident": "0.85-0.95",
+      "certain": "0.95-1.0"
+    },
+    "updateRules": {
+      "observation": "Bayesian update with prior=0.3, evidence=0.7",
+      "validation": "Increase confidence by validation factor",
+      "contradiction": "Decrease confidence, add uncertainty"
+    },
+    "bayesianParameters": {
+      "priorWeight": 0.3,
+      "evidenceWeight": 0.7,
+      "minObservations": 1
+    }
+  },
+  "knowledgeGaps": [],
+  "metadata": {
+    "totalConcepts": 0,
+    "totalPatterns": 0,
+    "totalValidations": 0,
+    "averageConfidence": 0,
+    "highConfidenceConcepts": 0,
+    "lowConfidenceConcepts": 0,
+    "knowledgeGaps": 0,
+    "lastValidation": "2025-12-15T03:12:13.912Z"
+  }
+}

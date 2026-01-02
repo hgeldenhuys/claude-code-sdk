@@ -1,0 +1,17 @@
+{
+  "$schema": "./SCHEMA.md#ontology",
+  "title": "Ontology",
+  "description": "What exists - entities, relations, constraints",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.912Z",
+  "entities": {},
+  "relations": {},
+  "constraints": {},
+  "metadata": {
+    "totalEntities": 0,
+    "totalRelations": 0,
+    "totalConstraints": 0,
+    "averageConfidence": 0,
+    "lastCompaction": null
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "domain": "hooks-sdk",
+  "fileCount": 22,
+  "files": [
+    {
+      "path": "packages/hooks-sdk/src/index.ts",
+      "purpose": "Module exports for src",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/install-hooks.ts",
+      "purpose": "install-hooks.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/manager.ts",
+      "purpose": "manager.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/templates/SessionStart.ts",
+      "purpose": "SessionStart.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/templates/Stop.ts",
+      "purpose": "Stop.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/transforms/ai-summary.ts",
+      "purpose": "ai-summary.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/transforms/conversation.ts",
+      "purpose": "conversation.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/transforms/file-tracker.ts",
+      "purpose": "file-tracker.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/transforms/index.ts",
+      "purpose": "Module exports for transforms",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/transforms/todo-tracker.ts",
+      "purpose": "todo-tracker.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/types.ts",
+      "purpose": "types.ts",
+      "layer": "types",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/uninstall-hooks.ts",
+      "purpose": "uninstall-hooks.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/use-hooks.ts",
+      "purpose": "use-hooks.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils.ts",
+      "purpose": "utils.ts",
+      "layer": "sdk",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/api-client.ts",
+      "purpose": "api-client.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/config.ts",
+      "purpose": "config.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/error-queue.ts",
+      "purpose": "error-queue.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/file-patterns.ts",
+      "purpose": "file-patterns.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/logger.ts",
+      "purpose": "logger.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/notifications.ts",
+      "purpose": "notifications.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/sdlc-sync.ts",
+      "purpose": "sdlc-sync.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/hooks-sdk/src/utils/tags.ts",
+      "purpose": "tags.ts",
+      "layer": "util",
+      "domain": "hooks-sdk",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "domain": "frontend-workspace",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "apps/web/app/components/workspace/ActivityFeed.tsx",
+      "purpose": "ActivityFeed React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/CreateWorkspaceModal.tsx",
+      "purpose": "CreateWorkspaceModal React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/InviteUsersModal.tsx",
+      "purpose": "InviteUsersModal React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/members/MemberActions.tsx",
+      "purpose": "MemberActions React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/settings/AuditLogTab.tsx",
+      "purpose": "AuditLogTab React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/settings/GeneralSettingsTab.tsx",
+      "purpose": "GeneralSettingsTab React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/settings/MembersTab.tsx",
+      "purpose": "MembersTab React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/WaitingForInvitation.tsx",
+      "purpose": "WaitingForInvitation React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/WorkspaceCard.tsx",
+      "purpose": "WorkspaceCard React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/WorkspaceSelector.tsx",
+      "purpose": "WorkspaceSelector React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

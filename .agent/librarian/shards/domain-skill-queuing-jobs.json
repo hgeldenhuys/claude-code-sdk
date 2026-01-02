@@ -1,0 +1,83 @@
+{
+  "domain": "skill-queuing-jobs",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": ".claude/skills/queuing-jobs/EXAMPLES.md",
+      "purpose": "Skill: queuing jobs - usage examples",
+      "layer": "skill",
+      "domain": "skill-queuing-jobs",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [
+        "PostgreSQL NOTIFY",
+        "Worker"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/queuing-jobs/PATTERNS.md",
+      "purpose": "Skill: queuing jobs - implementation patterns",
+      "layer": "skill",
+      "domain": "skill-queuing-jobs",
+      "keyConcepts": [
+        "pg-boss",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "PostgreSQL NOTIFY",
+        "Worker"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/queuing-jobs/README.md",
+      "purpose": "Skill: queuing jobs - overview documentation",
+      "layer": "skill",
+      "domain": "skill-queuing-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/queuing-jobs/REFERENCE.md",
+      "purpose": "Skill: queuing jobs - API reference",
+      "layer": "skill",
+      "domain": "skill-queuing-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "PostgreSQL NOTIFY",
+        "Worker"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/queuing-jobs/SKILL.md",
+      "purpose": "Skill: queuing jobs - main definition",
+      "layer": "skill",
+      "domain": "skill-queuing-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "PostgreSQL NOTIFY",
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

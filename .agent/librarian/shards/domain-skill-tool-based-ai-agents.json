@@ -1,0 +1,22 @@
+{
+  "domain": "skill-tool-based-ai-agents",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/tool-based-ai-agents/SKILL.md",
+      "purpose": "Skill: tool based ai agents - main definition",
+      "layer": "skill",
+      "domain": "skill-tool-based-ai-agents",
+      "keyConcepts": [
+        "OpenAI",
+        "Claude",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    }
+  ]
+}

@@ -1,0 +1,1398 @@
+{
+  "layer": "service",
+  "fileCount": 117,
+  "files": [
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/analytics/analytics.service.ts",
+      "purpose": "AI service: analytics.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/analytics/cost-calculator.service.ts",
+      "purpose": "AI service: cost calculator.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/analytics/index.ts",
+      "purpose": "AI service: index",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/analytics/performance-metrics.service.ts",
+      "purpose": "AI service: performance metrics.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/analytics/session-audit.service.ts",
+      "purpose": "AI service: session audit.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/code-search.service.ts",
+      "purpose": "AI service: code search.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/config.service.ts",
+      "purpose": "AI service: config.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/context.service.ts",
+      "purpose": "AI service: context.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/conversation.service.ts",
+      "purpose": "AI service: conversation.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/intelligence/context-manager.service.ts",
+      "purpose": "AI service: context manager.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/intelligence/conversation-summary.service.ts",
+      "purpose": "AI service: conversation summary.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/intelligence/memory.service.ts",
+      "purpose": "AI service: memory.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/intelligence/summarization.service.ts",
+      "purpose": "AI service: summarization.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "OpenAI",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/openrouter.service.ts",
+      "purpose": "AI service: openrouter.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "OpenAI",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tags.service.ts",
+      "purpose": "AI service: tags.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/add-memory.service.ts",
+      "purpose": "AI service: add memory.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/claude-code.service.ts",
+      "purpose": "AI service: claude code.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/claude-session.service.ts",
+      "purpose": "AI service: claude session.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/list-directory.service.ts",
+      "purpose": "AI service: list directory.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/query-memory.service.ts",
+      "purpose": "AI service: query memory.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/rate-limit.service.ts",
+      "purpose": "AI service: rate limit.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/read-file.service.ts",
+      "purpose": "AI service: read file.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/search-code.service.ts",
+      "purpose": "AI service: search code.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/security.service.ts",
+      "purpose": "AI service: security.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/services/tools/tool-executor.service.ts",
+      "purpose": "AI service: tool executor.service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/assistant/service.ts",
+      "purpose": "AI service: service",
+      "layer": "service",
+      "domain": "ai",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "OpenAI",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/auth/service.ts",
+      "purpose": "auth service: service",
+      "layer": "service",
+      "domain": "auth",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "bcrypt"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/cli/service.ts",
+      "purpose": "cli service: service",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/cli/services/cli-status.service.ts",
+      "purpose": "cli service: cli status.service",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/cli/services/index.ts",
+      "purpose": "cli service: index",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/context-usage/service.ts",
+      "purpose": "analytics service: service",
+      "layer": "service",
+      "domain": "analytics",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/ab-testing.ts",
+      "purpose": "CRM service: ab testing",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "low"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/accounts.ts",
+      "purpose": "CRM service: accounts",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/activities.ts",
+      "purpose": "CRM service: activities",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/agent-performance.ts",
+      "purpose": "CRM service: agent performance",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/analytics-export.ts",
+      "purpose": "CRM service: analytics export",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-cost-roi.ts",
+      "purpose": "CRM service: campaign cost roi",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-funnel.ts",
+      "purpose": "CRM service: campaign funnel",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-metrics.ts",
+      "purpose": "CRM service: campaign metrics",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-recurrence.ts",
+      "purpose": "CRM service: campaign recurrence",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-scheduling.ts",
+      "purpose": "CRM service: campaign scheduling",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-snapshots.service.ts",
+      "purpose": "CRM service: campaign snapshots.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-templates.ts",
+      "purpose": "CRM service: campaign templates",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-triggers.ts",
+      "purpose": "CRM service: campaign triggers",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaign-workflows.ts",
+      "purpose": "CRM service: campaign workflows",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/campaigns.ts",
+      "purpose": "CRM service: campaigns",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/channel-performance.ts",
+      "purpose": "CRM service: channel performance",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/compliance.ts",
+      "purpose": "CRM service: compliance",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/contact-lists.ts",
+      "purpose": "CRM service: contact lists",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/contacts.ts",
+      "purpose": "CRM service: contacts",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/custom-fields-export.ts",
+      "purpose": "CRM service: custom fields export",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/data-quality/index.ts",
+      "purpose": "CRM service: index",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/data-quality/quality-scorer.ts",
+      "purpose": "CRM service: quality scorer",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/data-quality/validators.ts",
+      "purpose": "CRM service: validators",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/drip.ts",
+      "purpose": "CRM service: drip",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/enrichment-history.service.ts",
+      "purpose": "CRM service: enrichment history.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/enrichment-mapping.ts",
+      "purpose": "CRM service: enrichment mapping",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/enrichment.ts",
+      "purpose": "CRM service: enrichment",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "SSE",
+        "OpenAI",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "PostgreSQL NOTIFY"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/health-score.ts",
+      "purpose": "CRM service: health score",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/leads-import.service.ts",
+      "purpose": "CRM service: leads import.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/leads.ts",
+      "purpose": "CRM service: leads",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/list-filters.service.ts",
+      "purpose": "CRM service: list filters.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/list-members.service.ts",
+      "purpose": "CRM service: list members.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/list-operations.service.ts",
+      "purpose": "CRM service: list operations.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/lists.service.ts",
+      "purpose": "CRM service: lists.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [
+        "CQRS"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/opportunities.ts",
+      "purpose": "CRM service: opportunities",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/queue.service.ts",
+      "purpose": "CRM service: queue.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/recurring.ts",
+      "purpose": "CRM service: recurring",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/research-ai.ts",
+      "purpose": "CRM service: research ai",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/scoring/composite-scorer.ts",
+      "purpose": "Lead scoring service: composite scorer",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/scoring/engagement-scorer.ts",
+      "purpose": "Lead scoring service: engagement scorer",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/scoring/fit-scorer.ts",
+      "purpose": "Lead scoring service: fit scorer",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/scoring/index.ts",
+      "purpose": "Lead scoring service: index",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/segment-query-evaluator.ts",
+      "purpose": "CRM service: segment query evaluator",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/tasks.service.ts",
+      "purpose": "CRM service: tasks.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/templates.service.ts",
+      "purpose": "CRM service: templates.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/timeline.ts",
+      "purpose": "CRM service: timeline",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/services/type-inference.service.ts",
+      "purpose": "CRM service: type inference.service",
+      "layer": "service",
+      "domain": "crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/hook-events/service.ts",
+      "purpose": "Hook event business logic with auto-session creation and job triggering",
+      "layer": "service",
+      "domain": "hook-events",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/projects/service.ts",
+      "purpose": "projects service: service",
+      "layer": "service",
+      "domain": "projects",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/cache.ts",
+      "purpose": "sdlc service: cache",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/file-parser.ts",
+      "purpose": "sdlc service: file parser",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/file-scanner.ts",
+      "purpose": "sdlc service: file scanner",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/snapshot-builder.ts",
+      "purpose": "sdlc service: snapshot builder",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/tags/service.ts",
+      "purpose": "tags service: service",
+      "layer": "service",
+      "domain": "tags",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/todos/service.ts",
+      "purpose": "todos service: service",
+      "layer": "service",
+      "domain": "todos",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/users/service.ts",
+      "purpose": "users service: service",
+      "layer": "service",
+      "domain": "users",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/workspaces/service.ts",
+      "purpose": "workspaces service: service",
+      "layer": "service",
+      "domain": "workspaces",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/services/ai/enrichment-service.ts",
+      "purpose": "core service: enrichment service",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/ai/health-service.ts",
+      "purpose": "core service: health service",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/ai/intent-detection-service.ts",
+      "purpose": "core service: intent detection service",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/ai/prediction-model.ts",
+      "purpose": "core service: prediction model",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/ai/prediction-service.ts",
+      "purpose": "core service: prediction service",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/ai/routing-service.ts",
+      "purpose": "core service: routing service",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio-service.ts",
+      "purpose": "tts service: audio service",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio/elevenlabs-provider.ts",
+      "purpose": "tts service: elevenlabs provider",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio/voice-provider.interface.ts",
+      "purpose": "tts service: voice provider.interface",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "OpenAI",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio/voice-service.ts",
+      "purpose": "tts service: voice service",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "OpenAI",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/custom-fields-notifications-service.ts",
+      "purpose": "core service: custom fields notifications service",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "PostgreSQL NOTIFY"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/custom-fields-service.example.ts",
+      "purpose": "core service: custom fields service.example",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "low"
+    },
+    {
+      "path": "apps/api/src/services/custom-fields-service.ts",
+      "purpose": "core service: custom fields service",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/components/company-fit.ts",
+      "purpose": "Lead scoring service: company fit",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/components/contact-quality.ts",
+      "purpose": "Lead scoring service: contact quality",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/components/engagement.ts",
+      "purpose": "Lead scoring service: engagement",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/components/timing.ts",
+      "purpose": "Lead scoring service: timing",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/icp-config.ts",
+      "purpose": "Lead scoring service: icp config",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/index.ts",
+      "purpose": "Lead scoring service: index",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/propensity-score.ts",
+      "purpose": "Lead scoring service: propensity score",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/scoring/types.ts",
+      "purpose": "Lead scoring service: types",
+      "layer": "service",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "low"
+    },
+    {
+      "path": "apps/cli/src/services/code-search/config-test.ts",
+      "purpose": "Service: config-test",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/cli/src/services/code-search/manual-test.ts",
+      "purpose": "Service: manual-test",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/cli/src/services/code-search/performance-test.ts",
+      "purpose": "Service: performance-test",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/cli/src/services/code-search/result-parsing-test.ts",
+      "purpose": "Service: result-parsing-test",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/cli/src/services/code-search/ripgrep-executor.ts",
+      "purpose": "Service: ripgrep-executor",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/cli/src/services/code-search/security-test.ts",
+      "purpose": "Service: security-test",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/cli/src/services/code-search/timeout-test.ts",
+      "purpose": "Service: timeout-test",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/cli/src/services/tags/tag-manager.ts",
+      "purpose": "Service: tag-manager",
+      "layer": "service",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

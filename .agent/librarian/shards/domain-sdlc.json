@@ -1,0 +1,160 @@
+{
+  "domain": "sdlc",
+  "fileCount": 12,
+  "files": [
+    {
+      "path": "apps/api/src/modules/sdlc/index.ts",
+      "purpose": "index",
+      "layer": "util",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/boards.ts",
+      "purpose": "sdlc boards HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/coherence-check.ts",
+      "purpose": "sdlc coherence check HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/locks.ts",
+      "purpose": "sdlc locks HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/sessions.ts",
+      "purpose": "sdlc sessions HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/snapshot.ts",
+      "purpose": "sdlc snapshot HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/sync.ts",
+      "purpose": "sdlc sync HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/cache.ts",
+      "purpose": "sdlc service: cache",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/file-parser.ts",
+      "purpose": "sdlc service: file parser",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/file-scanner.ts",
+      "purpose": "sdlc service: file scanner",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/services/snapshot-builder.ts",
+      "purpose": "sdlc service: snapshot builder",
+      "layer": "service",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/types.ts",
+      "purpose": "types",
+      "layer": "util",
+      "domain": "sdlc",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "low"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "domain": "llm",
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "apps/api/src/modules/llm-configs/defaults.ts",
+      "purpose": "defaults",
+      "layer": "util",
+      "domain": "llm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/llm-configs/index.ts",
+      "purpose": "index",
+      "layer": "util",
+      "domain": "llm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/llm-configs/routes.ts",
+      "purpose": "llm routes HTTP routes",
+      "layer": "routes",
+      "domain": "llm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/model-catalog/index.ts",
+      "purpose": "index",
+      "layer": "util",
+      "domain": "llm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/model-catalog/routes.ts",
+      "purpose": "llm routes HTTP routes",
+      "layer": "routes",
+      "domain": "llm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/scripts/seeders/llm-configs.ts",
+      "purpose": "Database seeder: llm-configs",
+      "layer": "util",
+      "domain": "llm",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "OpenAI",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/db/src/schema/llm-configs.ts",
+      "purpose": "Database schema: llm configs",
+      "layer": "schema",
+      "domain": "llm",
+      "keyConcepts": [
+        "OpenAI",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    }
+  ]
+}

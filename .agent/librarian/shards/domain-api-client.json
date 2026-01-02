@@ -1,0 +1,178 @@
+{
+  "domain": "api-client",
+  "fileCount": 17,
+  "files": [
+    {
+      "path": "packages/api-client/src/generated/client.gen.ts",
+      "purpose": "client.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/client/client.gen.ts",
+      "purpose": "client.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/client/index.ts",
+      "purpose": "Module exports for client",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/client/types.gen.ts",
+      "purpose": "types.gen.ts",
+      "layer": "types",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/client/utils.gen.ts",
+      "purpose": "utils.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/auth.gen.ts",
+      "purpose": "auth.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/bodySerializer.gen.ts",
+      "purpose": "bodySerializer.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/params.gen.ts",
+      "purpose": "params.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/pathSerializer.gen.ts",
+      "purpose": "pathSerializer.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/queryKeySerializer.gen.ts",
+      "purpose": "queryKeySerializer.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/serverSentEvents.gen.ts",
+      "purpose": "serverSentEvents.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/types.gen.ts",
+      "purpose": "types.gen.ts",
+      "layer": "types",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/core/utils.gen.ts",
+      "purpose": "utils.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/index.ts",
+      "purpose": "Module exports for generated",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/sdk.gen.ts",
+      "purpose": "sdk.gen.ts",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/generated/types.gen.ts",
+      "purpose": "types.gen.ts",
+      "layer": "types",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/api-client/src/index.ts",
+      "purpose": "Module exports for src",
+      "layer": "sdk",
+      "domain": "api-client",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    }
+  ]
+}

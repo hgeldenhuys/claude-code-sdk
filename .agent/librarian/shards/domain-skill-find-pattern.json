@@ -1,0 +1,24 @@
+{
+  "domain": "skill-find-pattern",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/find-pattern/SKILL.md",
+      "purpose": "Skill: find pattern - main definition",
+      "layer": "skill",
+      "domain": "skill-find-pattern",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

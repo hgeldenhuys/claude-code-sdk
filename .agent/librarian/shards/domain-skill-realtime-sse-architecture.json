@@ -1,0 +1,59 @@
+{
+  "domain": "skill-realtime-sse-architecture",
+  "fileCount": 3,
+  "files": [
+    {
+      "path": ".claude/skills/realtime-sse-architecture/EXAMPLES.md",
+      "purpose": "Skill: realtime sse architecture - usage examples",
+      "layer": "skill",
+      "domain": "skill-realtime-sse-architecture",
+      "keyConcepts": [
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/realtime-sse-architecture/SKILL.md",
+      "purpose": "Skill: realtime sse architecture - main definition",
+      "layer": "skill",
+      "domain": "skill-realtime-sse-architecture",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/realtime-sse-architecture/TROUBLESHOOTING.md",
+      "purpose": "Skill: realtime sse architecture - troubleshooting guide",
+      "layer": "skill",
+      "domain": "skill-realtime-sse-architecture",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    }
+  ]
+}

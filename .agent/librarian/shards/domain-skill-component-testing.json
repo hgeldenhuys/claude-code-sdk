@@ -1,0 +1,18 @@
+{
+  "domain": "skill-component-testing",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/component-testing/SKILL.md",
+      "purpose": "Skill: component testing - main definition",
+      "layer": "skill",
+      "domain": "skill-component-testing",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "low"
+    }
+  ]
+}

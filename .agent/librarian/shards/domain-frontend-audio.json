@@ -1,0 +1,134 @@
+{
+  "domain": "frontend-audio",
+  "fileCount": 11,
+  "files": [
+    {
+      "path": "apps/web/app/components/audio/__tests__/AudioPlayerProvider.test.tsx",
+      "purpose": "Test file for AudioPlayerProvider",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayer.tsx",
+      "purpose": "AudioPlayer React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerControls.tsx",
+      "purpose": "AudioPlayerControls React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerDrawer.tsx",
+      "purpose": "AudioPlayerDrawer React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerPanel.tsx",
+      "purpose": "AudioPlayerPanel React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerProvider.tsx",
+      "purpose": "AudioPlayerProvider React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerQueue.tsx",
+      "purpose": "AudioPlayerQueue React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerToast.tsx",
+      "purpose": "AudioPlayerToast React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPreviewButton.tsx",
+      "purpose": "AudioPreviewButton React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/index.ts",
+      "purpose": "Module exports for audio",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/KeyboardShortcutsHelp.tsx",
+      "purpose": "KeyboardShortcutsHelp React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

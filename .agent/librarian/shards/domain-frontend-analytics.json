@@ -1,0 +1,42 @@
+{
+  "domain": "frontend-analytics",
+  "fileCount": 3,
+  "files": [
+    {
+      "path": "apps/web/app/components/analytics/ActivityTimeline.tsx",
+      "purpose": "ActivityTimeline React component",
+      "layer": "component",
+      "domain": "frontend-analytics",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/analytics/CampaignCharts.tsx",
+      "purpose": "CampaignCharts React component",
+      "layer": "component",
+      "domain": "frontend-analytics",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/analytics/ResearchCharts.tsx",
+      "purpose": "ResearchCharts React component",
+      "layer": "component",
+      "domain": "frontend-analytics",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

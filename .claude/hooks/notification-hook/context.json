@@ -1,0 +1,12 @@
+{
+  "transactionId": "tx_1767383714851_2i0hohgfg",
+  "conversationId": "be59ef1a-4085-4f98-84ce-e9cbcb9500cc",
+  "project_dir": "/Users/hgeldenhuys/WebstormProjects/claude-code-sdk",
+  "git": {
+    "user": "herman",
+    "email": "hgeldenhuys@gmail.com",
+    "repo": "https://github.com/hgeldenhuys/claude-code-sdk",
+    "dirty": true,
+    "repoInstanceId": "repo_1765993469468_1b922eqzhaw"
+  }
+}

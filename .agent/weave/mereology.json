@@ -1,0 +1,23 @@
+{
+  "$schema": "./SCHEMA.md#mereology",
+  "title": "Mereology",
+  "description": "How parts compose - components, compositions, hierarchy",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.912Z",
+  "components": {},
+  "compositions": {},
+  "hierarchy": {
+    "root": null,
+    "layers": [],
+    "modules": []
+  },
+  "partWholeRelations": {},
+  "metadata": {
+    "totalComponents": 0,
+    "totalCompositions": 0,
+    "totalParts": 0,
+    "maxDepth": 0,
+    "averageConfidence": 0,
+    "lastCompaction": null
+  }
+}

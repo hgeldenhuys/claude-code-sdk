@@ -1,0 +1,20 @@
+{
+  "domain": "skill-weave.md",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/weave.md",
+      "purpose": "Skill: weave.md - weave",
+      "layer": "skill",
+      "domain": "skill-weave.md",
+      "keyConcepts": [
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

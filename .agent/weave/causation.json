@@ -1,0 +1,17 @@
+{
+  "$schema": "./SCHEMA.md#causation",
+  "title": "Causation (Etiology)",
+  "description": "What caused what - causal chains, root causes, mechanisms",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.912Z",
+  "causalChains": {},
+  "rootCauses": {},
+  "mechanisms": {},
+  "metadata": {
+    "totalCausalChains": 0,
+    "totalRootCauses": 0,
+    "totalMechanisms": 0,
+    "averageConfidence": 0,
+    "lastCompaction": null
+  }
+}

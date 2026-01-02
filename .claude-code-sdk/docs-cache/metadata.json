@@ -1,0 +1,386 @@
+[
+  [
+    "https://code.claude.com/docs/en/hooks.md",
+    {
+      "url": "https://code.claude.com/docs/en/hooks.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_hooks_md.md",
+      "title": "Hooks reference",
+      "description": "This page provides reference documentation for implementing hooks in Claude Code.",
+      "category": "development",
+      "tags": [],
+      "contentHash": "035740e7d9f71aaf04061caa6e65352555e16d9acd8e438eb5d7131cb12e1d20",
+      "firstCached": "2025-12-15T03:39:00.381Z",
+      "lastFetched": "2025-12-16T16:13:55.818Z",
+      "lastChanged": "2025-12-15T03:39:00.381Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/hooks-guide.md",
+    {
+      "url": "https://code.claude.com/docs/en/hooks-guide.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_hooks_guide_md.md",
+      "title": "Get started with Claude Code hooks",
+      "description": "Learn how to customize and extend Claude Code's behavior by registering shell commands",
+      "category": "development",
+      "tags": [],
+      "contentHash": "19e6d30899036fabcb1a04c936943b50fdfbacc18e27c6c841a369c867a28cd2",
+      "firstCached": "2025-12-15T03:39:00.610Z",
+      "lastFetched": "2025-12-16T16:13:56.135Z",
+      "lastChanged": "2025-12-15T03:39:00.610Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/skills.md",
+    {
+      "url": "https://code.claude.com/docs/en/skills.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_skills_md.md",
+      "title": "Agent Skills",
+      "description": "Create, manage, and share Skills to extend Claude's capabilities in Claude Code.",
+      "category": "development",
+      "tags": [],
+      "contentHash": "67d1a207d9b79d690cddd87ddfd9086b26dc2186f8f26a3da21eed041b1db62d",
+      "firstCached": "2025-12-15T03:39:00.847Z",
+      "lastFetched": "2025-12-16T16:13:56.392Z",
+      "lastChanged": "2025-12-15T03:39:00.847Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/sub-agents.md",
+    {
+      "url": "https://code.claude.com/docs/en/sub-agents.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_sub_agents_md.md",
+      "title": "Subagents",
+      "description": "Create and use specialized AI subagents in Claude Code for task-specific workflows and improved context management.",
+      "category": "development",
+      "tags": [],
+      "contentHash": "f1ad1f9bc8b8b3068d019b3e7ccce1bc6e2f06ca8d97c17a07173bdb994f5370",
+      "firstCached": "2025-12-15T03:39:01.054Z",
+      "lastFetched": "2025-12-16T16:13:56.666Z",
+      "lastChanged": "2025-12-15T03:39:01.054Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/plugins.md",
+    {
+      "url": "https://code.claude.com/docs/en/plugins.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_plugins_md.md",
+      "title": "Plugins",
+      "description": "Extend Claude Code with custom commands, agents, hooks, Skills, and MCP servers through the plugin system.",
+      "category": "development",
+      "tags": [],
+      "contentHash": "6b67f5a49fc07fa63a20d7b67d5c13354a36e5ffcd4624546ba0c113402c9f7a",
+      "firstCached": "2025-12-15T03:39:01.421Z",
+      "lastFetched": "2025-12-16T16:13:56.946Z",
+      "lastChanged": "2025-12-16T15:40:38.105Z",
+      "version": 2
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/plugins-reference.md",
+    {
+      "url": "https://code.claude.com/docs/en/plugins-reference.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_plugins_reference_md.md",
+      "title": "Plugins reference",
+      "description": "Complete technical reference for Claude Code plugin system, including schemas, CLI commands, and component specifications.",
+      "category": "reference",
+      "tags": [],
+      "contentHash": "5df4ab29b0d042c590cd2950bd2eadba980f27b41fb360f756522f0772fd9781",
+      "firstCached": "2025-12-15T03:39:01.643Z",
+      "lastFetched": "2025-12-16T16:13:57.232Z",
+      "lastChanged": "2025-12-16T15:40:38.295Z",
+      "version": 2
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/headless.md",
+    {
+      "url": "https://code.claude.com/docs/en/headless.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_headless_md.md",
+      "title": "Headless mode",
+      "description": "Run Claude Code programmatically without interactive UI",
+      "category": "development",
+      "tags": [],
+      "contentHash": "a9ccdc4e232e12284c55680ba2cb91ce03576b93a4828cecbbefcceab8ed087a",
+      "firstCached": "2025-12-15T03:39:01.850Z",
+      "lastFetched": "2025-12-16T16:13:57.490Z",
+      "lastChanged": "2025-12-16T15:40:38.495Z",
+      "version": 2
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/mcp.md",
+    {
+      "url": "https://code.claude.com/docs/en/mcp.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_mcp_md.md",
+      "title": "Connect Claude Code to tools via MCP",
+      "description": "Learn how to connect Claude Code to your tools with the Model Context Protocol.",
+      "category": "integration",
+      "tags": [],
+      "contentHash": "0a9045b2bec36cfadc0e88c83ce0f61187dc2d586d14efc22eb329272a6a90f5",
+      "firstCached": "2025-12-15T03:39:02.061Z",
+      "lastFetched": "2025-12-16T16:13:57.722Z",
+      "lastChanged": "2025-12-15T03:39:02.061Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/settings.md",
+    {
+      "url": "https://code.claude.com/docs/en/settings.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_settings_md.md",
+      "title": "Claude Code settings",
+      "description": "Configure Claude Code with global and project-level settings, and environment variables.",
+      "category": "configuration",
+      "tags": [],
+      "contentHash": "9e99b33459fb4eeae081cb5850be1f93da1f22449cfffa9ddba7fc6ff9680edf",
+      "firstCached": "2025-12-15T03:39:02.444Z",
+      "lastFetched": "2025-12-16T16:13:57.975Z",
+      "lastChanged": "2025-12-16T16:13:57.975Z",
+      "version": 3
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/memory.md",
+    {
+      "url": "https://code.claude.com/docs/en/memory.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_memory_md.md",
+      "title": "Manage Claude's memory",
+      "description": "Learn how to manage Claude Code's memory across sessions with different memory locations and best practices.",
+      "category": "configuration",
+      "tags": [],
+      "contentHash": "bfb0737ddfd8af370ca9574d85d10c84cf4091092b343af03cc3e218d09baa22",
+      "firstCached": "2025-12-15T03:39:02.651Z",
+      "lastFetched": "2025-12-16T16:13:58.422Z",
+      "lastChanged": "2025-12-15T03:39:02.651Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/model-config.md",
+    {
+      "url": "https://code.claude.com/docs/en/model-config.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_model_config_md.md",
+      "title": "Model configuration",
+      "description": "Learn about the Claude Code model configuration, including model aliases like `opusplan`",
+      "category": "configuration",
+      "tags": [],
+      "contentHash": "ba19a4a1cad941f0606c5d7094c8eeeaee054f67072dc715e086e4d3d77ea8b7",
+      "firstCached": "2025-12-15T03:39:02.871Z",
+      "lastFetched": "2025-12-16T16:13:58.731Z",
+      "lastChanged": "2025-12-15T03:39:02.871Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/terminal-config.md",
+    {
+      "url": "https://code.claude.com/docs/en/terminal-config.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_terminal_config_md.md",
+      "title": "Optimize your terminal setup",
+      "description": "Claude Code works best when your terminal is properly configured. Follow these guidelines to optimize your experience.",
+      "category": "configuration",
+      "tags": [],
+      "contentHash": "dd803385fd46710016a9448f44c3e5940e1b0f7a3fee516b4e9653ae1310f4b9",
+      "firstCached": "2025-12-15T03:39:03.061Z",
+      "lastFetched": "2025-12-16T16:13:59.208Z",
+      "lastChanged": "2025-12-15T03:39:03.061Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/output-styles.md",
+    {
+      "url": "https://code.claude.com/docs/en/output-styles.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_output_styles_md.md",
+      "title": "Output styles",
+      "description": "Adapt Claude Code for uses beyond software engineering",
+      "category": "configuration",
+      "tags": [],
+      "contentHash": "6457f8e1cffbbcb0a09d1623c044c5db9a442ed23f7ac64e06844bea0f149eca",
+      "firstCached": "2025-12-15T03:39:03.280Z",
+      "lastFetched": "2025-12-16T16:13:59.543Z",
+      "lastChanged": "2025-12-15T03:39:03.280Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/statusline.md",
+    {
+      "url": "https://code.claude.com/docs/en/statusline.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_statusline_md.md",
+      "title": "Status line configuration",
+      "description": "Create a custom status line for Claude Code to display contextual information",
+      "category": "configuration",
+      "tags": [],
+      "contentHash": "4e2e31e7321b1299c645592026beb17a7441458b9fc32b66a2d811830ba50658",
+      "firstCached": "2025-12-15T03:39:03.482Z",
+      "lastFetched": "2025-12-16T16:14:00.040Z",
+      "lastChanged": "2025-12-16T15:40:39.884Z",
+      "version": 2
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/cli-reference.md",
+    {
+      "url": "https://code.claude.com/docs/en/cli-reference.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_cli_reference_md.md",
+      "title": "CLI reference",
+      "description": "Complete reference for Claude Code command-line interface, including commands and flags.",
+      "category": "reference",
+      "tags": [],
+      "contentHash": "1f74e23fa86b4371fc33681751e303252a7b222d2da28beaf28c3e09b5bee882",
+      "firstCached": "2025-12-15T03:39:03.693Z",
+      "lastFetched": "2025-12-16T16:14:00.663Z",
+      "lastChanged": "2025-12-16T15:40:40.082Z",
+      "version": 2
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/slash-commands.md",
+    {
+      "url": "https://code.claude.com/docs/en/slash-commands.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_slash_commands_md.md",
+      "title": "Slash commands",
+      "description": "Control Claude's behavior during an interactive session with slash commands.",
+      "category": "reference",
+      "tags": [],
+      "contentHash": "beb94bd0553b3233e53a4ee2b9bdb6c5cb4ccd231c7fe090015672c834a21278",
+      "firstCached": "2025-12-15T03:39:03.892Z",
+      "lastFetched": "2025-12-16T16:14:01.204Z",
+      "lastChanged": "2025-12-15T03:39:03.892Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/interactive-mode.md",
+    {
+      "url": "https://code.claude.com/docs/en/interactive-mode.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_interactive_mode_md.md",
+      "title": "Interactive mode",
+      "description": "Complete reference for keyboard shortcuts, input modes, and interactive features in Claude Code sessions.",
+      "category": "reference",
+      "tags": [],
+      "contentHash": "41903eba6f86065149723ac3cca642874564f79c53f2bbf7c8bbfa40c3ec1a29",
+      "firstCached": "2025-12-15T03:39:04.121Z",
+      "lastFetched": "2025-12-16T16:14:01.622Z",
+      "lastChanged": "2025-12-15T03:39:04.121Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/checkpointing.md",
+    {
+      "url": "https://code.claude.com/docs/en/checkpointing.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_checkpointing_md.md",
+      "title": "Checkpointing",
+      "description": "Automatically track and rewind Claude's edits to quickly recover from unwanted changes.",
+      "category": "reference",
+      "tags": [],
+      "contentHash": "3412893eca2d799ac0f53886b7672e996a9e86126d353bfdbbc9240e639c957b",
+      "firstCached": "2025-12-15T03:39:04.325Z",
+      "lastFetched": "2025-12-16T16:14:01.924Z",
+      "lastChanged": "2025-12-15T03:39:04.325Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/third-party-integrations.md",
+    {
+      "url": "https://code.claude.com/docs/en/third-party-integrations.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_third_party_integrations_md.md",
+      "title": "Enterprise deployment overview",
+      "description": "Learn how Claude Code can integrate with various third-party services and infrastructure to meet enterprise deployment requirements.",
+      "category": "enterprise",
+      "tags": [],
+      "contentHash": "9f295509998c49b26818d3f77fc7899f75a2fbfc5f56867f6ff60d46c4a4d7e8",
+      "firstCached": "2025-12-15T03:39:04.542Z",
+      "lastFetched": "2025-12-16T16:14:02.184Z",
+      "lastChanged": "2025-12-15T03:39:04.542Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/amazon-bedrock.md",
+    {
+      "url": "https://code.claude.com/docs/en/amazon-bedrock.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_amazon_bedrock_md.md",
+      "title": "Claude Code on Amazon Bedrock",
+      "description": "Learn about configuring Claude Code through Amazon Bedrock, including setup, IAM configuration, and troubleshooting.",
+      "category": "integration",
+      "tags": [],
+      "contentHash": "a7bf981296d86a140210aa4cf10b983521b6b61b504bf7cb97f693c2d2bdad3d",
+      "firstCached": "2025-12-15T03:39:04.754Z",
+      "lastFetched": "2025-12-16T16:14:02.435Z",
+      "lastChanged": "2025-12-15T03:39:04.754Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/network-config.md",
+    {
+      "url": "https://code.claude.com/docs/en/network-config.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_network_config_md.md",
+      "title": "Enterprise network configuration",
+      "description": "Configure Claude Code for enterprise environments with proxy servers, custom Certificate Authorities (CA), and mutual Transport Layer Security (mTLS) authentication.",
+      "category": "enterprise",
+      "tags": [],
+      "contentHash": "9024e9f000eae32010edb41e58215d558229c84adfeba1d8e5dd724389043758",
+      "firstCached": "2025-12-15T03:39:04.972Z",
+      "lastFetched": "2025-12-16T16:14:02.764Z",
+      "lastChanged": "2025-12-15T03:39:04.972Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/llm-gateway.md",
+    {
+      "url": "https://code.claude.com/docs/en/llm-gateway.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_llm_gateway_md.md",
+      "title": "LLM gateway configuration",
+      "description": "Learn how to configure Claude Code to work with LLM gateway solutions. Covers gateway requirements, authentication configuration, model selection, and provider-specific endpoint setup.",
+      "category": "enterprise",
+      "tags": [],
+      "contentHash": "c8b3fb2a5182c25d58eebca099671bf53976c9889419056df53c63ee55f27180",
+      "firstCached": "2025-12-15T03:39:05.234Z",
+      "lastFetched": "2025-12-16T16:14:02.964Z",
+      "lastChanged": "2025-12-15T03:39:05.234Z",
+      "version": 1
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/troubleshooting.md",
+    {
+      "url": "https://code.claude.com/docs/en/troubleshooting.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_troubleshooting_md.md",
+      "title": "Troubleshooting",
+      "description": "Discover solutions to common issues with Claude Code installation and usage.",
+      "category": "troubleshooting",
+      "tags": [],
+      "contentHash": "ce6a9638581ae4efba3cf10bc38ba1dd9bfb640227528dc2349cd11971ef2d87",
+      "firstCached": "2025-12-15T03:39:05.475Z",
+      "lastFetched": "2025-12-16T16:14:03.168Z",
+      "lastChanged": "2025-12-16T16:14:03.168Z",
+      "version": 2
+    }
+  ],
+  [
+    "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md",
+    {
+      "url": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___raw_githubusercontent_com_anthropics_claude_code_refs_heads_main_CHANGELOG_md.md",
+      "title": "Changelog",
+      "description": "",
+      "category": "core",
+      "tags": [],
+      "contentHash": "fc1a3c9dccd638b5eb9ec95598c131a9ed37000ef5e0b1b4219025c7c8daa12e",
+      "firstCached": "2025-12-16T15:40:41.903Z",
+      "lastFetched": "2025-12-16T16:14:03.349Z",
+      "lastChanged": "2025-12-16T15:40:41.903Z",
+      "version": 1
+    }
+  ]
+]

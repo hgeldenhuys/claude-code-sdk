@@ -1,0 +1,1413 @@
+{
+  "layer": "routes",
+  "fileCount": 96,
+  "files": [
+    {
+      "path": "apps/api/src/modules/agent-identify/routes.ts",
+      "purpose": "core routes HTTP routes",
+      "layer": "routes",
+      "domain": "core",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/routes/analytics.routes.ts",
+      "purpose": "AI assistant analytics.routes HTTP routes",
+      "layer": "routes",
+      "domain": "ai",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/routes/chat.routes.ts",
+      "purpose": "AI assistant chat.routes HTTP routes",
+      "layer": "routes",
+      "domain": "ai",
+      "keyConcepts": [
+        "ElysiaJS",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/routes/code-search.routes.ts",
+      "purpose": "AI assistant code search.routes HTTP routes",
+      "layer": "routes",
+      "domain": "ai",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/ai-assistant/routes/config.routes.ts",
+      "purpose": "AI assistant config.routes HTTP routes",
+      "layer": "routes",
+      "domain": "ai",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/assistant/routes.ts",
+      "purpose": "AI assistant routes HTTP routes",
+      "layer": "routes",
+      "domain": "ai",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE",
+        "OpenAI"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/auth/routes.ts",
+      "purpose": "auth routes HTTP routes",
+      "layer": "routes",
+      "domain": "auth",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/chat/routes.ts",
+      "purpose": "communication routes HTTP routes",
+      "layer": "routes",
+      "domain": "communication",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/chat/routes/audio.ts",
+      "purpose": "communication audio HTTP routes",
+      "layer": "routes",
+      "domain": "communication",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/cli/routes.ts",
+      "purpose": "cli routes HTTP routes",
+      "layer": "routes",
+      "domain": "cli",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/context-usage/routes.ts",
+      "purpose": "analytics routes HTTP routes",
+      "layer": "routes",
+      "domain": "analytics",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/credentials/routes.ts",
+      "purpose": "credentials routes HTTP routes",
+      "layer": "routes",
+      "domain": "credentials",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/accounts.ts",
+      "purpose": "CRM accounts HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/activities.ts",
+      "purpose": "CRM activities HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/agent/call-list.ts",
+      "purpose": "CRM call list HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/agent/index.ts",
+      "purpose": "CRM index HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/agent/lead-detail.ts",
+      "purpose": "CRM lead detail HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/agent/performance.ts",
+      "purpose": "CRM performance HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/agent/timeline.ts",
+      "purpose": "CRM timeline HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/analytics.ts",
+      "purpose": "CRM analytics HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/bulk-operations.ts",
+      "purpose": "CRM bulk operations HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaign-recurrences.ts",
+      "purpose": "CRM campaign recurrences HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaign-schedules.ts",
+      "purpose": "CRM campaign schedules HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaign-templates.ts",
+      "purpose": "CRM campaign templates HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaign-triggers.ts",
+      "purpose": "CRM campaign triggers HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaign-workflows.ts",
+      "purpose": "CRM campaign workflows HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaigns-audience.ts",
+      "purpose": "CRM campaigns audience HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaigns-crud.ts",
+      "purpose": "CRM campaigns crud HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaigns-execution.ts",
+      "purpose": "CRM campaigns execution HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaigns-helpers.ts",
+      "purpose": "CRM campaigns helpers HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaigns-messages.ts",
+      "purpose": "CRM campaigns messages HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaigns-results.ts",
+      "purpose": "CRM campaigns results HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/campaigns-testing.ts",
+      "purpose": "CRM campaigns testing HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "low"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/compliance.ts",
+      "purpose": "CRM compliance HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [
+        "CQRS"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/consent.ts",
+      "purpose": "CRM consent HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [
+        "CQRS"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/contact-lists.ts",
+      "purpose": "CRM contact lists HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/contacts.ts",
+      "purpose": "CRM contacts HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/custom-fields.ts",
+      "purpose": "CRM custom fields HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/data-quality.ts",
+      "purpose": "CRM data quality HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/drip.ts",
+      "purpose": "CRM drip HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/email-templates.ts",
+      "purpose": "CRM email templates HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/enrichment-analytics.ts",
+      "purpose": "CRM enrichment analytics HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/enrichment-history.routes.ts",
+      "purpose": "CRM enrichment history.routes HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/enrichment.ts",
+      "purpose": "CRM enrichment HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "OpenAI"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/health.ts",
+      "purpose": "CRM health HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/intent.ts",
+      "purpose": "CRM intent HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/kyc.ts",
+      "purpose": "CRM kyc HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [
+        "CQRS"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/lead-actions.ts",
+      "purpose": "CRM lead actions HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "Twilio",
+        "Resend"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/lead-enrichment.ts",
+      "purpose": "CRM lead enrichment HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/lead-notes.ts",
+      "purpose": "CRM lead notes HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/leads-score-history.ts",
+      "purpose": "CRM leads score history HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/leads.ts",
+      "purpose": "CRM leads HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/list-operations.routes.ts",
+      "purpose": "CRM list operations.routes HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/lists.routes.ts",
+      "purpose": "CRM lists.routes HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/opportunities.ts",
+      "purpose": "CRM opportunities HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/predictions.ts",
+      "purpose": "CRM predictions HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/queue.ts",
+      "purpose": "CRM queue HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/recalculate-score.ts",
+      "purpose": "CRM recalculate score HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/research.ts",
+      "purpose": "CRM research HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/resend-webhooks.ts",
+      "purpose": "CRM resend webhooks HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "Resend"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/routing.ts",
+      "purpose": "CRM routing HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/scoring.ts",
+      "purpose": "CRM scoring HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/segments.ts",
+      "purpose": "CRM segments HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/tasks.routes.ts",
+      "purpose": "CRM tasks.routes HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/templates.routes.ts",
+      "purpose": "CRM templates.routes HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/timeline.ts",
+      "purpose": "CRM timeline HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/twilio-webhooks.ts",
+      "purpose": "CRM twilio webhooks HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "Twilio"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/twiml.ts",
+      "purpose": "CRM twiml HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Twilio"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/crm/routes/webhooks.ts",
+      "purpose": "CRM webhooks HTTP routes",
+      "layer": "routes",
+      "domain": "crm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Twilio",
+        "Resend"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/download/routes.ts",
+      "purpose": "core routes HTTP routes",
+      "layer": "routes",
+      "domain": "core",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/failures/routes.ts",
+      "purpose": "observability routes HTTP routes",
+      "layer": "routes",
+      "domain": "observability",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/hook-events/routes.ts",
+      "purpose": "HTTP routes for hook event management with CQRS and SSE streaming",
+      "layer": "routes",
+      "domain": "hook-events",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS",
+        "PostgreSQL NOTIFY",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/llm-configs/routes.ts",
+      "purpose": "llm routes HTTP routes",
+      "layer": "routes",
+      "domain": "llm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/model-catalog/routes.ts",
+      "purpose": "llm routes HTTP routes",
+      "layer": "routes",
+      "domain": "llm",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/projects/routes.ts",
+      "purpose": "projects routes HTTP routes",
+      "layer": "routes",
+      "domain": "projects",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/boards.ts",
+      "purpose": "sdlc boards HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/coherence-check.ts",
+      "purpose": "sdlc coherence check HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/locks.ts",
+      "purpose": "sdlc locks HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/sessions.ts",
+      "purpose": "sdlc sessions HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/snapshot.ts",
+      "purpose": "sdlc snapshot HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/stream.ts",
+      "purpose": "SSE streaming routes for real-time data updates via ElectricSQL",
+      "layer": "routes",
+      "domain": "real-time",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "Streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sdlc/routes/sync.ts",
+      "purpose": "sdlc sync HTTP routes",
+      "layer": "routes",
+      "domain": "sdlc",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/sessions/routes.ts",
+      "purpose": "sessions routes HTTP routes",
+      "layer": "routes",
+      "domain": "sessions",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/summaries/routes.ts",
+      "purpose": "core routes HTTP routes",
+      "layer": "routes",
+      "domain": "core",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/tags/routes.ts",
+      "purpose": "tags routes HTTP routes",
+      "layer": "routes",
+      "domain": "tags",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/todos/routes.ts",
+      "purpose": "todos routes HTTP routes",
+      "layer": "routes",
+      "domain": "todos",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/users/routes.ts",
+      "purpose": "users routes HTTP routes",
+      "layer": "routes",
+      "domain": "users",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/voices/routes.ts",
+      "purpose": "tts routes HTTP routes",
+      "layer": "routes",
+      "domain": "tts",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/workspaces/routes.ts",
+      "purpose": "workspaces routes HTTP routes",
+      "layer": "routes",
+      "domain": "workspaces",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/routes/cdn.ts",
+      "purpose": "core cdn HTTP routes",
+      "layer": "routes",
+      "domain": "core",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/routes/speak.ts",
+      "purpose": "core speak HTTP routes",
+      "layer": "routes",
+      "domain": "core",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/routes/stream.ts",
+      "purpose": "SSE streaming routes for real-time data updates via ElectricSQL",
+      "layer": "routes",
+      "domain": "real-time",
+      "keyConcepts": [
+        "ElysiaJS",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/routes/stream/analytics-metrics.ts",
+      "purpose": "SSE streaming routes for real-time data updates via ElectricSQL",
+      "layer": "routes",
+      "domain": "real-time",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/routes/stream/audio.ts",
+      "purpose": "SSE streaming routes for real-time data updates via ElectricSQL",
+      "layer": "routes",
+      "domain": "real-time",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/routes/stream/lead-scores.ts",
+      "purpose": "SSE streaming routes for real-time data updates via ElectricSQL",
+      "layer": "routes",
+      "domain": "real-time",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/routes/test-sse.ts",
+      "purpose": "Test SSE endpoint for debugging streaming connections",
+      "layer": "routes",
+      "domain": "core",
+      "keyConcepts": [
+        "ElysiaJS",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "low"
+    }
+  ]
+}

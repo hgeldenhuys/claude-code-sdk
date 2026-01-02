@@ -1,0 +1,16 @@
+{
+  "domain": "testing",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": "playwright.config.ts",
+      "purpose": "playwright.config.ts",
+      "layer": "util",
+      "domain": "testing",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

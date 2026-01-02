@@ -1,0 +1,470 @@
+{
+  "layer": "worker",
+  "fileCount": 31,
+  "files": [
+    {
+      "path": "apps/api/src/modules/ai-assistant/workers/code-search.worker.ts",
+      "purpose": "Background worker: code search.worker",
+      "layer": "worker",
+      "domain": "ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/ab-test-calculator.ts",
+      "purpose": "Background worker: ab test calculator",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "low"
+    },
+    {
+      "path": "apps/api/src/workers/batch-predict.ts",
+      "purpose": "Background worker: batch predict",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/bulk-operations.ts",
+      "purpose": "Background worker: bulk operations",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/calculate-health.ts",
+      "purpose": "Background worker: calculate health",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/calculate-intent.ts",
+      "purpose": "Background worker: calculate intent",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/campaign-scheduler.ts",
+      "purpose": "Campaign worker: campaign scheduler",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/create-chat-messages.ts",
+      "purpose": "Background worker for creating chat message records from Stop/UserPromptSubmit events",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/drip-scheduler.ts",
+      "purpose": "Background worker: drip scheduler",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/enrich-lead.ts",
+      "purpose": "Background worker: enrich lead",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/evaluate-ab-test-winner.ts",
+      "purpose": "Background worker: evaluate ab test winner",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "low"
+    },
+    {
+      "path": "apps/api/src/workers/evaluate-campaign-triggers.ts",
+      "purpose": "Campaign worker: evaluate campaign triggers",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/execute-campaign.ts",
+      "purpose": "Background worker for executing marketing campaigns",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "Twilio",
+        "Resend"
+      ],
+      "architecturalPatterns": [
+        "Worker",
+        "Adapter Pattern"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/execute-enrichment.ts",
+      "purpose": "Background worker: execute enrichment",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/execute-recurring-campaign.ts",
+      "purpose": "Campaign worker: execute recurring campaign",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/execute-scheduled-campaign.ts",
+      "purpose": "Campaign worker: execute scheduled campaign",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/execute-workflow.ts",
+      "purpose": "Background worker: execute workflow",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/extract-todos.ts",
+      "purpose": "Background worker for extracting todos from TodoWrite events",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/generate-analytics-export.ts",
+      "purpose": "Background worker: generate analytics export",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/generate-audio.ts",
+      "purpose": "Background worker for TTS audio generation via ElevenLabs",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "OpenAI",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [
+        "PostgreSQL NOTIFY",
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/generate-todo-title.ts",
+      "purpose": "Background worker: generate todo title",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/index.ts",
+      "purpose": "Background worker: index",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/predict-lead.ts",
+      "purpose": "Background worker: predict lead",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/refresh-segment.ts",
+      "purpose": "Background worker: refresh segment",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/research-worker.ts",
+      "purpose": "Background worker: research worker",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/route-lead.ts",
+      "purpose": "Background worker: route lead",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/scoring/calculate-lead-score.ts",
+      "purpose": "Background worker for calculating lead propensity scores",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "PostgreSQL NOTIFY"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/scoring/index.ts",
+      "purpose": "Background worker: index",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/summarize-event.ts",
+      "purpose": "Background worker for generating LLM summaries of all hook events",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/workers/train-prediction-model.ts",
+      "purpose": "Background worker: train prediction model",
+      "layer": "worker",
+      "domain": "background-jobs",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/cli/src/workers/code-search.worker.ts",
+      "purpose": "Background worker: code-search.worker",
+      "layer": "worker",
+      "domain": "cli",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [
+        "Background jobs"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

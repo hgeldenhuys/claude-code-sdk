@@ -1,0 +1,18 @@
+{
+  "domain": "skill-sms-error-handling.md",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/sms-error-handling.md",
+      "purpose": "Skill: sms error handling.md - sms error handling",
+      "layer": "skill",
+      "domain": "skill-sms-error-handling.md",
+      "keyConcepts": [
+        "Twilio"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

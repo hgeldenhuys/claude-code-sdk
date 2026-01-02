@@ -1,0 +1,28 @@
+{
+  "$schema": "./SCHEMA.md#qualia",
+  "title": "Qualia",
+  "description": "What it's like - experiential knowledge, pain points, solutions",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.912Z",
+  "experiences": {},
+  "painPoints": {},
+  "solutions": {},
+  "workflows": {},
+  "bestPractices": {},
+  "contextualKnowledge": {},
+  "patterns": {
+    "development": [],
+    "debugging": [],
+    "collaboration": []
+  },
+  "cognitiveLoad": {},
+  "metadata": {
+    "totalExperiences": 0,
+    "totalPainPoints": 0,
+    "totalSolutions": 0,
+    "totalWorkflows": 0,
+    "totalBestPractices": 0,
+    "totalPatterns": 0,
+    "lastUpdated": "2025-12-15T03:12:13.912Z"
+  }
+}

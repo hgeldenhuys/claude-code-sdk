@@ -1,0 +1,60 @@
+{
+  "layer": "store",
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "apps/web/app/stores/aiChatStore.ts",
+      "purpose": "State store: aiChatStore",
+      "layer": "store",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "Zustand",
+        "Zustand"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/stores/index.ts",
+      "purpose": "Module exports for stores",
+      "layer": "store",
+      "domain": "frontend-core",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/stores/realtime-store.ts",
+      "purpose": "State store: realtime-store",
+      "layer": "store",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "Zustand",
+        "Zustand"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/stores/types.ts",
+      "purpose": "State store: types",
+      "layer": "store",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "Zustand"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

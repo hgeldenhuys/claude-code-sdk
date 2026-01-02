@@ -1,0 +1,123 @@
+{
+  "domain": "tts",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "apps/api/src/modules/voices/index.ts",
+      "purpose": "index",
+      "layer": "util",
+      "domain": "tts",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/voices/models-routes.ts",
+      "purpose": "models routes",
+      "layer": "util",
+      "domain": "tts",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/voices/routes.ts",
+      "purpose": "tts routes HTTP routes",
+      "layer": "routes",
+      "domain": "tts",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "OpenAI",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/voices/settings-routes.ts",
+      "purpose": "settings routes",
+      "layer": "util",
+      "domain": "tts",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio-service.ts",
+      "purpose": "tts service: audio service",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio/elevenlabs-provider.ts",
+      "purpose": "tts service: elevenlabs provider",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio/voice-provider.interface.ts",
+      "purpose": "tts service: voice provider.interface",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "OpenAI",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/services/audio/voice-service.ts",
+      "purpose": "tts service: voice service",
+      "layer": "service",
+      "domain": "tts",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "OpenAI",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/db/src/schema/audio-cache.ts",
+      "purpose": "Database schema: audio cache",
+      "layer": "schema",
+      "domain": "tts",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0.0",
+  "deltas": [
+    {
+      "id": "delta-1765901637978-jbkguue",
+      "url": "https://code.claude.com/docs/en/settings.md",
+      "title": "Claude Code settings",
+      "detectedAt": "2025-12-16T16:13:57.975Z",
+      "previousVersion": 2,
+      "newVersion": 3,
+      "previousHash": "855c857dd7bb33289359dfc8530502ff73727cacd4407d765cbe9c8c87f857b3",
+      "newHash": "9e99b33459fb4eeae081cb5850be1f93da1f22449cfffa9ddba7fc6ff9680edf",
+      "diffSummary": {
+        "linesAdded": 127,
+        "linesRemoved": 29,
+        "linesModified": 29,
+        "changedSections": [
+          "#### `strictKnownMarketplaces`"
+        ],
+        "summary": "+127/-29 lines, 1 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1765901643170-b4yyw1m",
+      "url": "https://code.claude.com/docs/en/troubleshooting.md",
+      "title": "Troubleshooting",
+      "detectedAt": "2025-12-16T16:14:03.168Z",
+      "previousVersion": 1,
+      "newVersion": 2,
+      "previousHash": "a733812ac8742afbcca29744a6bcab0620fdf41310093afc13df602ebb0d5b42",
+      "newHash": "ce6a9638581ae4efba3cf10bc38ba1dd9bfb640227528dc2349cd11971ef2d87",
+      "diffSummary": {
+        "linesAdded": 0,
+        "linesRemoved": 1,
+        "linesModified": 0,
+        "changedSections": [],
+        "summary": "+0/-1 lines"
+      },
+      "reviewed": false
+    }
+  ]
+}

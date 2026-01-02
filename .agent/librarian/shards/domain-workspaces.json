@@ -1,0 +1,71 @@
+{
+  "domain": "workspaces",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "apps/api/src/modules/workspaces/audit.ts",
+      "purpose": "audit",
+      "layer": "util",
+      "domain": "workspaces",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/workspaces/email.ts",
+      "purpose": "email",
+      "layer": "util",
+      "domain": "workspaces",
+      "keyConcepts": [
+        "Resend"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/workspaces/index.ts",
+      "purpose": "index",
+      "layer": "util",
+      "domain": "workspaces",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/workspaces/routes.ts",
+      "purpose": "workspaces routes HTTP routes",
+      "layer": "routes",
+      "domain": "workspaces",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/workspaces/service.ts",
+      "purpose": "workspaces service: service",
+      "layer": "service",
+      "domain": "workspaces",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    }
+  ]
+}

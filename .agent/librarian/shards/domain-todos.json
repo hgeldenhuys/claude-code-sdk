@@ -1,0 +1,61 @@
+{
+  "domain": "todos",
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "apps/api/src/modules/todos/index.ts",
+      "purpose": "index",
+      "layer": "util",
+      "domain": "todos",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/todos/routes.ts",
+      "purpose": "todos routes HTTP routes",
+      "layer": "routes",
+      "domain": "todos",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Drizzle ORM",
+        "ElectricSQL",
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/api/src/modules/todos/service.ts",
+      "purpose": "todos service: service",
+      "layer": "service",
+      "domain": "todos",
+      "keyConcepts": [
+        "Drizzle ORM"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/todos.ts",
+      "purpose": "Database schema: todos",
+      "layer": "schema",
+      "domain": "todos",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    }
+  ]
+}

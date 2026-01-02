@@ -1,0 +1,543 @@
+{
+  "totalFiles": 1339,
+  "domains": [
+    {
+      "domain": "ai",
+      "fileCount": 40,
+      "shard": "shards/domain-ai.json"
+    },
+    {
+      "domain": "analytics",
+      "fileCount": 4,
+      "shard": "shards/domain-analytics.json"
+    },
+    {
+      "domain": "api-client",
+      "fileCount": 17,
+      "shard": "shards/domain-api-client.json"
+    },
+    {
+      "domain": "auth",
+      "fileCount": 5,
+      "shard": "shards/domain-auth.json"
+    },
+    {
+      "domain": "background-jobs",
+      "fileCount": 30,
+      "shard": "shards/domain-background-jobs.json"
+    },
+    {
+      "domain": "campaigns",
+      "fileCount": 2,
+      "shard": "shards/domain-campaigns.json"
+    },
+    {
+      "domain": "cli",
+      "fileCount": 59,
+      "shard": "shards/domain-cli.json"
+    },
+    {
+      "domain": "communication",
+      "fileCount": 22,
+      "shard": "shards/domain-communication.json"
+    },
+    {
+      "domain": "core",
+      "fileCount": 119,
+      "shard": "shards/domain-core.json"
+    },
+    {
+      "domain": "credentials",
+      "fileCount": 2,
+      "shard": "shards/domain-credentials.json"
+    },
+    {
+      "domain": "crm",
+      "fileCount": 113,
+      "shard": "shards/domain-crm.json"
+    },
+    {
+      "domain": "documentation",
+      "fileCount": 4,
+      "shard": "shards/domain-documentation.json"
+    },
+    {
+      "domain": "frontend-ai",
+      "fileCount": 39,
+      "shard": "shards/domain-frontend-ai.json"
+    },
+    {
+      "domain": "frontend-analytics",
+      "fileCount": 3,
+      "shard": "shards/domain-frontend-analytics.json"
+    },
+    {
+      "domain": "frontend-audio",
+      "fileCount": 11,
+      "shard": "shards/domain-frontend-audio.json"
+    },
+    {
+      "domain": "frontend-auth",
+      "fileCount": 5,
+      "shard": "shards/domain-frontend-auth.json"
+    },
+    {
+      "domain": "frontend-campaigns",
+      "fileCount": 8,
+      "shard": "shards/domain-frontend-campaigns.json"
+    },
+    {
+      "domain": "frontend-chat",
+      "fileCount": 10,
+      "shard": "shards/domain-frontend-chat.json"
+    },
+    {
+      "domain": "frontend-core",
+      "fileCount": 315,
+      "shard": "shards/domain-frontend-core.json"
+    },
+    {
+      "domain": "frontend-crm",
+      "fileCount": 171,
+      "shard": "shards/domain-frontend-crm.json"
+    },
+    {
+      "domain": "frontend-docs",
+      "fileCount": 5,
+      "shard": "shards/domain-frontend-docs.json"
+    },
+    {
+      "domain": "frontend-events",
+      "fileCount": 7,
+      "shard": "shards/domain-frontend-events.json"
+    },
+    {
+      "domain": "frontend-landing",
+      "fileCount": 75,
+      "shard": "shards/domain-frontend-landing.json"
+    },
+    {
+      "domain": "frontend-research",
+      "fileCount": 3,
+      "shard": "shards/domain-frontend-research.json"
+    },
+    {
+      "domain": "frontend-sdlc",
+      "fileCount": 21,
+      "shard": "shards/domain-frontend-sdlc.json"
+    },
+    {
+      "domain": "frontend-ui-primitives",
+      "fileCount": 47,
+      "shard": "shards/domain-frontend-ui-primitives.json"
+    },
+    {
+      "domain": "frontend-workspace",
+      "fileCount": 10,
+      "shard": "shards/domain-frontend-workspace.json"
+    },
+    {
+      "domain": "hook-events",
+      "fileCount": 4,
+      "shard": "shards/domain-hook-events.json"
+    },
+    {
+      "domain": "hooks-sdk",
+      "fileCount": 22,
+      "shard": "shards/domain-hooks-sdk.json"
+    },
+    {
+      "domain": "llm",
+      "fileCount": 7,
+      "shard": "shards/domain-llm.json"
+    },
+    {
+      "domain": "observability",
+      "fileCount": 2,
+      "shard": "shards/domain-observability.json"
+    },
+    {
+      "domain": "projects",
+      "fileCount": 4,
+      "shard": "shards/domain-projects.json"
+    },
+    {
+      "domain": "real-time",
+      "fileCount": 8,
+      "shard": "shards/domain-real-time.json"
+    },
+    {
+      "domain": "sdlc",
+      "fileCount": 12,
+      "shard": "shards/domain-sdlc.json"
+    },
+    {
+      "domain": "sessions",
+      "fileCount": 3,
+      "shard": "shards/domain-sessions.json"
+    },
+    {
+      "domain": "skill-agile-orchestration",
+      "fileCount": 7,
+      "shard": "shards/domain-skill-agile-orchestration.json"
+    },
+    {
+      "domain": "skill-ai-cost-tracking",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-ai-cost-tracking.json"
+    },
+    {
+      "domain": "skill-api-integration-debugging.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-api-integration-debugging.md.json"
+    },
+    {
+      "domain": "skill-channel-adapter-ai-extensibility",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-channel-adapter-ai-extensibility.json"
+    },
+    {
+      "domain": "skill-channel-adapter-pattern.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-channel-adapter-pattern.md.json"
+    },
+    {
+      "domain": "skill-cli-patterns",
+      "fileCount": 4,
+      "shard": "shards/domain-skill-cli-patterns.json"
+    },
+    {
+      "domain": "skill-component-testing",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-component-testing.json"
+    },
+    {
+      "domain": "skill-cqrs-implementation",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-cqrs-implementation.json"
+    },
+    {
+      "domain": "skill-creating-skills",
+      "fileCount": 4,
+      "shard": "shards/domain-skill-creating-skills.json"
+    },
+    {
+      "domain": "skill-crm-domain",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-crm-domain.json"
+    },
+    {
+      "domain": "skill-customizing-claude-code",
+      "fileCount": 5,
+      "shard": "shards/domain-skill-customizing-claude-code.json"
+    },
+    {
+      "domain": "skill-debug-analyze",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-debug-analyze.json"
+    },
+    {
+      "domain": "skill-debugging-realtime-streaming",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-debugging-realtime-streaming.json"
+    },
+    {
+      "domain": "skill-debugging-tts-audio",
+      "fileCount": 5,
+      "shard": "shards/domain-skill-debugging-tts-audio.json"
+    },
+    {
+      "domain": "skill-deps",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-deps.json"
+    },
+    {
+      "domain": "skill-discover-env",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-discover-env.json"
+    },
+    {
+      "domain": "skill-elysia-dynamic-params.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-elysia-dynamic-params.md.json"
+    },
+    {
+      "domain": "skill-event-driven-ai-integration",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-event-driven-ai-integration.json"
+    },
+    {
+      "domain": "skill-external-api-ids",
+      "fileCount": 4,
+      "shard": "shards/domain-skill-external-api-ids.json"
+    },
+    {
+      "domain": "skill-file-organization",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-file-organization.json"
+    },
+    {
+      "domain": "skill-find-concept",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-find-concept.json"
+    },
+    {
+      "domain": "skill-find-pattern",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-find-pattern.json"
+    },
+    {
+      "domain": "skill-health-monitor",
+      "fileCount": 3,
+      "shard": "shards/domain-skill-health-monitor.json"
+    },
+    {
+      "domain": "skill-lint-code",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-lint-code.json"
+    },
+    {
+      "domain": "skill-project-context",
+      "fileCount": 2,
+      "shard": "shards/domain-skill-project-context.json"
+    },
+    {
+      "domain": "skill-queuing-jobs",
+      "fileCount": 5,
+      "shard": "shards/domain-skill-queuing-jobs.json"
+    },
+    {
+      "domain": "skill-quick-research",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-quick-research.json"
+    },
+    {
+      "domain": "skill-react-router-panels",
+      "fileCount": 3,
+      "shard": "shards/domain-skill-react-router-panels.json"
+    },
+    {
+      "domain": "skill-react-state-sync",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-react-state-sync.json"
+    },
+    {
+      "domain": "skill-realtime-sse-architecture",
+      "fileCount": 3,
+      "shard": "shards/domain-skill-realtime-sse-architecture.json"
+    },
+    {
+      "domain": "skill-requirements-first-workflow.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-requirements-first-workflow.md.json"
+    },
+    {
+      "domain": "skill-review-checklist",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-review-checklist.json"
+    },
+    {
+      "domain": "skill-rubber-duck",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-rubber-duck.json"
+    },
+    {
+      "domain": "skill-semantic-code-search.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-semantic-code-search.md.json"
+    },
+    {
+      "domain": "skill-semantic-error-adoption",
+      "fileCount": 3,
+      "shard": "shards/domain-skill-semantic-error-adoption.json"
+    },
+    {
+      "domain": "skill-session-lifecycle-pattern",
+      "fileCount": 2,
+      "shard": "shards/domain-skill-session-lifecycle-pattern.json"
+    },
+    {
+      "domain": "skill-session-lookup",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-session-lookup.json"
+    },
+    {
+      "domain": "skill-shadcn-ui-integration",
+      "fileCount": 3,
+      "shard": "shards/domain-skill-shadcn-ui-integration.json"
+    },
+    {
+      "domain": "skill-sms-compliance-pattern.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-sms-compliance-pattern.md.json"
+    },
+    {
+      "domain": "skill-sms-error-handling.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-sms-error-handling.md.json"
+    },
+    {
+      "domain": "skill-tag-based-filtering.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-tag-based-filtering.md.json"
+    },
+    {
+      "domain": "skill-testing-claude-headless",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-testing-claude-headless.json"
+    },
+    {
+      "domain": "skill-text-normalization-patterns",
+      "fileCount": 4,
+      "shard": "shards/domain-skill-text-normalization-patterns.json"
+    },
+    {
+      "domain": "skill-text-normalization-patterns.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-text-normalization-patterns.md.json"
+    },
+    {
+      "domain": "skill-tool-based-ai-agents",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-tool-based-ai-agents.json"
+    },
+    {
+      "domain": "skill-ui-event-debugging",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-ui-event-debugging.json"
+    },
+    {
+      "domain": "skill-verify-code-deployment",
+      "fileCount": 5,
+      "shard": "shards/domain-skill-verify-code-deployment.json"
+    },
+    {
+      "domain": "skill-verify-code-deployment.md",
+      "fileCount": 1,
+      "shard": "shards/domain-skill-verify-code-deployment.md.json"
+    },
+    {
+      "domain": "skill-writing-tests",
+      "fileCount": 3,
+      "shard": "shards/domain-skill-writing-tests.json"
+    },
+    {
+      "domain": "tags",
+      "fileCount": 3,
+      "shard": "shards/domain-tags.json"
+    },
+    {
+      "domain": "testing",
+      "fileCount": 1,
+      "shard": "shards/domain-testing.json"
+    },
+    {
+      "domain": "todos",
+      "fileCount": 4,
+      "shard": "shards/domain-todos.json"
+    },
+    {
+      "domain": "transcript-types",
+      "fileCount": 6,
+      "shard": "shards/domain-transcript-types.json"
+    },
+    {
+      "domain": "tts",
+      "fileCount": 9,
+      "shard": "shards/domain-tts.json"
+    },
+    {
+      "domain": "users",
+      "fileCount": 5,
+      "shard": "shards/domain-users.json"
+    },
+    {
+      "domain": "workspaces",
+      "fileCount": 5,
+      "shard": "shards/domain-workspaces.json"
+    }
+  ],
+  "layers": [
+    {
+      "layer": "command",
+      "fileCount": 16,
+      "shard": "shards/layer-command.json"
+    },
+    {
+      "layer": "component",
+      "fileCount": 414,
+      "shard": "shards/layer-component.json"
+    },
+    {
+      "layer": "config",
+      "fileCount": 4,
+      "shard": "shards/layer-config.json"
+    },
+    {
+      "layer": "hook",
+      "fileCount": 94,
+      "shard": "shards/layer-hook.json"
+    },
+    {
+      "layer": "route",
+      "fileCount": 175,
+      "shard": "shards/layer-route.json"
+    },
+    {
+      "layer": "routes",
+      "fileCount": 96,
+      "shard": "shards/layer-routes.json"
+    },
+    {
+      "layer": "schema",
+      "fileCount": 42,
+      "shard": "shards/layer-schema.json"
+    },
+    {
+      "layer": "sdk",
+      "fileCount": 27,
+      "shard": "shards/layer-sdk.json"
+    },
+    {
+      "layer": "service",
+      "fileCount": 117,
+      "shard": "shards/layer-service.json"
+    },
+    {
+      "layer": "skill",
+      "fileCount": 98,
+      "shard": "shards/layer-skill.json"
+    },
+    {
+      "layer": "store",
+      "fileCount": 4,
+      "shard": "shards/layer-store.json"
+    },
+    {
+      "layer": "test",
+      "fileCount": 7,
+      "shard": "shards/layer-test.json"
+    },
+    {
+      "layer": "type",
+      "fileCount": 9,
+      "shard": "shards/layer-type.json"
+    },
+    {
+      "layer": "types",
+      "fileCount": 10,
+      "shard": "shards/layer-types.json"
+    },
+    {
+      "layer": "util",
+      "fileCount": 195,
+      "shard": "shards/layer-util.json"
+    },
+    {
+      "layer": "worker",
+      "fileCount": 31,
+      "shard": "shards/layer-worker.json"
+    }
+  ],
+  "lastUpdated": "2025-11-23T02:24:32.895Z"
+}

@@ -1,0 +1,52 @@
+{
+  "domain": "documentation",
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "apps/api/src/modules/docs/cli.ts",
+      "purpose": "cli",
+      "layer": "util",
+      "domain": "documentation",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/docs/generator.ts",
+      "purpose": "generator",
+      "layer": "util",
+      "domain": "documentation",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/modules/docs/types.ts",
+      "purpose": "types",
+      "layer": "util",
+      "domain": "documentation",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "low"
+    },
+    {
+      "path": "apps/api/src/modules/docs/validator.ts",
+      "purpose": "validator",
+      "layer": "util",
+      "domain": "documentation",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

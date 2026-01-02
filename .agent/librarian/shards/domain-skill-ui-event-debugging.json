@@ -1,0 +1,16 @@
+{
+  "domain": "skill-ui-event-debugging",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/ui-event-debugging/SKILL.md",
+      "purpose": "Skill: ui event debugging - main definition",
+      "layer": "skill",
+      "domain": "skill-ui-event-debugging",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

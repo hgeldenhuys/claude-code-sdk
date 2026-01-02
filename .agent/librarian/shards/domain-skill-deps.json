@@ -1,0 +1,19 @@
+{
+  "domain": "skill-deps",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/deps/SKILL.md",
+      "purpose": "Skill: deps - main definition",
+      "layer": "skill",
+      "domain": "skill-deps",
+      "keyConcepts": [
+        "ElectricSQL",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

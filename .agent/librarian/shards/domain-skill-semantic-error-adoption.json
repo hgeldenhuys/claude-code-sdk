@@ -1,0 +1,48 @@
+{
+  "domain": "skill-semantic-error-adoption",
+  "fileCount": 3,
+  "files": [
+    {
+      "path": ".claude/skills/semantic-error-adoption/EXAMPLES.md",
+      "purpose": "Skill: semantic error adoption - usage examples",
+      "layer": "skill",
+      "domain": "skill-semantic-error-adoption",
+      "keyConcepts": [
+        "Twilio"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/semantic-error-adoption/REFERENCE.md",
+      "purpose": "Skill: semantic error adoption - API reference",
+      "layer": "skill",
+      "domain": "skill-semantic-error-adoption",
+      "keyConcepts": [
+        "Twilio"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/semantic-error-adoption/SKILL.md",
+      "purpose": "Skill: semantic error adoption - main definition",
+      "layer": "skill",
+      "domain": "skill-semantic-error-adoption",
+      "keyConcepts": [
+        "Twilio"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

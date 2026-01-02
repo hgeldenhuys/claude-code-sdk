@@ -1,0 +1,472 @@
+{
+  "layer": "schema",
+  "fileCount": 42,
+  "files": [
+    {
+      "path": "packages/db/src/schema/accounts.ts",
+      "purpose": "Database schema: accounts",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/ai-assistant.ts",
+      "purpose": "Database schema: ai assistant",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Claude",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/ai-intelligence.schema.ts",
+      "purpose": "Database schema: ai intelligence.schema",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/ai-voice-calls.ts",
+      "purpose": "Database schema: ai voice calls",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/audio-cache.ts",
+      "purpose": "Database schema: audio cache",
+      "layer": "schema",
+      "domain": "tts",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/campaign-automation.ts",
+      "purpose": "Database schema: campaign automation",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "pg-boss"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/campaigns.ts",
+      "purpose": "Database schema: campaigns",
+      "layer": "schema",
+      "domain": "campaigns",
+      "keyConcepts": [
+        "Resend"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/chat-messages.ts",
+      "purpose": "Database schema: chat messages",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/claude-sessions.ts",
+      "purpose": "Database schema: claude sessions",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/cli-sessions.ts",
+      "purpose": "Database schema: cli sessions",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/contact-lists.ts",
+      "purpose": "Database schema: contact lists",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/conversations.ts",
+      "purpose": "Database schema: conversations",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/crm.ts",
+      "purpose": "Database schema for CRM entities (contacts, accounts, leads, opportunities)",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "Twilio"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/device-codes.ts",
+      "purpose": "Database schema: device codes",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/enrichment-history.ts",
+      "purpose": "Database schema: enrichment history",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/enrichment.ts",
+      "purpose": "Database schema: enrichment",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "pg-boss",
+        "OpenAI",
+        "OpenRouter"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/event-summaries.ts",
+      "purpose": "Database schema: event summaries",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/health-scoring.ts",
+      "purpose": "Database schema: health scoring",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/hook-events.ts",
+      "purpose": "Database schema for Claude Code hook events (immutable, insert-only)",
+      "layer": "schema",
+      "domain": "hook-events",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/index.ts",
+      "purpose": "Unified database schema export aggregating all table definitions",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/intent-signals.ts",
+      "purpose": "Database schema: intent signals",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/lead-management.ts",
+      "purpose": "Database schema: lead management",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/llm-configs.ts",
+      "purpose": "Database schema: llm configs",
+      "layer": "schema",
+      "domain": "llm",
+      "keyConcepts": [
+        "OpenAI",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/llm-credentials.ts",
+      "purpose": "Database schema: llm credentials",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "OpenAI",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/llm-model-catalog.ts",
+      "purpose": "Database schema: llm model catalog",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "OpenAI"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/models.ts",
+      "purpose": "Database schema: models",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/personas.ts",
+      "purpose": "Database schema: personas",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/projects.ts",
+      "purpose": "Database schema: projects",
+      "layer": "schema",
+      "domain": "projects",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/pronunciation-dictionaries.ts",
+      "purpose": "Database schema: pronunciation dictionaries",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/research.ts",
+      "purpose": "Database schema: research",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/routing.ts",
+      "purpose": "Database schema: routing",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/sdlc-files.ts",
+      "purpose": "Database schema: sdlc files",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "ElectricSQL",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/sessions.ts",
+      "purpose": "Database schema: sessions",
+      "layer": "schema",
+      "domain": "sessions",
+      "keyConcepts": [
+        "Better Auth"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/tasks.ts",
+      "purpose": "Database schema: tasks",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/todos.ts",
+      "purpose": "Database schema: todos",
+      "layer": "schema",
+      "domain": "todos",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/users.ts",
+      "purpose": "Database schema: users",
+      "layer": "schema",
+      "domain": "users",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/voice-settings.ts",
+      "purpose": "Database schema: voice settings",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/voices.ts",
+      "purpose": "Database schema: voices",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [
+        "OpenAI"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/workspace-audit-log.ts",
+      "purpose": "Database schema: workspace audit log",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/workspace-invitations.ts",
+      "purpose": "Database schema: workspace invitations",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/workspace-members.ts",
+      "purpose": "Database schema: workspace members",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/db/src/schema/workspaces.ts",
+      "purpose": "Database schema: workspaces",
+      "layer": "schema",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "./SCHEMA.md#teleology",
+  "title": "Teleology (Purpose)",
+  "description": "What is this for - intent, goals, purposes, functions",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.913Z",
+  "purposes": {},
+  "goals": {},
+  "intents": {},
+  "metadata": {
+    "totalPurposes": 0,
+    "totalGoals": 0,
+    "totalIntents": 0,
+    "averageConfidence": 0,
+    "lastCompaction": null
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "domain": "skill-external-api-ids",
+  "fileCount": 4,
+  "files": [
+    {
+      "path": ".claude/skills/external-api-ids/EXAMPLES.md",
+      "purpose": "Skill: external api ids - usage examples",
+      "layer": "skill",
+      "domain": "skill-external-api-ids",
+      "keyConcepts": [
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/external-api-ids/MIGRATION.md",
+      "purpose": "Skill: external api ids - migration guide",
+      "layer": "skill",
+      "domain": "skill-external-api-ids",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/external-api-ids/PROVIDER-PATTERNS.md",
+      "purpose": "Skill: external api ids - provider patterns",
+      "layer": "skill",
+      "domain": "skill-external-api-ids",
+      "keyConcepts": [
+        "OpenAI",
+        "Twilio",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/external-api-ids/SKILL.md",
+      "purpose": "Skill: external api ids - main definition",
+      "layer": "skill",
+      "domain": "skill-external-api-ids",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "OpenAI",
+        "Claude",
+        "Twilio",
+        "ElevenLabs"
+      ],
+      "architecturalPatterns": [
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

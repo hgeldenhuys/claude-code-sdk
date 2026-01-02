@@ -1,0 +1,16 @@
+{
+  "domain": "skill-react-state-sync",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/react-state-sync/SKILL.md",
+      "purpose": "Skill: react state sync - main definition",
+      "layer": "skill",
+      "domain": "skill-react-state-sync",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

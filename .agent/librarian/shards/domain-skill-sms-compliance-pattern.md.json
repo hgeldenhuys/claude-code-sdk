@@ -1,0 +1,18 @@
+{
+  "domain": "skill-sms-compliance-pattern.md",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/sms-compliance-pattern.md",
+      "purpose": "Skill: sms compliance pattern.md - sms compliance pattern",
+      "layer": "skill",
+      "domain": "skill-sms-compliance-pattern.md",
+      "keyConcepts": [
+        "Twilio"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

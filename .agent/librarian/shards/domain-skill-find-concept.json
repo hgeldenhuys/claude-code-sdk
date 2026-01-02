@@ -1,0 +1,18 @@
+{
+  "domain": "skill-find-concept",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/find-concept/SKILL.md",
+      "purpose": "Skill: find concept - main definition",
+      "layer": "skill",
+      "domain": "skill-find-concept",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

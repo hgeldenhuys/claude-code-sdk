@@ -1,0 +1,2519 @@
+{
+  "layer": "route",
+  "fileCount": 175,
+  "files": [
+    {
+      "path": "apps/cli/src/routes/code-search.routes.ts",
+      "purpose": "Route handler for code-search.routes",
+      "layer": "route",
+      "domain": "cli",
+      "keyConcepts": [
+        "React Router v7",
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/_index.tsx",
+      "purpose": "Route handler for _index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/api.$.tsx",
+      "purpose": "Route handler for api.$",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.auth.$.ts",
+      "purpose": "Route handler for api.auth.$",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.stream.ts",
+      "purpose": "Route handler for api.stream",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.tasks.$taskId.progress.ts",
+      "purpose": "Route handler for api.tasks.$taskId.progress",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.test-docs.ts",
+      "purpose": "Route handler for api.test-docs",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.theme.ts",
+      "purpose": "Route handler for api.theme",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.v1.$.ts",
+      "purpose": "Route handler for api.v1.$",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.v1.stream.$.ts",
+      "purpose": "Route handler for api.v1.stream.$",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.v1.stream.ts",
+      "purpose": "Route handler for api.v1.stream",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/api.workspaces.stream.ts",
+      "purpose": "Route handler for api.workspaces.stream",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/auth.$.ts",
+      "purpose": "Route handler for auth.$",
+      "layer": "route",
+      "domain": "frontend-auth",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/auth.sign-in.tsx",
+      "purpose": "Route handler for auth.sign-in",
+      "layer": "route",
+      "domain": "frontend-auth",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/auth.sign-up.tsx",
+      "purpose": "Route handler for auth.sign-up",
+      "layer": "route",
+      "domain": "frontend-auth",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/chat.tsx",
+      "purpose": "Route handler for chat",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude._index.tsx",
+      "purpose": "Route handler for claude._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.agents._index.tsx",
+      "purpose": "Route handler for claude.agents._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.chat._index.tsx",
+      "purpose": "Route handler for claude.chat._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.context._index.tsx",
+      "purpose": "Route handler for claude.context._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.events.$eventId.tsx",
+      "purpose": "Route handler for claude.events.$eventId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.hooks._index.tsx",
+      "purpose": "Route handler for claude.hooks._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.project.$projectId.settings._index.tsx",
+      "purpose": "Route handler for claude.project.$projectId.settings._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.projects._index.tsx",
+      "purpose": "Route handler for claude.projects._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc._index.old.tsx",
+      "purpose": "Route handler for claude.sdlc._index.old",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.about.tsx",
+      "purpose": "Route handler for claude.sdlc.about",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.boards._index.tsx",
+      "purpose": "Route handler for claude.sdlc.boards._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.boards.$boardId.tsx",
+      "purpose": "Route handler for claude.sdlc.boards.$boardId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.boards.old.tsx",
+      "purpose": "Route handler for claude.sdlc.boards.old",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.knowledge-graph.tsx",
+      "purpose": "Route handler for claude.sdlc.knowledge-graph",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.overview.tsx",
+      "purpose": "Route handler for claude.sdlc.overview",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.sessions._index.tsx",
+      "purpose": "Route handler for claude.sdlc.sessions._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.sessions.$sessionId.tsx",
+      "purpose": "Route handler for claude.sdlc.sessions.$sessionId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.sessions.old.tsx",
+      "purpose": "Route handler for claude.sdlc.sessions.old",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.tasks.tsx",
+      "purpose": "Route handler for claude.sdlc.tasks",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sdlc.tsx",
+      "purpose": "Route handler for claude.sdlc",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sessions._index.tsx",
+      "purpose": "Route handler for claude.sessions._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.sessions.$sessionId.tsx",
+      "purpose": "Route handler for claude.sessions.$sessionId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/claude.summaries._index.tsx",
+      "purpose": "Route handler for claude.summaries._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.todo._index.tsx",
+      "purpose": "Route handler for claude.todo._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/claude.tsx",
+      "purpose": "Route handler for claude",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard._index.tsx",
+      "purpose": "Route handler for dashboard._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.ai.analytics._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.ai.analytics._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.ai.analytics.sessions.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.ai.analytics.sessions",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.ai.intelligence._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.ai.intelligence._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.ai.intelligence.conversations.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.ai.intelligence.conversations",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.ai.intelligence.memory.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.ai.intelligence.memory",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.ai.intelligence.search.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.ai.intelligence.search",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.ai.intelligence.suggestions.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.ai.intelligence.suggestions",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.campaigns.$campaignId.ab-test.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.campaigns.$campaignId.ab-test",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.campaigns.ab-tests._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.campaigns.ab-tests._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.campaigns.ab-tests.$testId.results.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.campaigns.ab-tests.$testId.results",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.credentials._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.credentials._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.accounts._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.accounts._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.accounts.$accountId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.accounts.$accountId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.accounts.new.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.accounts.new",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.activities._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.activities._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.activities.$activityId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.activities.$activityId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.activities.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.activities",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.agent._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.agent._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.agent.performance.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.agent.performance",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.analytics._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.analytics._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.analytics.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.analytics",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.automation.workflows._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.automation.workflows._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.automation.workflows.$id._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.automation.workflows.$id._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.automation.workflows.new.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.automation.workflows.new",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.automation.workflows.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.automation.workflows",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.$campaignId.recurrence.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.$campaignId.recurrence",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.$campaignId.schedule.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.$campaignId.schedule",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.$campaignId.triggers.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.$campaignId.triggers",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.$campaignId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.$campaignId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.delete.$campaignId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.delete.$campaignId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.edit.$campaignId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.edit.$campaignId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.new.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.new",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.templates._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.templates._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.templates.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns.templates",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.campaigns.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.campaigns",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.compliance._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.compliance._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.compliance.consent._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.compliance.consent._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.compliance.consent.$consentId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.compliance.consent.$consentId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.compliance.kyc._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.compliance.kyc._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.compliance.kyc.$kycId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.compliance.kyc.$kycId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.contacts._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.contacts._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.contacts.$contactId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.contacts.$contactId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.contacts.delete.$contactId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.contacts.delete.$contactId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.contacts.edit.$contactId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.contacts.edit.$contactId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.contacts.import._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.contacts.import._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.contacts.new.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.contacts.new",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.contacts.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.contacts",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.email-templates._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.email-templates._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.enrichment._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.enrichment._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.enrichment.$jobId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.enrichment.$jobId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.enrichment.new.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.enrichment.new",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.enrichment.templates._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.enrichment.templates._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.enrichment.templates.$templateId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.enrichment.templates.$templateId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.enrichment.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.enrichment",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.$leadId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.$leadId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.$leadId.convert.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.$leadId.convert",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.bulk._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.bulk._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.data-quality._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.data-quality._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.delete.$leadId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.delete.$leadId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.edit.$leadId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.edit.$leadId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.import._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.import._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.lists._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.lists._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.lists.$listId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.lists.$listId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.my-queue._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.my-queue._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.new.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.new",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.segments._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.segments._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.segments.$segmentId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.segments.$segmentId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.segments.new.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads.segments.new",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.leads.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.leads",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.lists._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.lists._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.lists.$listId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.lists.$listId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.lists.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.lists",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.opportunities._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.opportunities._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.opportunities.$opportunityId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.opportunities.$opportunityId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.opportunities.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.opportunities",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.predictions._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.predictions._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.research._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.research._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.research.$sessionId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.research.$sessionId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.research.$sessionId.findings.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.research.$sessionId.findings",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.research.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.research",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.search._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.search._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.tasks._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.tasks._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.tasks.$taskId._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.tasks.$taskId._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.tasks.$taskId.run.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.tasks.$taskId.run",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.tasks.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.tasks",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.timeline._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.timeline._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.timeline.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.timeline",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.crm.webhook-test._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.crm.webhook-test._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.docs._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.docs._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.docs.$featureId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.docs.$featureId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.llm-configs._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.llm-configs._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.sessions._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.sessions._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.sessions.$sessionId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.sessions.$sessionId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.settings._index.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.settings._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.settings.ai.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId.settings.ai",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.$workspaceId.tsx",
+      "purpose": "Route handler for dashboard.$workspaceId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.chat._index.tsx",
+      "purpose": "Route handler for dashboard.chat._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.hooks._index.tsx",
+      "purpose": "Route handler for dashboard.hooks._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.project.$projectId.agent.$agentType.chat._index.tsx",
+      "purpose": "Route handler for dashboard.project.$projectId.agent.$agentType.chat._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.project.$projectId.agent.$agentType.hooks._index.tsx",
+      "purpose": "Route handler for dashboard.project.$projectId.agent.$agentType.hooks._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.project.$projectId.agent.$agentType.summaries._index.tsx",
+      "purpose": "Route handler for dashboard.project.$projectId.agent.$agentType.summaries._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.project.$projectId.agent.$agentType.todos._index.tsx",
+      "purpose": "Route handler for dashboard.project.$projectId.agent.$agentType.todos._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.project.$projectId.agent.$agentType.todos.continuity._index.tsx",
+      "purpose": "Route handler for dashboard.project.$projectId.agent.$agentType.todos.continuity._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.projects._index.tsx",
+      "purpose": "Route handler for dashboard.projects._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.summaries._index.tsx",
+      "purpose": "Route handler for dashboard.summaries._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/dashboard.todos-demo._index.tsx",
+      "purpose": "Route handler for dashboard.todos-demo._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/device.tsx",
+      "purpose": "Route handler for device",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/invitations.$token.tsx",
+      "purpose": "Route handler for invitations.$token",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-1.tsx",
+      "purpose": "Route handler for landing-alt-1",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-10.tsx",
+      "purpose": "Route handler for landing-alt-10",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-2.tsx",
+      "purpose": "Route handler for landing-alt-2",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-3.tsx",
+      "purpose": "Route handler for landing-alt-3",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-4.tsx",
+      "purpose": "Route handler for landing-alt-4",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-5.tsx",
+      "purpose": "Route handler for landing-alt-5",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-6.tsx",
+      "purpose": "Route handler for landing-alt-6",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-7.tsx",
+      "purpose": "Route handler for landing-alt-7",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-8.tsx",
+      "purpose": "Route handler for landing-alt-8",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing-alt-9.tsx",
+      "purpose": "Route handler for landing-alt-9",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/landing.tsx",
+      "purpose": "Route handler for landing",
+      "layer": "route",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/login.tsx",
+      "purpose": "Route handler for login",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/manage._index.tsx",
+      "purpose": "Route handler for manage._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/manage.audio._index.tsx",
+      "purpose": "Route handler for manage.audio._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/manage.credentials._index.tsx",
+      "purpose": "Route handler for manage.credentials._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/manage.llm-configs._index.tsx",
+      "purpose": "Route handler for manage.llm-configs._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/manage.model-catalog._index.tsx",
+      "purpose": "Route handler for manage.model-catalog._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/manage.sessions._index.tsx",
+      "purpose": "Route handler for manage.sessions._index",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/manage.sessions.$sessionId.tsx",
+      "purpose": "Route handler for manage.sessions.$sessionId",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern",
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/manage.tsx",
+      "purpose": "Route handler for manage",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/profile.tsx",
+      "purpose": "Route handler for profile",
+      "layer": "route",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "medium",
+      "importance": "high"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "domain": "skill-channel-adapter-pattern.md",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/channel-adapter-pattern.md",
+      "purpose": "Skill: channel adapter pattern.md - channel adapter pattern",
+      "layer": "skill",
+      "domain": "skill-channel-adapter-pattern.md",
+      "keyConcepts": [
+        "Twilio"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

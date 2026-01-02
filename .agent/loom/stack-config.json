@@ -1,0 +1,94 @@
+{
+  "project": "claude-code-sdk",
+  "version": "0.1.0",
+  "runtime": "bun",
+  "packageManager": "bun",
+  "backend": {
+    "framework": null,
+    "database": null,
+    "orm": null,
+    "validation": null,
+    "httpClient": "fetch"
+  },
+  "frontend": {
+    "framework": null,
+    "router": null,
+    "state": null,
+    "ui": null,
+    "bundler": null
+  },
+  "testing": {
+    "unit": "bun:test",
+    "e2e": null,
+    "integration": null
+  },
+  "infrastructure": {
+    "hosting": null,
+    "ci": null,
+    "containers": null
+  },
+  "linting": {
+    "tool": "biome",
+    "formatter": "biome"
+  },
+  "conventions": {
+    "loopStyle": "for-of",
+    "asyncStyle": "async-await",
+    "exportStyle": "named",
+    "functionStyle": "mixed",
+    "quoteStyle": "single",
+    "semicolons": true,
+    "trailingCommas": "es5",
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "moduleType": "esm",
+    "fileNaming": "kebab-case",
+    "classNaming": "PascalCase",
+    "functionNaming": "camelCase",
+    "constantNaming": "camelCase"
+  },
+  "monorepo": {
+    "type": "none",
+    "subprojects": [
+      {
+        "name": "claude-code-sdk",
+        "path": ".",
+        "type": "library"
+      },
+      {
+        "name": "notify-service",
+        "path": "notify-service",
+        "type": "service"
+      },
+      {
+        "name": "hooks",
+        "path": "hooks",
+        "type": "hooks"
+      }
+    ]
+  },
+  "dependencies": {
+    "production": {
+      "@inquirer/prompts": "^8.1.0",
+      "claude-hooks-sdk": "^0.8.6"
+    },
+    "development": {
+      "@biomejs/biome": "^1.9.0",
+      "@types/bun": "latest",
+      "typescript": "^5"
+    }
+  },
+  "nodeApis": [
+    "node:fs/promises",
+    "node:os",
+    "node:path"
+  ],
+  "projectStructure": {
+    "src": "Source code with barrel exports",
+    "tests": "Unit tests using bun:test",
+    "hooks": "Claude Code hook implementations",
+    "notify-service": "Standalone notification service",
+    "dist": "Build output"
+  }
+}

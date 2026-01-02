@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "createdAt": "2025-12-15T03:12:13.913Z",
+  "lastUpdated": "2025-12-15T03:12:13.913Z",
+  "stats": {
+    "totalEntities": 0,
+    "totalRelations": 0,
+    "totalComponents": 0,
+    "totalPatterns": 0,
+    "totalPainPoints": 0,
+    "totalCausalChains": 0,
+    "totalValueJudgments": 0,
+    "totalPurposes": 0,
+    "averageConfidence": 0,
+    "totalSessions": 0
+  },
+  "health": {
+    "ontologyCoverage": 0,
+    "epistemicConfidence": 0,
+    "qualiaDepth": 0,
+    "causationDepth": 0,
+    "axiologyDepth": 0,
+    "teleologyDepth": 0,
+    "lastCompaction": null
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "domain": "frontend-docs",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "apps/web/app/components/docs/DocNav.tsx",
+      "purpose": "DocNav React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/DocViewer.tsx",
+      "purpose": "DocViewer React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/FeatureCard.tsx",
+      "purpose": "FeatureCard React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/FeatureDocContent.tsx",
+      "purpose": "FeatureDocContent React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/SlideControls.tsx",
+      "purpose": "SlideControls React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

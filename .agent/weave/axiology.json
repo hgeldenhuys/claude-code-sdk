@@ -1,0 +1,17 @@
+{
+  "$schema": "./SCHEMA.md#axiology",
+  "title": "Axiology (Value)",
+  "description": "What is valuable - quality judgments, trade-offs, worth",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.912Z",
+  "valueJudgments": {},
+  "tradeoffs": {},
+  "qualityMetrics": {},
+  "metadata": {
+    "totalValueJudgments": 0,
+    "totalTradeoffs": 0,
+    "totalQualityMetrics": 0,
+    "averageConfidence": 0,
+    "lastCompaction": null
+  }
+}

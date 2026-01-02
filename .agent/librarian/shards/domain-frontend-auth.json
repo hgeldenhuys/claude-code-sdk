@@ -1,0 +1,68 @@
+{
+  "domain": "frontend-auth",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "apps/web/app/lib/api-client/core/auth.gen.ts",
+      "purpose": "auth.gen.ts",
+      "layer": "util",
+      "domain": "frontend-auth",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/lib/auth.ts",
+      "purpose": "auth.ts",
+      "layer": "util",
+      "domain": "frontend-auth",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/routes/auth.$.ts",
+      "purpose": "Route handler for auth.$",
+      "layer": "route",
+      "domain": "frontend-auth",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/auth.sign-in.tsx",
+      "purpose": "Route handler for auth.sign-in",
+      "layer": "route",
+      "domain": "frontend-auth",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "apps/web/app/routes/auth.sign-up.tsx",
+      "purpose": "Route handler for auth.sign-up",
+      "layer": "route",
+      "domain": "frontend-auth",
+      "keyConcepts": [
+        "React Router v7"
+      ],
+      "architecturalPatterns": [
+        "Loader pattern"
+      ],
+      "complexity": "low",
+      "importance": "high"
+    }
+  ]
+}

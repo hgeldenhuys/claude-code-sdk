@@ -1,0 +1,21 @@
+{
+  "domain": "skill-tag-based-filtering.md",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/tag-based-filtering.md",
+      "purpose": "Skill: tag based filtering.md - tag based filtering",
+      "layer": "skill",
+      "domain": "skill-tag-based-filtering.md",
+      "keyConcepts": [
+        "SSE"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "CQRS"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

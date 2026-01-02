@@ -1,0 +1,86 @@
+{
+  "layer": "test",
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "apps/cli/src/test/post-hook-event.ts",
+      "purpose": "post-hook-event.ts",
+      "layer": "test",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "low"
+    },
+    {
+      "path": "apps/cli/src/test/test-chat.ts",
+      "purpose": "test-chat.ts",
+      "layer": "test",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "low"
+    },
+    {
+      "path": "apps/cli/src/test/test-hooks.ts",
+      "purpose": "test-hooks.ts",
+      "layer": "test",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "low"
+    },
+    {
+      "path": "apps/cli/src/test/test-rapid-messages.ts",
+      "purpose": "test-rapid-messages.ts",
+      "layer": "test",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "low"
+    },
+    {
+      "path": "apps/cli/src/test/test-summaries.ts",
+      "purpose": "test-summaries.ts",
+      "layer": "test",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "low"
+    },
+    {
+      "path": "apps/cli/src/test/test-todos.ts",
+      "purpose": "test-todos.ts",
+      "layer": "test",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "low"
+    },
+    {
+      "path": "apps/cli/src/test/test-user-prompt-notification.ts",
+      "purpose": "test-user-prompt-notification.ts",
+      "layer": "test",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "low"
+    }
+  ]
+}

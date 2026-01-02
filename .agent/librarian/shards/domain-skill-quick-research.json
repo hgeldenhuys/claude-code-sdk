@@ -1,0 +1,16 @@
+{
+  "domain": "skill-quick-research",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/quick-research/SKILL.md",
+      "purpose": "Skill: quick research - main definition",
+      "layer": "skill",
+      "domain": "skill-quick-research",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

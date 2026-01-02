@@ -1,0 +1,66 @@
+{
+  "domain": "transcript-types",
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "packages/transcript-types/src/index.ts",
+      "purpose": "Module exports for src",
+      "layer": "types",
+      "domain": "transcript-types",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/transcript-types/src/parser.ts",
+      "purpose": "parser.ts",
+      "layer": "types",
+      "domain": "transcript-types",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/transcript-types/src/test-example.ts",
+      "purpose": "test-example.ts",
+      "layer": "types",
+      "domain": "transcript-types",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/transcript-types/src/test-thinking.ts",
+      "purpose": "test-thinking.ts",
+      "layer": "types",
+      "domain": "transcript-types",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "high"
+    },
+    {
+      "path": "packages/transcript-types/src/types.ts",
+      "purpose": "types.ts",
+      "layer": "types",
+      "domain": "transcript-types",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    },
+    {
+      "path": "packages/transcript-types/src/utils.ts",
+      "purpose": "utils.ts",
+      "layer": "types",
+      "domain": "transcript-types",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "high"
+    }
+  ]
+}

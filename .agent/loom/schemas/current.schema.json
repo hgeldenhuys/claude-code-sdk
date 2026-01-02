@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-loom.dev/schemas/current.schema.json",
+  "title": "Loom Current Session State",
+  "description": "Active session state for compaction recovery and progress tracking. This file is the checkpoint that allows any agent to resume work after context compaction.",
+  "type": "object",
+  "required": ["activeTask", "sessionInfo", "progress"],
+  "properties": {
+    "activeTask": {
+      "oneOf": [
+        { "$ref": "#/definitions/ActiveTask" },
+        { "type": "null" }
+      ],
+      "description": "Currently executing task, or null if no task is active"
+    },
+    "sessionInfo": {
+      "$ref": "#/definitions/SessionInfo",
+      "description": "Information about the current Claude session"
+    },
+    "progress": {
+      "$ref": "#/definitions/Progress",
+      "description": "Overall progress for the current story"
+    },
+    "lastAction": {
+      "type": "object",
+      "description": "Last significant action taken (for recovery context)",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Action type that was performed",
+          "enum": [
+            "story_started",
+            "task_assigned",
+            "task_completed",
+            "task_failed",
+            "actor_spawned",
+            "checkpoint_saved",
+            "story_completed"
+          ]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the action occurred"
+        },
+        "details": {
+          "type": "string",
+          "description": "Human-readable description of what happened"
+        }
+      },
+      "required": ["action", "timestamp"]
+    },
+    "pendingWeaveProposals": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of uncommitted Weave proposals awaiting review"
+    }
+  },
+  "definitions": {
+    "ActiveTask": {
+      "type": "object",
+      "description": "Details of the task currently being executed",
+      "required": ["storyId", "taskId", "assignedAgent", "startedAt"],
+      "properties": {
+        "storyId": {
+          "type": "string",
+          "description": "ID of the story this task belongs to",
+          "pattern": "^[A-Z]+-[0-9]{3}$",
+          "examples": ["US-015", "FEAT-001"]
+        },
+        "taskId": {
+          "type": "string",
+          "description": "ID of the task being executed",
+          "pattern": "^T-[0-9]{3}$",
+          "examples": ["T-001", "T-042"]
+        },
+        "assignedAgent": {
+          "type": "string",
+          "description": "Actor type assigned to this task",
+          "enum": [
+            "architect",
+            "backend-dev",
+            "frontend-dev",
+            "qa-engineer",
+            "devops",
+            "tech-writer"
+          ]
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp when task execution began"
+        },
+        "lastCheckpoint": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp of last progress checkpoint"
+        },
+        "attemptCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "default": 1,
+          "description": "Current attempt number (circuit breaker triggers at 3)"
+        },
+        "phase": {
+          "type": "string",
+          "description": "Execution phase within the task",
+          "enum": ["boot-up", "executing", "validating", "updating-state", "clean-up"]
+        }
+      }
+    },
+    "SessionInfo": {
+      "type": "object",
+      "description": "Claude session tracking for compaction awareness",
+      "required": ["sessionId"],
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "description": "Unique session identifier from Claude",
+          "minLength": 1
+        },
+        "sessionName": {
+          "type": "string",
+          "description": "Human-friendly session name (e.g., brave-elephant)",
+          "pattern": "^[a-z]+-[a-z]+$",
+          "examples": ["brave-elephant", "swift-falcon"]
+        },
+        "compactionCount": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of compaction events that have occurred in this session"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this session began"
+        }
+      }
+    },
+    "Progress": {
+      "type": "object",
+      "description": "Task completion progress for the current story",
+      "required": ["tasksComplete", "tasksTotal"],
+      "properties": {
+        "tasksComplete": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of tasks successfully completed"
+        },
+        "tasksTotal": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of tasks in the story"
+        },
+        "tasksFailed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of tasks that failed and hit circuit breaker"
+        },
+        "tasksBlocked": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of tasks blocked awaiting dependencies"
+        },
+        "currentPhase": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Current execution phase (tasks grouped by dependency layers)"
+        },
+        "totalPhases": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total number of execution phases"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "activeTask": {
+        "storyId": "US-015",
+        "taskId": "T-003",
+        "assignedAgent": "frontend-dev",
+        "startedAt": "2025-12-09T10:00:00Z",
+        "lastCheckpoint": "2025-12-09T10:15:00Z",
+        "attemptCount": 1,
+        "phase": "executing"
+      },
+      "sessionInfo": {
+        "sessionId": "abc123def456",
+        "sessionName": "brave-elephant",
+        "compactionCount": 0,
+        "startedAt": "2025-12-09T09:30:00Z"
+      },
+      "progress": {
+        "tasksComplete": 2,
+        "tasksTotal": 8,
+        "tasksFailed": 0,
+        "tasksBlocked": 1,
+        "currentPhase": 2,
+        "totalPhases": 4
+      },
+      "lastAction": {
+        "action": "actor_spawned",
+        "timestamp": "2025-12-09T10:00:00Z",
+        "details": "Spawned frontend-dev actor for T-003: Implement Dashboard UI"
+      },
+      "pendingWeaveProposals": 2
+    },
+    {
+      "activeTask": null,
+      "sessionInfo": {
+        "sessionId": "xyz789",
+        "sessionName": "swift-falcon",
+        "compactionCount": 1,
+        "startedAt": "2025-12-09T14:00:00Z"
+      },
+      "progress": {
+        "tasksComplete": 0,
+        "tasksTotal": 0
+      },
+      "lastAction": {
+        "action": "story_completed",
+        "timestamp": "2025-12-09T13:45:00Z",
+        "details": "Completed US-014: Batch/WorkItem Separation"
+      },
+      "pendingWeaveProposals": 0
+    }
+  ]
+}

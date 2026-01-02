@@ -1,0 +1,16 @@
+{
+  "domain": "skill-lint-code",
+  "fileCount": 1,
+  "files": [
+    {
+      "path": ".claude/skills/lint-code/SKILL.md",
+      "purpose": "Skill: lint code - main definition",
+      "layer": "skill",
+      "domain": "skill-lint-code",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

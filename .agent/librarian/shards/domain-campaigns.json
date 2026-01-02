@@ -1,0 +1,35 @@
+{
+  "domain": "campaigns",
+  "fileCount": 2,
+  "files": [
+    {
+      "path": ".claude/skills/campaigns-domain/SKILL.md",
+      "purpose": "Skill: campaigns domain - main definition",
+      "layer": "skill",
+      "domain": "campaigns",
+      "keyConcepts": [
+        "SSE",
+        "Claude",
+        "Resend"
+      ],
+      "architecturalPatterns": [
+        "SSE",
+        "Worker"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "packages/db/src/schema/campaigns.ts",
+      "purpose": "Database schema: campaigns",
+      "layer": "schema",
+      "domain": "campaigns",
+      "keyConcepts": [
+        "Resend"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "high"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "domain": "skill-customizing-claude-code",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": ".claude/skills/customizing-claude-code/EXAMPLES.md",
+      "purpose": "Skill: customizing claude code - usage examples",
+      "layer": "skill",
+      "domain": "skill-customizing-claude-code",
+      "keyConcepts": [
+        "SSE",
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "SSE"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/customizing-claude-code/PLUGINS.md",
+      "purpose": "Skill: customizing claude code - plugins documentation",
+      "layer": "skill",
+      "domain": "skill-customizing-claude-code",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/customizing-claude-code/README.md",
+      "purpose": "Skill: customizing claude code - overview documentation",
+      "layer": "skill",
+      "domain": "skill-customizing-claude-code",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/customizing-claude-code/SKILL.md",
+      "purpose": "Skill: customizing claude code - main definition",
+      "layer": "skill",
+      "domain": "skill-customizing-claude-code",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/customizing-claude-code/TROUBLESHOOTING.md",
+      "purpose": "Skill: customizing claude code - troubleshooting guide",
+      "layer": "skill",
+      "domain": "skill-customizing-claude-code",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [
+        "CQRS"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    }
+  ]
+}

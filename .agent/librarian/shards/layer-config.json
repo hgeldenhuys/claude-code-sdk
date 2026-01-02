@@ -1,0 +1,53 @@
+{
+  "layer": "config",
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "apps/api/src/config/auth.ts",
+      "purpose": "Authentication configuration for Better Auth",
+      "layer": "config",
+      "domain": "core",
+      "keyConcepts": [
+        "Drizzle ORM",
+        "Better Auth"
+      ],
+      "architecturalPatterns": [
+        "Adapter Pattern"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/config/cors.ts",
+      "purpose": "CORS configuration for cross-origin requests",
+      "layer": "config",
+      "domain": "core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/api/src/config/env.ts",
+      "purpose": "Type-safe environment variable configuration with validation",
+      "layer": "config",
+      "domain": "core",
+      "keyConcepts": [
+        "Better Auth"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "critical"
+    },
+    {
+      "path": "apps/cli/src/config/code-search.config.ts",
+      "purpose": "code-search.config.ts",
+      "layer": "config",
+      "domain": "cli",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

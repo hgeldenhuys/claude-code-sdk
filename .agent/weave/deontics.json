@@ -1,0 +1,17 @@
+{
+  "$schema": "./SCHEMA.md#deontics",
+  "title": "Deontics (Δ)",
+  "description": "What must/can/cannot be done - obligations, permissions, prohibitions",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-15T03:12:13.913Z",
+  "obligations": {},
+  "permissions": {},
+  "prohibitions": {},
+  "metadata": {
+    "totalObligations": 0,
+    "totalPermissions": 0,
+    "totalProhibitions": 0,
+    "averageConfidence": 0,
+    "lastCompaction": null
+  }
+}

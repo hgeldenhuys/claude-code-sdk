@@ -1,0 +1,67 @@
+{
+  "name": "claude-code-sdk",
+  "version": "0.1.0",
+  "description": "SDK for tracking Claude Code changes, extending components, and plugin marketplace",
+  "module": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./tracker": {
+      "import": "./dist/tracker/index.js",
+      "types": "./dist/tracker/index.d.ts"
+    },
+    "./marketplace": {
+      "import": "./dist/marketplace/index.js",
+      "types": "./dist/marketplace/index.d.ts"
+    },
+    "./plugins": {
+      "import": "./dist/plugins/index.js",
+      "types": "./dist/plugins/index.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "lint": "bunx @biomejs/biome check src/",
+    "lint:fix": "bunx @biomejs/biome check --write src/",
+    "format": "bunx @biomejs/biome format --write src/",
+    "typecheck": "bunx tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run build",
+    "docs": "bun src/cli/docs.ts",
+    "docs:fetch": "bun src/cli/docs.ts fetch",
+    "docs:check": "bun src/cli/docs.ts check",
+    "docs:status": "bun src/cli/docs.ts status"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "claude-code",
+    "sdk",
+    "anthropic",
+    "plugins",
+    "marketplace",
+    "ai-tools"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^8.1.0",
+    "claude-hooks-sdk": "^0.8.6"
+  }
+}

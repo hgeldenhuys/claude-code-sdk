@@ -1,0 +1,4976 @@
+{
+  "layer": "component",
+  "fileCount": 414,
+  "files": [
+    {
+      "path": "apps/web/app/components/ai-analytics/AIAnalyticsDashboard.tsx",
+      "purpose": "AIAnalyticsDashboard React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-analytics/CostTrendChart.tsx",
+      "purpose": "CostTrendChart React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-analytics/LiveActivityFeed.tsx",
+      "purpose": "LiveActivityFeed React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-analytics/PerformanceMetrics.tsx",
+      "purpose": "PerformanceMetrics React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-analytics/SessionAuditLog.tsx",
+      "purpose": "SessionAuditLog React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-analytics/ToolUsageChart.tsx",
+      "purpose": "ToolUsageChart React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/__tests__/AIChatInput.test.tsx",
+      "purpose": "Test file for AIChatInput",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/__tests__/AIChatMessage.test.tsx",
+      "purpose": "Test file for AIChatMessage",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/__tests__/AIChatMessageList.test.tsx",
+      "purpose": "Test file for AIChatMessageList",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/__tests__/AIChatWidget.test.tsx",
+      "purpose": "Test file for AIChatWidget",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatHeader.tsx",
+      "purpose": "AIChatHeader React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatInput.tsx",
+      "purpose": "AIChatInput React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatInterface.tsx",
+      "purpose": "AIChatInterface React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatMessage.tsx",
+      "purpose": "AIChatMessage React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatMessageList.tsx",
+      "purpose": "AIChatMessageList React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatTypingIndicator.tsx",
+      "purpose": "AIChatTypingIndicator React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatUnconfigured.tsx",
+      "purpose": "AIChatUnconfigured React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/AIChatWidget.tsx",
+      "purpose": "AIChatWidget React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ai-assistant/index.ts",
+      "purpose": "Module exports for ai-assistant",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/analytics/ActivityTimeline.tsx",
+      "purpose": "ActivityTimeline React component",
+      "layer": "component",
+      "domain": "frontend-analytics",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/analytics/CampaignCharts.tsx",
+      "purpose": "CampaignCharts React component",
+      "layer": "component",
+      "domain": "frontend-analytics",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/analytics/ResearchCharts.tsx",
+      "purpose": "ResearchCharts React component",
+      "layer": "component",
+      "domain": "frontend-analytics",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/AppShell.tsx",
+      "purpose": "AppShell React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/__tests__/AudioPlayerProvider.test.tsx",
+      "purpose": "Test file for AudioPlayerProvider",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayer.tsx",
+      "purpose": "AudioPlayer React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerControls.tsx",
+      "purpose": "AudioPlayerControls React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerDrawer.tsx",
+      "purpose": "AudioPlayerDrawer React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerPanel.tsx",
+      "purpose": "AudioPlayerPanel React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerProvider.tsx",
+      "purpose": "AudioPlayerProvider React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerQueue.tsx",
+      "purpose": "AudioPlayerQueue React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPlayerToast.tsx",
+      "purpose": "AudioPlayerToast React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/AudioPreviewButton.tsx",
+      "purpose": "AudioPreviewButton React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/index.ts",
+      "purpose": "Module exports for audio",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/audio/KeyboardShortcutsHelp.tsx",
+      "purpose": "KeyboardShortcutsHelp React component",
+      "layer": "component",
+      "domain": "frontend-audio",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/AudienceBuilder.tsx",
+      "purpose": "AudienceBuilder React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/CampaignBasicInfo.tsx",
+      "purpose": "CampaignBasicInfo React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/CampaignStatusBadge.tsx",
+      "purpose": "CampaignStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/ListMetadata.tsx",
+      "purpose": "ListMetadata React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/ListPreview.tsx",
+      "purpose": "ListPreview React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/ListSelector.tsx",
+      "purpose": "ListSelector React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/MessageComposer.tsx",
+      "purpose": "MessageComposer React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/campaigns/WizardProgress.tsx",
+      "purpose": "WizardProgress React component",
+      "layer": "component",
+      "domain": "frontend-campaigns",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/Message.tsx",
+      "purpose": "Message React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/MessageInput.tsx",
+      "purpose": "MessageInput React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/MessageList.tsx",
+      "purpose": "MessageList React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/MessagePlayButton.tsx",
+      "purpose": "MessagePlayButton React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ModelSelector.tsx",
+      "purpose": "ModelSelector React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/StreamingMessage.tsx",
+      "purpose": "StreamingMessage React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ThinkingBlock.tsx",
+      "purpose": "ThinkingBlock React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ThinkingToggle.tsx",
+      "purpose": "ThinkingToggle React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ThreeTierModelSelector.tsx",
+      "purpose": "ThreeTierModelSelector React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/TwoTierModelSelector.tsx",
+      "purpose": "TwoTierModelSelector React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ClaudeProjectSelector.tsx",
+      "purpose": "ClaudeProjectSelector React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ClientOnly.tsx",
+      "purpose": "ClientOnly React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/code-search/SearchForm.tsx",
+      "purpose": "SearchForm React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/code-search/SearchResults.tsx",
+      "purpose": "SearchResults React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/context/SessionCard.tsx",
+      "purpose": "SessionCard React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/context/UsageGraph.tsx",
+      "purpose": "UsageGraph React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/__tests__/ConfidenceBadge.test.tsx",
+      "purpose": "Test file for ConfidenceBadge",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/AccountCard.tsx",
+      "purpose": "AccountCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/AccountForm.tsx",
+      "purpose": "AccountForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/AccountStatusBadge.tsx",
+      "purpose": "AccountStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ActivityCard.tsx",
+      "purpose": "ActivityCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ActivityForm.tsx",
+      "purpose": "ActivityForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ActivityPriorityBadge.tsx",
+      "purpose": "ActivityPriorityBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ActivityStatusBadge.tsx",
+      "purpose": "ActivityStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ActivityTypeBadge.tsx",
+      "purpose": "ActivityTypeBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/AddressFields.tsx",
+      "purpose": "AddressFields React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/AddTimelineNoteModal.tsx",
+      "purpose": "AddTimelineNoteModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/AddToListDialog.tsx",
+      "purpose": "AddToListDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/ActivityTimeline.tsx",
+      "purpose": "ActivityTimeline React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/ActivityTimelineItem.tsx",
+      "purpose": "ActivityTimelineItem React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/CallDispositionModal.tsx",
+      "purpose": "CallDispositionModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/CallListFilters.tsx",
+      "purpose": "CallListFilters React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/EmptyCallListState.tsx",
+      "purpose": "EmptyCallListState React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadListItem.tsx",
+      "purpose": "LeadListItem React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPop.tsx",
+      "purpose": "LeadScreenPop React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPopSections/AccountContextSection.tsx",
+      "purpose": "AccountContextSection React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPopSections/AIIntelligenceSection.tsx",
+      "purpose": "AIIntelligenceSection React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPopSections/CampaignSection.tsx",
+      "purpose": "CampaignSection React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPopSections/ContactInfoSection.tsx",
+      "purpose": "ContactInfoSection React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPopSections/RecentActivitiesSection.tsx",
+      "purpose": "RecentActivitiesSection React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPopSections/RelatedContactsSection.tsx",
+      "purpose": "RelatedContactsSection React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/LeadScreenPopSections/ScoreDetailSection.tsx",
+      "purpose": "ScoreDetailSection React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/MetricCard.tsx",
+      "purpose": "MetricCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/PerformanceCharts.tsx",
+      "purpose": "PerformanceCharts React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/PriorityCallList.tsx",
+      "purpose": "PriorityCallList React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/agent/QuickNoteInput.tsx",
+      "purpose": "QuickNoteInput React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/analytics/CampaignFunnelChart.tsx",
+      "purpose": "CampaignFunnelChart React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/analytics/ChannelPerformanceTable.tsx",
+      "purpose": "ChannelPerformanceTable React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/analytics/CostROICard.tsx",
+      "purpose": "CostROICard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/analytics/ExportDialog.tsx",
+      "purpose": "ExportDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/BudgetProgressBar.tsx",
+      "purpose": "BudgetProgressBar React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/__tests__/TrafficSplitVisualizer.test.tsx",
+      "purpose": "Test file for TrafficSplitVisualizer",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/__tests__/VariantEditor.test.tsx",
+      "purpose": "Test file for VariantEditor",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/ABTestConfig.tsx",
+      "purpose": "ABTestConfig React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/ABTestResults.tsx",
+      "purpose": "ABTestResults React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/RecurrenceConfig.tsx",
+      "purpose": "RecurrenceConfig React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/ScheduledCampaignsList.tsx",
+      "purpose": "ScheduledCampaignsList React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/ScheduleForm.tsx",
+      "purpose": "ScheduleForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/TrafficSplitVisualizer.tsx",
+      "purpose": "TrafficSplitVisualizer React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/TriggerBuilder.tsx",
+      "purpose": "TriggerBuilder React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/campaigns/VariantEditor.tsx",
+      "purpose": "VariantEditor React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ConfidenceBadge.tsx",
+      "purpose": "ConfidenceBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ConsentForm.tsx",
+      "purpose": "ConsentForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ConsentStatusBadge.tsx",
+      "purpose": "ConsentStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ContactCard.tsx",
+      "purpose": "ContactCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ContactForm.tsx",
+      "purpose": "ContactForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ContactLifecycleBadge.tsx",
+      "purpose": "ContactLifecycleBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/contacts/ImportCSVWizard.tsx",
+      "purpose": "ImportCSVWizard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ContactStatusBadge.tsx",
+      "purpose": "ContactStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/CreateListDialog.tsx",
+      "purpose": "CreateListDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/CRMDashboardCharts.tsx",
+      "purpose": "CRMDashboardCharts React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/CRMTimeline.tsx",
+      "purpose": "CRMTimeline React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/custom-fields/CustomFieldInput.tsx",
+      "purpose": "CustomFieldInput React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/custom-fields/CustomFieldsDisplay.tsx",
+      "purpose": "CustomFieldsDisplay React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/custom-fields/CustomFieldsEditor.tsx",
+      "purpose": "CustomFieldsEditor React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/custom-fields/index.tsx",
+      "purpose": "Module exports for custom-fields",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/ConfigurePromptStep.tsx",
+      "purpose": "ConfigurePromptStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/history/EnrichmentDataDisplay.tsx",
+      "purpose": "EnrichmentDataDisplay React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/history/EnrichmentHistoryCard.tsx",
+      "purpose": "EnrichmentHistoryCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/history/EnrichmentHistoryEntry.tsx",
+      "purpose": "EnrichmentHistoryEntry React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/history/EnrichmentHistoryTimeline.tsx",
+      "purpose": "EnrichmentHistoryTimeline React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/history/EnrichmentReportModal.tsx",
+      "purpose": "EnrichmentReportModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/history/index.ts",
+      "purpose": "Module exports for history",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/ProgressStep.tsx",
+      "purpose": "ProgressStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/ResultsStep.tsx",
+      "purpose": "ResultsStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/ReviewSampleStep.tsx",
+      "purpose": "ReviewSampleStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/SampleStep.tsx",
+      "purpose": "SampleStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/SelectListStep.tsx",
+      "purpose": "SelectListStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/templates/TemplateDeleteDialog.tsx",
+      "purpose": "TemplateDeleteDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/templates/TemplateDryRunModal.tsx",
+      "purpose": "TemplateDryRunModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/enrichment/templates/TemplateFormModal.tsx",
+      "purpose": "TemplateFormModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ExportButton.tsx",
+      "purpose": "ExportButton React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/GlobalSearchInput.tsx",
+      "purpose": "GlobalSearchInput React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ImportModal.tsx",
+      "purpose": "ImportModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/KPICard.tsx",
+      "purpose": "KPICard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/KYCForm.tsx",
+      "purpose": "KYCForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/KYCRiskBadge.tsx",
+      "purpose": "KYCRiskBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/KYCStatusBadge.tsx",
+      "purpose": "KYCStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/KYCVerificationModal.tsx",
+      "purpose": "KYCVerificationModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/LeadCard.tsx",
+      "purpose": "LeadCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/LeadForm.tsx",
+      "purpose": "LeadForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/BulkActionBar.tsx",
+      "purpose": "BulkActionBar React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/BulkAssignDialog.tsx",
+      "purpose": "BulkAssignDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/BulkOperationProgress.tsx",
+      "purpose": "BulkOperationProgress React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/BulkUpdateDialog.tsx",
+      "purpose": "BulkUpdateDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/CommunicationTimeline.tsx",
+      "purpose": "CommunicationTimeline React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/ConfidenceBadge.tsx",
+      "purpose": "ConfidenceBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/CustomFieldFilters.tsx",
+      "purpose": "CustomFieldFilters React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/CustomFieldsCard.tsx",
+      "purpose": "CustomFieldsCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/DataQualityDashboard.tsx",
+      "purpose": "DataQualityDashboard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/DataQualityIndicator.tsx",
+      "purpose": "DataQualityIndicator React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/EmailComposer.tsx",
+      "purpose": "EmailComposer React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/EnrichmentHistoryPanel.tsx",
+      "purpose": "EnrichmentHistoryPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/EnrichmentPreviewModal.tsx",
+      "purpose": "EnrichmentPreviewModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/EnrichmentStatusBadge.tsx",
+      "purpose": "EnrichmentStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/EnrichmentTriggerButton.tsx",
+      "purpose": "EnrichmentTriggerButton React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/HealthFactorsPanel.tsx",
+      "purpose": "HealthFactorsPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/HealthScoreBadge.tsx",
+      "purpose": "HealthScoreBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/HealthTrendChart.tsx",
+      "purpose": "HealthTrendChart React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/import/ColumnMappingStep.tsx",
+      "purpose": "ColumnMappingStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/import/FileUploadStep.tsx",
+      "purpose": "FileUploadStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/import/ImportPreviewStep.tsx",
+      "purpose": "ImportPreviewStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/import/ImportProgressStep.tsx",
+      "purpose": "ImportProgressStep React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/ImportCSVWizard.tsx",
+      "purpose": "ImportCSVWizard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/IntentActionPanel.tsx",
+      "purpose": "IntentActionPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/IntentScoreBadge.tsx",
+      "purpose": "IntentScoreBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/IntentSignalsTimeline.tsx",
+      "purpose": "IntentSignalsTimeline React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/LeadDetailsPanel.tsx",
+      "purpose": "LeadDetailsPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/LeadNotesPanel.tsx",
+      "purpose": "LeadNotesPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/LeadScoreCard.tsx",
+      "purpose": "LeadScoreCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/ManualRoutingDialog.tsx",
+      "purpose": "ManualRoutingDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/MentionAutocomplete.tsx",
+      "purpose": "MentionAutocomplete React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/ModelTrainingDialog.tsx",
+      "purpose": "ModelTrainingDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/NoteCard.tsx",
+      "purpose": "NoteCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/NoteComposer.tsx",
+      "purpose": "NoteComposer React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/PredictionFactorsPanel.tsx",
+      "purpose": "PredictionFactorsPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/PredictionScoreBadge.tsx",
+      "purpose": "PredictionScoreBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/PredictionTrendChart.tsx",
+      "purpose": "PredictionTrendChart React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/QualityIssuesList.tsx",
+      "purpose": "QualityIssuesList React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/RoutingHistoryPanel.tsx",
+      "purpose": "RoutingHistoryPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/RoutingStatusBadge.tsx",
+      "purpose": "RoutingStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/ScoringModelConfig.tsx",
+      "purpose": "ScoringModelConfig React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/SegmentBuilder.tsx",
+      "purpose": "SegmentBuilder React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/SegmentList.tsx",
+      "purpose": "SegmentList React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/SegmentMetricsCard.tsx",
+      "purpose": "SegmentMetricsCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/SegmentPreview.tsx",
+      "purpose": "SegmentPreview React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/leads/SMSComposer.tsx",
+      "purpose": "SMSComposer React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/LeadScoreBadge.tsx",
+      "purpose": "LeadScoreBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/LeadStatusBadge.tsx",
+      "purpose": "LeadStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/lists/CreateFromFiltersDialog.tsx",
+      "purpose": "CreateFromFiltersDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/lists/CreateLeadListDialog.tsx",
+      "purpose": "CreateLeadListDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/lists/DynamicListFilters.tsx",
+      "purpose": "DynamicListFilters React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/lists/LeadSelectionDialog.tsx",
+      "purpose": "LeadSelectionDialog React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/lists/ListOperationsModal.tsx",
+      "purpose": "ListOperationsModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/OpportunityCard.tsx",
+      "purpose": "OpportunityCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/OpportunityForm.tsx",
+      "purpose": "OpportunityForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/OpportunityKanban.tsx",
+      "purpose": "OpportunityKanban React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/OpportunityStageBadge.tsx",
+      "purpose": "OpportunityStageBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/OpportunityStatusBadge.tsx",
+      "purpose": "OpportunityStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ScoreBreakdownTable.tsx",
+      "purpose": "ScoreBreakdownTable React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ScoreGauge.tsx",
+      "purpose": "ScoreGauge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/ScoreHistoryChart.tsx",
+      "purpose": "ScoreHistoryChart React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/SearchResultCard.tsx",
+      "purpose": "SearchResultCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/config/EnrichmentTaskConfig.tsx",
+      "purpose": "EnrichmentTaskConfig React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/config/ExportTaskConfig.tsx",
+      "purpose": "ExportTaskConfig React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/config/ScoringTaskConfig.tsx",
+      "purpose": "ScoringTaskConfig React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/config/SegmentationTaskConfig.tsx",
+      "purpose": "SegmentationTaskConfig React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/TaskCard.tsx",
+      "purpose": "TaskCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/TaskExecutionPanel.tsx",
+      "purpose": "TaskExecutionPanel React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React",
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/TaskPlanningModal.tsx",
+      "purpose": "TaskPlanningModal React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/TaskStatusBadge.tsx",
+      "purpose": "TaskStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/tasks/TaskTypeBadge.tsx",
+      "purpose": "TaskTypeBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/templates/__tests__/TemplateCard.test.tsx",
+      "purpose": "Test file for TemplateCard",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/templates/TemplateCard.tsx",
+      "purpose": "TemplateCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/templates/TemplateDetails.tsx",
+      "purpose": "TemplateDetails React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/templates/TemplateForm.tsx",
+      "purpose": "TemplateForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/templates/TemplateGallery.tsx",
+      "purpose": "TemplateGallery React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/timeline/CommunicationRenderer.tsx",
+      "purpose": "CommunicationRenderer React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/timeline/DataChangeRenderer.tsx",
+      "purpose": "DataChangeRenderer React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/timeline/EventCategoryBadge.tsx",
+      "purpose": "EventCategoryBadge React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/TimelineEventCard.tsx",
+      "purpose": "TimelineEventCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/TimelineView.tsx",
+      "purpose": "TimelineView React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/workflows/EnrollmentCard.tsx",
+      "purpose": "EnrollmentCard React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/workflows/ExecutionTimeline.tsx",
+      "purpose": "ExecutionTimeline React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/workflows/StepConfigForm.tsx",
+      "purpose": "StepConfigForm React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/workflows/WorkflowBuilder.tsx",
+      "purpose": "WorkflowBuilder React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/crm/workflows/WorkflowList.tsx",
+      "purpose": "WorkflowList React component",
+      "layer": "component",
+      "domain": "frontend-crm",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/dashboard/AgentCapacityWidget.tsx",
+      "purpose": "AgentCapacityWidget React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/dashboard/AtRiskLeadsWidget.tsx",
+      "purpose": "AtRiskLeadsWidget React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/dashboard/EnrichmentStatsWidget.tsx",
+      "purpose": "EnrichmentStatsWidget React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/dashboard/PredictionAccuracyWidget.tsx",
+      "purpose": "PredictionAccuracyWidget React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/dashboard/TopIntentLeadsWidget.tsx",
+      "purpose": "TopIntentLeadsWidget React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/design-primitives.tsx",
+      "purpose": "design-primitives React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/design-primitives/index.tsx",
+      "purpose": "Module exports for design-primitives",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/DocNav.tsx",
+      "purpose": "DocNav React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/DocViewer.tsx",
+      "purpose": "DocViewer React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/FeatureCard.tsx",
+      "purpose": "FeatureCard React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/FeatureDocContent.tsx",
+      "purpose": "FeatureDocContent React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/docs/SlideControls.tsx",
+      "purpose": "SlideControls React component",
+      "layer": "component",
+      "domain": "frontend-docs",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/events/EventDetailLayout.tsx",
+      "purpose": "EventDetailLayout React component",
+      "layer": "component",
+      "domain": "frontend-events",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/events/EventTypeRouter.tsx",
+      "purpose": "EventTypeRouter React component",
+      "layer": "component",
+      "domain": "frontend-events",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/events/FullscreenMarkdownViewer.tsx",
+      "purpose": "FullscreenMarkdownViewer React component",
+      "layer": "component",
+      "domain": "frontend-events",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/events/index.ts",
+      "purpose": "Module exports for events",
+      "layer": "component",
+      "domain": "frontend-events",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/events/JsonPayloadAccordion.tsx",
+      "purpose": "JsonPayloadAccordion React component",
+      "layer": "component",
+      "domain": "frontend-events",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/events/views/GenericEventView.tsx",
+      "purpose": "GenericEventView React component",
+      "layer": "component",
+      "domain": "frontend-events",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/events/views/StopEventView.tsx",
+      "purpose": "StopEventView React component",
+      "layer": "component",
+      "domain": "frontend-events",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/FormattedDate.tsx",
+      "purpose": "FormattedDate React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/AddMemoryModal.tsx",
+      "purpose": "AddMemoryModal React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/ContextBudgetMeter.tsx",
+      "purpose": "ContextBudgetMeter React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/ContextBudgetWidget.tsx",
+      "purpose": "ContextBudgetWidget React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/ConversationSearchFilters.tsx",
+      "purpose": "ConversationSearchFilters React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/EditMemoryModal.tsx",
+      "purpose": "EditMemoryModal React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/IndexStatusCard.tsx",
+      "purpose": "IndexStatusCard React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/MemoryListWidget.tsx",
+      "purpose": "MemoryListWidget React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/MemoryTable.tsx",
+      "purpose": "MemoryTable React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/SearchFilters.tsx",
+      "purpose": "SearchFilters React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/SearchResults.tsx",
+      "purpose": "SearchResults React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/SemanticSearchBar.tsx",
+      "purpose": "SemanticSearchBar React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/SuggestionCard.tsx",
+      "purpose": "SuggestionCard React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/intelligence/SuggestionsFeed.tsx",
+      "purpose": "SuggestionsFeed React component",
+      "layer": "component",
+      "domain": "frontend-ai",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/ComparisonSectionAlt1.tsx",
+      "purpose": "ComparisonSectionAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/DemoFormAlt1.tsx",
+      "purpose": "DemoFormAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/FooterAlt1.tsx",
+      "purpose": "FooterAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/HeroSectionAlt1.tsx",
+      "purpose": "HeroSectionAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/PricingAlt1.tsx",
+      "purpose": "PricingAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/ProcessSectionAlt1.tsx",
+      "purpose": "ProcessSectionAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/ProofSectionAlt1.tsx",
+      "purpose": "ProofSectionAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-1/ResultsSectionAlt1.tsx",
+      "purpose": "ResultsSectionAlt1 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-10/BrutalFeaturesAlt10.tsx",
+      "purpose": "BrutalFeaturesAlt10 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-10/DemoFormAlt10.tsx",
+      "purpose": "DemoFormAlt10 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-10/FooterAlt10.tsx",
+      "purpose": "FooterAlt10 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-10/HeroSectionAlt10.tsx",
+      "purpose": "HeroSectionAlt10 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-2/DemoFormAlt2.tsx",
+      "purpose": "DemoFormAlt2 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-2/FeaturesSectionAlt2.tsx",
+      "purpose": "FeaturesSectionAlt2 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-2/FooterAlt2.tsx",
+      "purpose": "FooterAlt2 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-2/HeroSectionAlt2.tsx",
+      "purpose": "HeroSectionAlt2 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-2/PricingSectionAlt2.tsx",
+      "purpose": "PricingSectionAlt2 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-2/ProblemSectionAlt2.tsx",
+      "purpose": "ProblemSectionAlt2 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-2/SolutionSectionAlt2.tsx",
+      "purpose": "SolutionSectionAlt2 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-3/CaseStudiesSectionAlt3.tsx",
+      "purpose": "CaseStudiesSectionAlt3 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-3/DemoFormAlt3.tsx",
+      "purpose": "DemoFormAlt3 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-3/FooterAlt3.tsx",
+      "purpose": "FooterAlt3 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-3/GuaranteeSectionAlt3.tsx",
+      "purpose": "GuaranteeSectionAlt3 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-3/HeroSectionAlt3.tsx",
+      "purpose": "HeroSectionAlt3 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-3/HiringPainSectionAlt3.tsx",
+      "purpose": "HiringPainSectionAlt3 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-3/TransparentProcessAlt3.tsx",
+      "purpose": "TransparentProcessAlt3 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-4/AIIntelligenceSectionAlt4.tsx",
+      "purpose": "AIIntelligenceSectionAlt4 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-4/DemoFormAlt4.tsx",
+      "purpose": "DemoFormAlt4 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-4/EnterpriseProofAlt4.tsx",
+      "purpose": "EnterpriseProofAlt4 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-4/FooterAlt4.tsx",
+      "purpose": "FooterAlt4 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-4/HeroSectionAlt4.tsx",
+      "purpose": "HeroSectionAlt4 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-4/SpeedToValueAlt4.tsx",
+      "purpose": "SpeedToValueAlt4 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-4/TechnicalFeaturesAlt4.tsx",
+      "purpose": "TechnicalFeaturesAlt4 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-5/DemoFormAlt5.tsx",
+      "purpose": "DemoFormAlt5 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-5/EvolutionSectionAlt5.tsx",
+      "purpose": "EvolutionSectionAlt5 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-5/FeaturesAlt5.tsx",
+      "purpose": "FeaturesAlt5 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-5/FooterAlt5.tsx",
+      "purpose": "FooterAlt5 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-5/HeroSectionAlt5.tsx",
+      "purpose": "HeroSectionAlt5 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-6/DemoFormAlt6.tsx",
+      "purpose": "DemoFormAlt6 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-6/FooterAlt6.tsx",
+      "purpose": "FooterAlt6 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-6/HeroSectionAlt6.tsx",
+      "purpose": "HeroSectionAlt6 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-6/MinimalGridAlt6.tsx",
+      "purpose": "MinimalGridAlt6 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-6/StatsAlt6.tsx",
+      "purpose": "StatsAlt6 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-7/DemoFormAlt7.tsx",
+      "purpose": "DemoFormAlt7 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-7/FooterAlt7.tsx",
+      "purpose": "FooterAlt7 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-7/HarmonySectionAlt7.tsx",
+      "purpose": "HarmonySectionAlt7 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-7/HeroSectionAlt7.tsx",
+      "purpose": "HeroSectionAlt7 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-7/TestimonialAlt7.tsx",
+      "purpose": "TestimonialAlt7 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-8/DemoFormAlt8.tsx",
+      "purpose": "DemoFormAlt8 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-8/FooterAlt8.tsx",
+      "purpose": "FooterAlt8 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-8/HeroSectionAlt8.tsx",
+      "purpose": "HeroSectionAlt8 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-8/SpeedMetricsAlt8.tsx",
+      "purpose": "SpeedMetricsAlt8 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-9/BlueprintGridAlt9.tsx",
+      "purpose": "BlueprintGridAlt9 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-9/DemoFormAlt9.tsx",
+      "purpose": "DemoFormAlt9 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-9/FooterAlt9.tsx",
+      "purpose": "FooterAlt9 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing-alt-9/HeroSectionAlt9.tsx",
+      "purpose": "HeroSectionAlt9 React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/DemoFormSection.tsx",
+      "purpose": "DemoFormSection React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/FeaturesSection.tsx",
+      "purpose": "FeaturesSection React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/Footer.tsx",
+      "purpose": "Footer React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/HeroSection.tsx",
+      "purpose": "HeroSection React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/NavigationBar.tsx",
+      "purpose": "NavigationBar React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/PricingSection.tsx",
+      "purpose": "PricingSection React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/ProblemSection.tsx",
+      "purpose": "ProblemSection React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/landing/SolutionSection.tsx",
+      "purpose": "SolutionSection React component",
+      "layer": "component",
+      "domain": "frontend-landing",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ProjectAgentSelector.tsx",
+      "purpose": "ProjectAgentSelector React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/research/CreateResearchDialog.tsx",
+      "purpose": "CreateResearchDialog React component",
+      "layer": "component",
+      "domain": "frontend-research",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/research/EnrichmentPreviewDialog.tsx",
+      "purpose": "EnrichmentPreviewDialog React component",
+      "layer": "component",
+      "domain": "frontend-research",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/research/ResearchStatusBadge.tsx",
+      "purpose": "ResearchStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-research",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/BoardLockActions.tsx",
+      "purpose": "BoardLockActions React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/BoardLockStatus.tsx",
+      "purpose": "BoardLockStatus React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/BoardsTable.tsx",
+      "purpose": "BoardsTable React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/CoherenceMetrics.tsx",
+      "purpose": "CoherenceMetrics React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/CrashRecoveryDialog.tsx",
+      "purpose": "CrashRecoveryDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/EntityDetailDialog.tsx",
+      "purpose": "EntityDetailDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/ErrorState.tsx",
+      "purpose": "ErrorState React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/GraphVisualization.tsx",
+      "purpose": "GraphVisualization React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/KanbanBoard.tsx",
+      "purpose": "KanbanBoard React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/KnowledgeGraph.tsx",
+      "purpose": "KnowledgeGraph React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/MarkdownViewer.tsx",
+      "purpose": "MarkdownViewer React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/ObserverModeBanner.tsx",
+      "purpose": "ObserverModeBanner React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/Overview.tsx",
+      "purpose": "Overview React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SDLCNavigation.tsx",
+      "purpose": "SDLCNavigation React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SessionDetailDialog.tsx",
+      "purpose": "SessionDetailDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SessionsTable.tsx",
+      "purpose": "SessionsTable React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SessionStatusBadge.tsx",
+      "purpose": "SessionStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SkeletonLoader.tsx",
+      "purpose": "SkeletonLoader React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/StoryDetailDialog.tsx",
+      "purpose": "StoryDetailDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/WipLimitsDisplay.tsx",
+      "purpose": "WipLimitsDisplay React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/WipViolationAlert.tsx",
+      "purpose": "WipViolationAlert React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ShellSwitcher.tsx",
+      "purpose": "ShellSwitcher React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/SidePanelContainer.tsx",
+      "purpose": "SidePanelContainer React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/SimpleButton.test.tsx",
+      "purpose": "Test file for SimpleButton",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/SimpleButton.tsx",
+      "purpose": "SimpleButton React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ThemeToggle.tsx",
+      "purpose": "ThemeToggle React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/accordion.tsx",
+      "purpose": "accordion React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/alert-dialog.tsx",
+      "purpose": "alert-dialog React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/alert.tsx",
+      "purpose": "alert React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/aspect-ratio.tsx",
+      "purpose": "aspect-ratio React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/avatar.tsx",
+      "purpose": "avatar React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/badge.tsx",
+      "purpose": "badge React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/breadcrumb.tsx",
+      "purpose": "breadcrumb React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/button.tsx",
+      "purpose": "button React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/calendar.tsx",
+      "purpose": "calendar React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/card.tsx",
+      "purpose": "card React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/carousel.tsx",
+      "purpose": "carousel React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/chart.tsx",
+      "purpose": "chart React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/checkbox.tsx",
+      "purpose": "checkbox React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/collapsible.tsx",
+      "purpose": "collapsible React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/combobox.tsx",
+      "purpose": "combobox React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/command.tsx",
+      "purpose": "command React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/context-menu.tsx",
+      "purpose": "context-menu React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/dialog.tsx",
+      "purpose": "dialog React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/drawer.tsx",
+      "purpose": "drawer React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/dropdown-menu.tsx",
+      "purpose": "dropdown-menu React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/form.tsx",
+      "purpose": "form React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/hover-card.tsx",
+      "purpose": "hover-card React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/input-otp.tsx",
+      "purpose": "input-otp React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/input.tsx",
+      "purpose": "input React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/label.tsx",
+      "purpose": "label React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/menubar.tsx",
+      "purpose": "menubar React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/navigation-menu.tsx",
+      "purpose": "navigation-menu React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/pagination.tsx",
+      "purpose": "pagination React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/popover.tsx",
+      "purpose": "popover React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/progress.tsx",
+      "purpose": "progress React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/radio-group.tsx",
+      "purpose": "radio-group React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/resizable.tsx",
+      "purpose": "resizable React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/scroll-area.tsx",
+      "purpose": "scroll-area React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/select.tsx",
+      "purpose": "select React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/separator.tsx",
+      "purpose": "separator React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/sheet.tsx",
+      "purpose": "sheet React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/sidebar.tsx",
+      "purpose": "sidebar React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "high",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/skeleton.tsx",
+      "purpose": "skeleton React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/slider.tsx",
+      "purpose": "slider React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/sonner.tsx",
+      "purpose": "sonner React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/switch.tsx",
+      "purpose": "switch React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/table.tsx",
+      "purpose": "table React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/tabs.tsx",
+      "purpose": "tabs React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/textarea.tsx",
+      "purpose": "textarea React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/toggle-group.tsx",
+      "purpose": "toggle-group React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/toggle.tsx",
+      "purpose": "toggle React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/ui/tooltip.tsx",
+      "purpose": "tooltip React component",
+      "layer": "component",
+      "domain": "frontend-ui-primitives",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/UserMenu.tsx",
+      "purpose": "UserMenu React component",
+      "layer": "component",
+      "domain": "frontend-core",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/ActivityFeed.tsx",
+      "purpose": "ActivityFeed React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/CreateWorkspaceModal.tsx",
+      "purpose": "CreateWorkspaceModal React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/InviteUsersModal.tsx",
+      "purpose": "InviteUsersModal React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/members/MemberActions.tsx",
+      "purpose": "MemberActions React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/settings/AuditLogTab.tsx",
+      "purpose": "AuditLogTab React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/settings/GeneralSettingsTab.tsx",
+      "purpose": "GeneralSettingsTab React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/settings/MembersTab.tsx",
+      "purpose": "MembersTab React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/WaitingForInvitation.tsx",
+      "purpose": "WaitingForInvitation React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/WorkspaceCard.tsx",
+      "purpose": "WorkspaceCard React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/workspace/WorkspaceSelector.tsx",
+      "purpose": "WorkspaceSelector React component",
+      "layer": "component",
+      "domain": "frontend-workspace",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

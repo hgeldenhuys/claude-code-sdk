@@ -1,0 +1,63 @@
+{
+  "domain": "skill-verify-code-deployment",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": ".claude/skills/verify-code-deployment/code-path.md",
+      "purpose": "Skill: verify code deployment - code path",
+      "layer": "skill",
+      "domain": "skill-verify-code-deployment",
+      "keyConcepts": [
+        "ElysiaJS"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/verify-code-deployment/health-checks.md",
+      "purpose": "Skill: verify code deployment - health checks",
+      "layer": "skill",
+      "domain": "skill-verify-code-deployment",
+      "keyConcepts": [
+        "ElysiaJS",
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/verify-code-deployment/hot-reload.md",
+      "purpose": "Skill: verify code deployment - hot reload",
+      "layer": "skill",
+      "domain": "skill-verify-code-deployment",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/verify-code-deployment/process-management.md",
+      "purpose": "Skill: verify code deployment - process management",
+      "layer": "skill",
+      "domain": "skill-verify-code-deployment",
+      "keyConcepts": [],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": ".claude/skills/verify-code-deployment/quick-start.md",
+      "purpose": "Skill: verify code deployment - quick start",
+      "layer": "skill",
+      "domain": "skill-verify-code-deployment",
+      "keyConcepts": [
+        "Claude"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

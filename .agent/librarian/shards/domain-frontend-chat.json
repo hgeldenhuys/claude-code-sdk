@@ -1,0 +1,129 @@
+{
+  "domain": "frontend-chat",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "apps/web/app/components/chat/Message.tsx",
+      "purpose": "Message React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/MessageInput.tsx",
+      "purpose": "MessageInput React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/MessageList.tsx",
+      "purpose": "MessageList React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/MessagePlayButton.tsx",
+      "purpose": "MessagePlayButton React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ModelSelector.tsx",
+      "purpose": "ModelSelector React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/StreamingMessage.tsx",
+      "purpose": "StreamingMessage React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ThinkingBlock.tsx",
+      "purpose": "ThinkingBlock React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ThinkingToggle.tsx",
+      "purpose": "ThinkingToggle React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/ThreeTierModelSelector.tsx",
+      "purpose": "ThreeTierModelSelector React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/chat/TwoTierModelSelector.tsx",
+      "purpose": "TwoTierModelSelector React component",
+      "layer": "component",
+      "domain": "frontend-chat",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}

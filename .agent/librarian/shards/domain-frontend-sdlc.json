@@ -1,0 +1,262 @@
+{
+  "domain": "frontend-sdlc",
+  "fileCount": 21,
+  "files": [
+    {
+      "path": "apps/web/app/components/sdlc/BoardLockActions.tsx",
+      "purpose": "BoardLockActions React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/BoardLockStatus.tsx",
+      "purpose": "BoardLockStatus React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/BoardsTable.tsx",
+      "purpose": "BoardsTable React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/CoherenceMetrics.tsx",
+      "purpose": "CoherenceMetrics React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/CrashRecoveryDialog.tsx",
+      "purpose": "CrashRecoveryDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/EntityDetailDialog.tsx",
+      "purpose": "EntityDetailDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/ErrorState.tsx",
+      "purpose": "ErrorState React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/GraphVisualization.tsx",
+      "purpose": "GraphVisualization React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/KanbanBoard.tsx",
+      "purpose": "KanbanBoard React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/KnowledgeGraph.tsx",
+      "purpose": "KnowledgeGraph React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/MarkdownViewer.tsx",
+      "purpose": "MarkdownViewer React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/ObserverModeBanner.tsx",
+      "purpose": "ObserverModeBanner React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/Overview.tsx",
+      "purpose": "Overview React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SDLCNavigation.tsx",
+      "purpose": "SDLCNavigation React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SessionDetailDialog.tsx",
+      "purpose": "SessionDetailDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SessionsTable.tsx",
+      "purpose": "SessionsTable React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React",
+        "TanStack Query"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SessionStatusBadge.tsx",
+      "purpose": "SessionStatusBadge React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/SkeletonLoader.tsx",
+      "purpose": "SkeletonLoader React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "medium",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/StoryDetailDialog.tsx",
+      "purpose": "StoryDetailDialog React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [
+        "SSE streaming"
+      ],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/WipLimitsDisplay.tsx",
+      "purpose": "WipLimitsDisplay React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    },
+    {
+      "path": "apps/web/app/components/sdlc/WipViolationAlert.tsx",
+      "purpose": "WipViolationAlert React component",
+      "layer": "component",
+      "domain": "frontend-sdlc",
+      "keyConcepts": [
+        "React"
+      ],
+      "architecturalPatterns": [],
+      "complexity": "low",
+      "importance": "medium"
+    }
+  ]
+}
