@@ -32,3 +32,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Loom workflow system (internal tooling - not part of public SDK)
+.agent/
+.claude/
+notify-service/
+hooks/
+data/

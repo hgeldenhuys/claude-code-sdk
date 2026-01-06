@@ -103,13 +103,15 @@ export type HookEvent =
   | 'on-init'
   | 'on-exit';
 
-// Skill types
+// Skill types (aligned with Claude Code 2.0.74)
 export interface SkillDefinition {
   name: string;
   description: string;
   triggers: string[];
   instructions: string;
-  tools?: string[];
+  allowedTools?: string[];  // Tools Claude can use without permission when skill is active
+  model?: string;           // Model to use when skill is active (e.g., 'claude-sonnet-4-20250514')
+  version?: string;         // Skill version for tracking
   examples?: SkillExample[];
 }
 
@@ -125,4 +127,70 @@ export interface SDKConfig {
   cacheDir?: string;
   autoUpdate?: boolean;
   telemetry?: boolean;
+}
+
+// Claude Code Settings types (aligned with 2.0.74 docs)
+export interface ClaudeCodeSettings {
+  permissions?: PermissionSettings;
+  env?: Record<string, string>;
+  hooks?: Record<string, HookConfig[]>;
+  disableAllHooks?: boolean;
+  allowManagedHooksOnly?: boolean;  // Enterprise: only allow managed/SDK hooks
+  model?: string;
+  enabledPlugins?: Record<string, boolean>;
+  extraKnownMarketplaces?: Record<string, MarketplaceSource>;
+  strictKnownMarketplaces?: MarketplaceSourceSpec[];  // Enterprise: allowlist of marketplaces
+  attribution?: AttributionSettings;
+  sandbox?: SandboxSettings;
+}
+
+export interface PermissionSettings {
+  allow?: string[];
+  ask?: string[];
+  deny?: string[];
+  additionalDirectories?: string[];
+  defaultMode?: 'acceptEdits' | 'plan' | 'normal';
+  disableBypassPermissionsMode?: 'disable';
+}
+
+export interface AttributionSettings {
+  commit?: string;
+  pr?: string;
+}
+
+export interface SandboxSettings {
+  enabled?: boolean;
+  autoAllowBashIfSandboxed?: boolean;
+  excludedCommands?: string[];
+  allowUnsandboxedCommands?: boolean;
+  network?: {
+    allowUnixSockets?: string[];
+    allowLocalBinding?: boolean;
+    httpProxyPort?: number;
+    socksProxyPort?: number;
+  };
+  enableWeakerNestedSandbox?: boolean;
+}
+
+export interface MarketplaceSource {
+  source: MarketplaceSourceSpec;
+}
+
+export type MarketplaceSourceSpec =
+  | { source: 'github'; repo: string; ref?: string; path?: string }
+  | { source: 'git'; url: string; ref?: string; path?: string }
+  | { source: 'url'; url: string; headers?: Record<string, string> }
+  | { source: 'npm'; package: string }
+  | { source: 'file'; path: string }
+  | { source: 'directory'; path: string };
+
+export interface HookConfig {
+  matcher?: string;
+  hooks: HookCommand[];
+}
+
+export interface HookCommand {
+  type: 'command';
+  command: string;
+  timeout?: number;
 }

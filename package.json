@@ -36,8 +36,8 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run build",
     "docs": "bun src/cli/docs.ts",
-    "docs:fetch": "bun src/cli/docs.ts fetch",
     "docs:check": "bun src/cli/docs.ts check",
+    "docs:fetch": "bun src/cli/docs.ts fetch",
     "docs:status": "bun src/cli/docs.ts status"
   },
   "devDependencies": {
