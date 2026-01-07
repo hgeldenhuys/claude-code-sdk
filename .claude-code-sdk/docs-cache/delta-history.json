@@ -343,6 +343,153 @@
         "summary": "+1/-1 lines"
       },
       "reviewed": true
+    },
+    {
+      "id": "delta-1767734546705-1jx9ai0",
+      "url": "https://code.claude.com/docs/en/hooks.md",
+      "title": "Hooks reference",
+      "detectedAt": "2026-01-06T21:22:26.702Z",
+      "previousVersion": 2,
+      "newVersion": 3,
+      "previousHash": "6b934f30c983a501ef64489005e5c866d1bd5dd95cc75e14d79699094bc80f61",
+      "newHash": "ceb78acd69b2d792918479dfd072cd94e288db3a98a0389fac5e37a886426cef",
+      "diffSummary": {
+        "linesAdded": 1,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+1/-1 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1767734547413-iqsbz9t",
+      "url": "https://code.claude.com/docs/en/sub-agents.md",
+      "title": "Subagents",
+      "detectedAt": "2026-01-06T21:22:27.412Z",
+      "previousVersion": 2,
+      "newVersion": 3,
+      "previousHash": "e7caa21fb064d2bd5c655b2bd10a074e08003ac08b50c17bf8d84366a11e6554",
+      "newHash": "e09eace86a27625862884c3cc6a057c0f1b8d64ec1c4201aefdf62262d726054",
+      "diffSummary": {
+        "linesAdded": 1,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+1/-1 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1767734550538-bvddq35",
+      "url": "https://code.claude.com/docs/en/interactive-mode.md",
+      "title": "Interactive mode",
+      "detectedAt": "2026-01-06T21:22:30.537Z",
+      "previousVersion": 1,
+      "newVersion": 2,
+      "previousHash": "41903eba6f86065149723ac3cca642874564f79c53f2bbf7c8bbfa40c3ec1a29",
+      "newHash": "1dd8b7df024968fd9d7afe041349522898fdb2d96b650a515c46c0b3a6c037ec",
+      "diffSummary": {
+        "linesAdded": 5,
+        "linesRemoved": 6,
+        "linesModified": 5,
+        "changedSections": [],
+        "summary": "+5/-6 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1767734551936-6s02jgo",
+      "url": "https://code.claude.com/docs/en/troubleshooting.md",
+      "title": "Troubleshooting",
+      "detectedAt": "2026-01-06T21:22:31.936Z",
+      "previousVersion": 2,
+      "newVersion": 3,
+      "previousHash": "ce6a9638581ae4efba3cf10bc38ba1dd9bfb640227528dc2349cd11971ef2d87",
+      "newHash": "46549e4ceca1fc625679f4b10444d2772482cac1987fa19279e52c98686c452b",
+      "diffSummary": {
+        "linesAdded": 23,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [
+          "### Windows: \"Claude Code on Windows requires git-bash\"",
+          "### Windows: \"installMethod is native, but claude command not found\""
+        ],
+        "summary": "+23/-1 lines, 2 new sections"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1767734552331-a9aobdu",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview",
+      "title": "Agent Skills",
+      "detectedAt": "2026-01-06T21:22:32.329Z",
+      "previousVersion": 1,
+      "newVersion": 2,
+      "previousHash": "44677f8b8d5c44fa6b0a395603d4c109b08eb6dcd380936da1e77bce9f981104",
+      "newHash": "ca4d42d6792bb8c02a0bd3cd6edc18e54d2978cf3f5fe5768d5564be2bccc03f",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 2,
+        "linesModified": 2,
+        "changedSections": [],
+        "summary": "+2/-2 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1767734552753-j1jrmak",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/agent-skills/quickstart",
+      "title": "Get started with Agent Skills in the API",
+      "detectedAt": "2026-01-06T21:22:32.752Z",
+      "previousVersion": 1,
+      "newVersion": 2,
+      "previousHash": "7de0ed8d46d33ff6f14320de1c4d2ca9a6973efc24087af9daeb692852396e41",
+      "newHash": "28e54e937f6cb2ac3af754dd2861fdbbc1e79d82b7a9e7d943a435bd8a94a887",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 2,
+        "linesModified": 2,
+        "changedSections": [],
+        "summary": "+2/-2 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1767734552986-pk6ggd9",
+      "url": "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/claude-4-best-practices",
+      "title": "Prompting best practices",
+      "detectedAt": "2026-01-06T21:22:32.985Z",
+      "previousVersion": 1,
+      "newVersion": 2,
+      "previousHash": "1bd8b813e6da66a6cf6faa3862d69254699c11829fdb4ea843d6ec69575795cf",
+      "newHash": "5945216cb8f4dc746276ada5b7fbf2a61b180c3ff32abc0a7c786e5774d52857",
+      "diffSummary": {
+        "linesAdded": 1,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+1/-1 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1767734553460-e1lv4kg",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/claude-code/sdk-overview",
+      "title": "Untitled",
+      "detectedAt": "2026-01-06T21:22:33.459Z",
+      "previousVersion": 2,
+      "newVersion": 3,
+      "previousHash": "9702b2231a0fded8cc4773572943d11e214266001dcac424165e1f40b5f26323",
+      "newHash": "ed2da0bbc422bbe8c36288f7d831c49afb06b3edca16ad707d5efbc2669ebf6a",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 2,
+        "linesModified": 2,
+        "changedSections": [],
+        "summary": "+2/-2 lines"
+      },
+      "reviewed": true
     }
   ]
 }

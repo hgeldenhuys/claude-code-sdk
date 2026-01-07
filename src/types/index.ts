@@ -109,9 +109,9 @@ export interface SkillDefinition {
   description: string;
   triggers: string[];
   instructions: string;
-  allowedTools?: string[];  // Tools Claude can use without permission when skill is active
-  model?: string;           // Model to use when skill is active (e.g., 'claude-sonnet-4-20250514')
-  version?: string;         // Skill version for tracking
+  allowedTools?: string[]; // Tools Claude can use without permission when skill is active
+  model?: string; // Model to use when skill is active (e.g., 'claude-sonnet-4-20250514')
+  version?: string; // Skill version for tracking
   examples?: SkillExample[];
 }
 
@@ -135,11 +135,11 @@ export interface ClaudeCodeSettings {
   env?: Record<string, string>;
   hooks?: Record<string, HookConfig[]>;
   disableAllHooks?: boolean;
-  allowManagedHooksOnly?: boolean;  // Enterprise: only allow managed/SDK hooks
+  allowManagedHooksOnly?: boolean; // Enterprise: only allow managed/SDK hooks
   model?: string;
   enabledPlugins?: Record<string, boolean>;
   extraKnownMarketplaces?: Record<string, MarketplaceSource>;
-  strictKnownMarketplaces?: MarketplaceSourceSpec[];  // Enterprise: allowlist of marketplaces
+  strictKnownMarketplaces?: MarketplaceSourceSpec[]; // Enterprise: allowlist of marketplaces
   attribution?: AttributionSettings;
   sandbox?: SandboxSettings;
 }
