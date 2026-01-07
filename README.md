@@ -10,7 +10,64 @@ A TypeScript toolkit for extending Claude Code with documentation tracking, tran
 - **Change Tracker** - Monitor Claude Code releases and breaking changes
 - **Plugin Manager** - Load and manage skills, hooks, commands, and MCP servers
 
-## Installation
+## Installing Skills
+
+This repo is a **Claude Code plugin marketplace**. Install skills directly in Claude Code:
+
+### Method 1: Plugin Marketplace (Recommended)
+
+```bash
+# In Claude Code, add this repo as a marketplace
+/plugin marketplace add hgeldenhuys/claude-code-sdk
+
+# Then install any skill
+/plugin install claude-code-reference@claude-code-sdk
+/plugin install creating-hooks@claude-code-sdk
+/plugin install transcript-intelligence@claude-code-sdk
+/plugin install writing-skills@claude-code-sdk
+```
+
+### Method 2: Direct Copy
+
+```bash
+# Clone and copy skills you want
+git clone https://github.com/hgeldenhuys/claude-code-sdk.git
+cp -r claude-code-sdk/skills/creating-hooks ~/.claude/skills/
+
+# Or copy all skills
+cp -r claude-code-sdk/skills/* ~/.claude/skills/
+```
+
+### Method 3: npm Package + Symlink
+
+```bash
+# Install the package
+bun add claude-code-sdk
+
+# Symlink skills from node_modules
+ln -s node_modules/claude-code-sdk/skills/creating-hooks ~/.claude/skills/
+ln -s node_modules/claude-code-sdk/skills/transcript-intelligence ~/.claude/skills/
+```
+
+### Skill Locations
+
+| Location | Scope |
+|----------|-------|
+| `~/.claude/skills/` | Available in all your projects |
+| `.claude/skills/` | Project-specific (version controlled) |
+
+## Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `claude-code-reference` | Reference guide for Claude Code extensions - skills, hooks, commands, MCP, marketplaces |
+| `creating-hooks` | Complete guide for all 10 hook events with examples and troubleshooting |
+| `transcript-intelligence` | Deep memory search across session transcripts to recall past decisions |
+| `writing-skills` | Best practices for creating effective Claude Code skills |
+
+## SDK Installation
+
+For programmatic access to documentation tracking and transcript search:
 
 ```bash
 bun add claude-code-sdk
@@ -118,37 +175,6 @@ const skills = manager.getByType('skill');
 const hooks = manager.getByType('hook');
 ```
 
-## Skills Library
-
-Pre-built skills in `skills/` for Claude Code development:
-
-| Skill | Purpose |
-|-------|---------|
-| `claude-code-reference` | Authoritative reference for Claude Code extensions |
-| `creating-hooks` | Guide for implementing all 10 hook events |
-| `transcript-intelligence` | Deep memory search across sessions |
-| `writing-skills` | Best practices for creating skills |
-
-### Using Skills
-
-Copy a skill directory to your project's `.claude/skills/` or user's `~/.claude/skills/`:
-
-```bash
-cp -r skills/creating-hooks ~/.claude/skills/
-```
-
-Claude Code will automatically load and use the skill when relevant.
-
-## Plugin Types
-
-| Type | Description |
-|------|-------------|
-| `skill` | Custom skills with triggers and instructions |
-| `hook` | Event handlers (PreToolUse, PostToolUse, SessionStart, etc.) |
-| `command` | Custom slash commands |
-| `tool` | Additional tools for Claude Code |
-| `mcp-server` | MCP server integrations |
-
 ## CLI Commands
 
 ```bash
@@ -171,6 +197,15 @@ bun run docs search <query>  # Search docs
 ## Project Structure
 
 ```
+.claude-plugin/
+└── marketplace.json   # Plugin marketplace manifest
+
+skills/                # Distributable skills
+├── claude-code-reference/
+├── creating-hooks/
+├── transcript-intelligence/
+└── writing-skills/
+
 src/
 ├── index.ts           # Main SDK entry point
 ├── types/             # TypeScript interfaces
@@ -179,12 +214,6 @@ src/
 ├── plugins/           # Plugin management
 ├── docs/              # Documentation tracker
 └── transcripts/       # Transcript search module
-
-skills/                # Distributable skills
-├── claude-code-reference/
-├── creating-hooks/
-├── transcript-intelligence/
-└── writing-skills/
 
 tests/                 # Test suites (274 tests)
 ```

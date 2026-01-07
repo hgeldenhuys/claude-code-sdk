@@ -1,0 +1,34 @@
+{
+  "name": "claude-code-sdk",
+  "owner": {
+    "name": "Hennie Geldenhuys",
+    "email": "hgeldenhuys@gmail.com"
+  },
+  "description": "Skills and tools for extending Claude Code - hooks, transcript search, and best practices",
+  "plugins": [
+    {
+      "name": "claude-code-reference",
+      "source": "./skills/claude-code-reference",
+      "description": "Reference guide for Claude Code extensions. Covers skills, hooks, commands, MCP, and plugin marketplaces.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "creating-hooks",
+      "source": "./skills/creating-hooks",
+      "description": "Complete guide for implementing Claude Code hooks. All 10 events with examples and troubleshooting.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "transcript-intelligence",
+      "source": "./skills/transcript-intelligence",
+      "description": "Deep memory search across Claude Code session transcripts. Recall past decisions and solutions.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "writing-skills",
+      "source": "./skills/writing-skills",
+      "description": "Best practices for creating effective Claude Code skills with progressive disclosure.",
+      "version": "1.0.0"
+    }
+  ]
+}
