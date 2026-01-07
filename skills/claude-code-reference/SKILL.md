@@ -321,6 +321,87 @@ Need to extend Claude Code?
                              Hook  Reconsider need
 ```
 
+## Plugin Marketplaces
+
+Distribute plugins (skills, hooks, commands, agents, MCP servers) via marketplaces:
+
+### Creating a Marketplace
+
+```json
+// .claude-plugin/marketplace.json
+{
+  "name": "my-marketplace",
+  "owner": { "name": "Your Name" },
+  "plugins": [
+    {
+      "name": "my-skill",
+      "source": "./plugins/my-skill",
+      "description": "What it does"
+    }
+  ]
+}
+```
+
+### Plugin Sources
+
+| Type | Source Format |
+|------|---------------|
+| Relative path | `"./plugins/name"` |
+| GitHub | `{"source": "github", "repo": "owner/repo"}` |
+| Git URL | `{"source": "url", "url": "https://..."}` |
+
+### Installing from Marketplaces
+
+```bash
+# Add a marketplace
+/plugin marketplace add owner/repo
+
+# Install a plugin
+/plugin install plugin-name@marketplace-name
+
+# Update marketplace
+/plugin marketplace update
+```
+
+### Team Configuration
+
+```json
+// .claude/settings.json
+{
+  "extraKnownMarketplaces": {
+    "company-tools": {
+      "source": {"source": "github", "repo": "your-org/plugins"}
+    }
+  }
+}
+```
+
+See: https://code.claude.com/docs/en/plugin-marketplaces
+
+## Deep-Dive Skills
+
+For detailed implementation guidance, install these companion skills:
+
+| Skill | Purpose | Install |
+|-------|---------|---------|
+| `creating-hooks` | All 10 hook events with examples | `cp -r skills/creating-hooks ~/.claude/skills/` |
+| `transcript-intelligence` | Search past sessions | `cp -r skills/transcript-intelligence ~/.claude/skills/` |
+| `writing-skills` | Best practices for skill creation | `cp -r skills/writing-skills ~/.claude/skills/` |
+
+**From npm package:**
+```bash
+# If installed via: bun add claude-code-sdk
+ln -s node_modules/claude-code-sdk/skills/creating-hooks ~/.claude/skills/
+ln -s node_modules/claude-code-sdk/skills/transcript-intelligence ~/.claude/skills/
+ln -s node_modules/claude-code-sdk/skills/writing-skills ~/.claude/skills/
+```
+
+**From GitHub:**
+```bash
+git clone https://github.com/hgeldenhuys/claude-code-sdk /tmp/sdk
+cp -r /tmp/sdk/skills/* ~/.claude/skills/
+```
+
 ## Version Information
 
 This reference is based on Claude Code documentation as of January 2025. For the latest information:
@@ -329,3 +410,4 @@ This reference is based on Claude Code documentation as of January 2025. For the
 - Slash Commands: https://code.claude.com/docs/en/slash-commands
 - Hooks: https://code.claude.com/docs/en/hooks
 - MCP: https://code.claude.com/docs/en/mcp
+- Plugin Marketplaces: https://code.claude.com/docs/en/plugin-marketplaces

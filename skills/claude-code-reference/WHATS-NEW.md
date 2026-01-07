@@ -93,6 +93,15 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 | 2.0.0 | Dynamic Agents | Add subagents with `--agents` flag |
 | 1.0.64 | Agent Model Customization | Specify which model an agent should use |
 
+### Plugins & Marketplaces
+
+| Version | Feature | Description |
+|---------|---------|-------------|
+| 2.0.72 | Plugin Search | Filter by name, description, or marketplace in discover screen |
+| 2.0.70 | Plugin Marketplaces | Create and distribute plugin marketplaces via GitHub |
+| 2.0.65 | Plugin Discovery | `/plugin` menu for browsing and installing plugins |
+| 2.0.60 | Plugins Released | Full plugin system with commands, agents, hooks, MCP, LSP |
+
 ### Headless Mode
 
 | Version | Feature | Description |
