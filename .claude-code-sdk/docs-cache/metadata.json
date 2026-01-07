@@ -10,7 +10,7 @@
       "tags": [],
       "contentHash": "ceb78acd69b2d792918479dfd072cd94e288db3a98a0389fac5e37a886426cef",
       "firstCached": "2025-12-15T03:39:00.381Z",
-      "lastFetched": "2026-01-06T21:22:26.702Z",
+      "lastFetched": "2026-01-07T04:50:37.724Z",
       "lastChanged": "2026-01-06T21:22:26.702Z",
       "version": 3
     }
@@ -26,7 +26,7 @@
       "tags": [],
       "contentHash": "19e6d30899036fabcb1a04c936943b50fdfbacc18e27c6c841a369c867a28cd2",
       "firstCached": "2025-12-15T03:39:00.610Z",
-      "lastFetched": "2026-01-06T21:22:26.918Z",
+      "lastFetched": "2026-01-07T04:50:37.955Z",
       "lastChanged": "2025-12-15T03:39:00.610Z",
       "version": 1
     }
@@ -42,7 +42,7 @@
       "tags": [],
       "contentHash": "3b235f36f90f4caa5095bcef11ac7e07f6173f19ffff6f2d5b6aaf55bfe98305",
       "firstCached": "2025-12-15T03:39:00.847Z",
-      "lastFetched": "2026-01-06T21:22:27.157Z",
+      "lastFetched": "2026-01-07T04:50:38.180Z",
       "lastChanged": "2026-01-02T20:02:39.606Z",
       "version": 2
     }
@@ -58,7 +58,7 @@
       "tags": [],
       "contentHash": "e09eace86a27625862884c3cc6a057c0f1b8d64ec1c4201aefdf62262d726054",
       "firstCached": "2025-12-15T03:39:01.054Z",
-      "lastFetched": "2026-01-06T21:22:27.412Z",
+      "lastFetched": "2026-01-07T04:50:38.381Z",
       "lastChanged": "2026-01-06T21:22:27.412Z",
       "version": 3
     }
@@ -74,7 +74,7 @@
       "tags": [],
       "contentHash": "3f9f67dc213377a80a2c5048428ec7a469e67f69e1d6fb8e4ad5ab69f56a5072",
       "firstCached": "2025-12-15T03:39:01.421Z",
-      "lastFetched": "2026-01-06T21:22:27.662Z",
+      "lastFetched": "2026-01-07T04:50:38.594Z",
       "lastChanged": "2026-01-02T20:02:40.177Z",
       "version": 3
     }
@@ -90,7 +90,7 @@
       "tags": [],
       "contentHash": "d51bd482a097a329f6c9e4563d8d3d0fa65ea7a16d5de32d02ecb29bfe5b6425",
       "firstCached": "2025-12-15T03:39:01.643Z",
-      "lastFetched": "2026-01-06T21:22:27.986Z",
+      "lastFetched": "2026-01-07T04:50:38.805Z",
       "lastChanged": "2026-01-02T20:02:40.399Z",
       "version": 3
     }
@@ -106,7 +106,7 @@
       "tags": [],
       "contentHash": "3b3fd5b137d4bb74e004c205b98d0720fccf0e8269bc6ce8621fee6da3c85be1",
       "firstCached": "2025-12-15T03:39:01.850Z",
-      "lastFetched": "2026-01-06T21:22:28.269Z",
+      "lastFetched": "2026-01-07T04:50:39.225Z",
       "lastChanged": "2026-01-02T20:02:40.682Z",
       "version": 3
     }
@@ -120,11 +120,11 @@
       "description": "Learn how to connect Claude Code to your tools with the Model Context Protocol.",
       "category": "integration",
       "tags": [],
-      "contentHash": "96d84afcc804eef1143aa098db83e2345f968c783b4f810a4c457a503c4a3b59",
+      "contentHash": "51bf8a72439b69e35c47aef9805537cc80c815abb58ef15ce016608d8b567eb8",
       "firstCached": "2025-12-15T03:39:02.061Z",
-      "lastFetched": "2026-01-06T21:22:28.547Z",
-      "lastChanged": "2026-01-02T20:02:40.880Z",
-      "version": 2
+      "lastFetched": "2026-01-07T04:50:39.454Z",
+      "lastChanged": "2026-01-07T04:50:39.454Z",
+      "version": 3
     }
   ],
   [
@@ -136,11 +136,11 @@
       "description": "Configure Claude Code with global and project-level settings, and environment variables.",
       "category": "configuration",
       "tags": [],
-      "contentHash": "a53ec5648f0dddd0c10ea99b1027b0bc752b24d7fddf4253215c29501eefb58e",
+      "contentHash": "204475489075f908a3fb88bd8f458fa788532897a955457973bf8ab2a5ad50f2",
       "firstCached": "2025-12-15T03:39:02.444Z",
-      "lastFetched": "2026-01-06T21:22:28.762Z",
-      "lastChanged": "2026-01-02T20:02:41.100Z",
-      "version": 4
+      "lastFetched": "2026-01-07T04:50:39.667Z",
+      "lastChanged": "2026-01-07T04:50:39.667Z",
+      "version": 5
     }
   ],
   [
@@ -154,7 +154,7 @@
       "tags": [],
       "contentHash": "bfb0737ddfd8af370ca9574d85d10c84cf4091092b343af03cc3e218d09baa22",
       "firstCached": "2025-12-15T03:39:02.651Z",
-      "lastFetched": "2026-01-06T21:22:28.967Z",
+      "lastFetched": "2026-01-07T04:50:39.874Z",
       "lastChanged": "2025-12-15T03:39:02.651Z",
       "version": 1
     }
@@ -170,7 +170,7 @@
       "tags": [],
       "contentHash": "ba19a4a1cad941f0606c5d7094c8eeeaee054f67072dc715e086e4d3d77ea8b7",
       "firstCached": "2025-12-15T03:39:02.871Z",
-      "lastFetched": "2026-01-06T21:22:29.218Z",
+      "lastFetched": "2026-01-07T04:50:40.083Z",
       "lastChanged": "2025-12-15T03:39:02.871Z",
       "version": 1
     }
@@ -186,7 +186,7 @@
       "tags": [],
       "contentHash": "dd803385fd46710016a9448f44c3e5940e1b0f7a3fee516b4e9653ae1310f4b9",
       "firstCached": "2025-12-15T03:39:03.061Z",
-      "lastFetched": "2026-01-06T21:22:29.471Z",
+      "lastFetched": "2026-01-07T04:50:40.287Z",
       "lastChanged": "2025-12-15T03:39:03.061Z",
       "version": 1
     }
@@ -202,7 +202,7 @@
       "tags": [],
       "contentHash": "6457f8e1cffbbcb0a09d1623c044c5db9a442ed23f7ac64e06844bea0f149eca",
       "firstCached": "2025-12-15T03:39:03.280Z",
-      "lastFetched": "2026-01-06T21:22:29.669Z",
+      "lastFetched": "2026-01-07T04:50:40.490Z",
       "lastChanged": "2025-12-15T03:39:03.280Z",
       "version": 1
     }
@@ -218,7 +218,7 @@
       "tags": [],
       "contentHash": "4e2e31e7321b1299c645592026beb17a7441458b9fc32b66a2d811830ba50658",
       "firstCached": "2025-12-15T03:39:03.482Z",
-      "lastFetched": "2026-01-06T21:22:29.915Z",
+      "lastFetched": "2026-01-07T04:50:40.687Z",
       "lastChanged": "2025-12-16T15:40:39.884Z",
       "version": 2
     }
@@ -234,7 +234,7 @@
       "tags": [],
       "contentHash": "4b3ab44ce77627dc513601c05897cd56fb1db7107bc6f5c0d5665f608380c83c",
       "firstCached": "2025-12-15T03:39:03.693Z",
-      "lastFetched": "2026-01-06T21:22:30.130Z",
+      "lastFetched": "2026-01-07T04:50:40.887Z",
       "lastChanged": "2026-01-02T20:02:42.408Z",
       "version": 3
     }
@@ -250,7 +250,7 @@
       "tags": [],
       "contentHash": "a45c95d290277d1f80b1f9fb120e645194023b0ce4662ef331ccf59d7cbd2c0f",
       "firstCached": "2025-12-15T03:39:03.892Z",
-      "lastFetched": "2026-01-06T21:22:30.335Z",
+      "lastFetched": "2026-01-07T04:50:41.101Z",
       "lastChanged": "2026-01-02T20:02:42.647Z",
       "version": 2
     }
@@ -266,7 +266,7 @@
       "tags": [],
       "contentHash": "1dd8b7df024968fd9d7afe041349522898fdb2d96b650a515c46c0b3a6c037ec",
       "firstCached": "2025-12-15T03:39:04.121Z",
-      "lastFetched": "2026-01-06T21:22:30.537Z",
+      "lastFetched": "2026-01-07T04:50:41.292Z",
       "lastChanged": "2026-01-06T21:22:30.537Z",
       "version": 2
     }
@@ -282,7 +282,7 @@
       "tags": [],
       "contentHash": "3412893eca2d799ac0f53886b7672e996a9e86126d353bfdbbc9240e639c957b",
       "firstCached": "2025-12-15T03:39:04.325Z",
-      "lastFetched": "2026-01-06T21:22:30.755Z",
+      "lastFetched": "2026-01-07T04:50:41.489Z",
       "lastChanged": "2025-12-15T03:39:04.325Z",
       "version": 1
     }
@@ -298,7 +298,7 @@
       "tags": [],
       "contentHash": "9f295509998c49b26818d3f77fc7899f75a2fbfc5f56867f6ff60d46c4a4d7e8",
       "firstCached": "2025-12-15T03:39:04.542Z",
-      "lastFetched": "2026-01-06T21:22:31.011Z",
+      "lastFetched": "2026-01-07T04:50:41.697Z",
       "lastChanged": "2025-12-15T03:39:04.542Z",
       "version": 1
     }
@@ -314,7 +314,7 @@
       "tags": [],
       "contentHash": "b57f9a2687ef34c9156a873bda76416093af0a9faa70a44a0c862a50d6dadce1",
       "firstCached": "2025-12-15T03:39:04.754Z",
-      "lastFetched": "2026-01-06T21:22:31.226Z",
+      "lastFetched": "2026-01-07T04:50:41.909Z",
       "lastChanged": "2026-01-02T20:02:43.599Z",
       "version": 2
     }
@@ -330,7 +330,7 @@
       "tags": [],
       "contentHash": "9024e9f000eae32010edb41e58215d558229c84adfeba1d8e5dd724389043758",
       "firstCached": "2025-12-15T03:39:04.972Z",
-      "lastFetched": "2026-01-06T21:22:31.471Z",
+      "lastFetched": "2026-01-07T04:50:42.128Z",
       "lastChanged": "2025-12-15T03:39:04.972Z",
       "version": 1
     }
@@ -346,7 +346,7 @@
       "tags": [],
       "contentHash": "c8b3fb2a5182c25d58eebca099671bf53976c9889419056df53c63ee55f27180",
       "firstCached": "2025-12-15T03:39:05.234Z",
-      "lastFetched": "2026-01-06T21:22:31.716Z",
+      "lastFetched": "2026-01-07T04:50:42.350Z",
       "lastChanged": "2025-12-15T03:39:05.234Z",
       "version": 1
     }
@@ -360,11 +360,11 @@
       "description": "Discover solutions to common issues with Claude Code installation and usage.",
       "category": "troubleshooting",
       "tags": [],
-      "contentHash": "46549e4ceca1fc625679f4b10444d2772482cac1987fa19279e52c98686c452b",
+      "contentHash": "80f7d381a7060a6ab711fece3369d4e3c2c704cc4910f608169cc05a4db8d82c",
       "firstCached": "2025-12-15T03:39:05.475Z",
-      "lastFetched": "2026-01-06T21:22:31.936Z",
-      "lastChanged": "2026-01-06T21:22:31.936Z",
-      "version": 3
+      "lastFetched": "2026-01-07T04:50:42.571Z",
+      "lastChanged": "2026-01-07T04:50:42.571Z",
+      "version": 4
     }
   ],
   [
@@ -378,7 +378,7 @@
       "tags": [],
       "contentHash": "d6b4f58c8309793bd5d1a5301d25cd7efdd877ed334a2def485a6d2d4cca678d",
       "firstCached": "2025-12-16T15:40:41.903Z",
-      "lastFetched": "2026-01-06T21:22:32.070Z",
+      "lastFetched": "2026-01-07T04:50:42.706Z",
       "lastChanged": "2026-01-02T20:02:44.353Z",
       "version": 2
     }
@@ -394,7 +394,7 @@
       "tags": [],
       "contentHash": "ca4d42d6792bb8c02a0bd3cd6edc18e54d2978cf3f5fe5768d5564be2bccc03f",
       "firstCached": "2026-01-02T20:02:44.679Z",
-      "lastFetched": "2026-01-06T21:22:32.329Z",
+      "lastFetched": "2026-01-07T04:50:43.033Z",
       "lastChanged": "2026-01-06T21:22:32.329Z",
       "version": 2
     }
@@ -410,7 +410,7 @@
       "tags": [],
       "contentHash": "ebcc593fba18290ddce3ff3c856457929580538c4929047dff2a7a71b972e9dd",
       "firstCached": "2026-01-02T20:02:44.890Z",
-      "lastFetched": "2026-01-06T21:22:32.545Z",
+      "lastFetched": "2026-01-07T04:50:43.227Z",
       "lastChanged": "2026-01-02T20:02:44.890Z",
       "version": 1
     }
@@ -426,7 +426,7 @@
       "tags": [],
       "contentHash": "28e54e937f6cb2ac3af754dd2861fdbbc1e79d82b7a9e7d943a435bd8a94a887",
       "firstCached": "2026-01-02T20:02:45.092Z",
-      "lastFetched": "2026-01-06T21:22:32.752Z",
+      "lastFetched": "2026-01-07T04:50:43.442Z",
       "lastChanged": "2026-01-06T21:22:32.752Z",
       "version": 2
     }
@@ -442,7 +442,7 @@
       "tags": [],
       "contentHash": "5945216cb8f4dc746276ada5b7fbf2a61b180c3ff32abc0a7c786e5774d52857",
       "firstCached": "2026-01-02T20:02:45.297Z",
-      "lastFetched": "2026-01-06T21:22:32.985Z",
+      "lastFetched": "2026-01-07T04:50:43.722Z",
       "lastChanged": "2026-01-06T21:22:32.985Z",
       "version": 2
     }
@@ -456,11 +456,27 @@
       "description": "",
       "category": "development",
       "tags": [],
-      "contentHash": "ed2da0bbc422bbe8c36288f7d831c49afb06b3edca16ad707d5efbc2669ebf6a",
+      "contentHash": "49ab254993e9871904b2c2b53eae80407b9929de47f174df2f75fbf004fa3790",
       "firstCached": "2026-01-02T20:02:45.630Z",
-      "lastFetched": "2026-01-06T21:22:33.459Z",
-      "lastChanged": "2026-01-06T21:22:33.459Z",
-      "version": 3
+      "lastFetched": "2026-01-07T04:50:44.124Z",
+      "lastChanged": "2026-01-07T04:50:44.124Z",
+      "version": 4
+    }
+  ],
+  [
+    "https://code.claude.com/docs/en/plugin-marketplaces.md",
+    {
+      "url": "https://code.claude.com/docs/en/plugin-marketplaces.md",
+      "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_plugin_marketplaces_md.md",
+      "title": "Create and distribute a plugin marketplace",
+      "description": "Build and host plugin marketplaces to distribute Claude Code extensions across teams and communities.",
+      "category": "development",
+      "tags": [],
+      "contentHash": "ca89eb7f6c055aa0ada35043f394e363012b93428461e41ae06342884c0dd4ac",
+      "firstCached": "2026-01-07T04:50:39.009Z",
+      "lastFetched": "2026-01-07T04:50:39.009Z",
+      "lastChanged": "2026-01-07T04:50:39.009Z",
+      "version": 1
     }
   ]
 ]

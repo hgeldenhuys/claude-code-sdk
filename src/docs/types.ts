@@ -265,6 +265,13 @@ export const CLAUDE_CODE_DOCS: DocSource[] = [
     priority: 9,
   },
   {
+    id: 'plugin-marketplaces',
+    url: 'https://code.claude.com/docs/en/plugin-marketplaces.md',
+    category: 'development',
+    tags: ['plugins', 'marketplace', 'distribution', 'hosting'],
+    priority: 9,
+  },
+  {
     id: 'headless',
     url: 'https://code.claude.com/docs/en/headless.md',
     category: 'development',
