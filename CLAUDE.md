@@ -49,6 +49,12 @@ src/
 ├── cli/
 │   └── docs.ts        # CLI for documentation management
 └── utils/index.ts     # Shared utilities (version comparison, file ops)
+
+skills/                # Distributable skills for Claude Code development
+└── writing-skills/    # Guide for creating effective skills
+    ├── SKILL.md       # Main skill file
+    ├── TEMPLATES.md   # Starter templates
+    └── EXAMPLES.md    # Real-world examples
 ```
 
 ### Core Classes
@@ -86,13 +92,14 @@ Each plugin has a manifest with: id, name, version, description, author, type, e
 
 ## Skill Development
 
-This project follows a marketplace-first approach to skills. All skills are developed in `.claude/skills/` for distribution via Claude Code plugins.
+This SDK provides reusable skills in `skills/` for distribution. These skills help developers build Claude Code extensions.
 
 ### Skill Locations
 
 | Location | Scope | Use Case |
 |----------|-------|----------|
-| `.claude/skills/` | Project | Marketplace distribution, team workflows |
+| `skills/` | SDK Distribution | Reusable skills for plugin development |
+| `.claude/skills/` | Project | Internal project workflows |
 | `~/.claude/skills/` | Personal | Individual workflows, experiments |
 
 ### Versioning Convention
@@ -116,13 +123,16 @@ This project follows a marketplace-first approach to skills. All skills are deve
 
 4. **Skills can be sharded**: Split complex skills into subskills
 
-### Project Skills
+### SDK Skills
 
 | Skill | Purpose |
 |-------|---------|
-| `writing-skills` | Guide for creating effective skills |
-| `docs-tracker` | Track Claude Code documentation changes |
-| `managing-agent-lifecycles` | Agent lifecycle management patterns |
+| `writing-skills` | Guide for creating effective Claude Code skills |
+
+Planned skills:
+- `creating-hooks` - Guide for implementing Claude Code hooks
+- `creating-slash-commands` - Guide for custom slash commands
+- `creating-mcp-servers` - Guide for MCP server development
 
 ### Documentation Sources
 
