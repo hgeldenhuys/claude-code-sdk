@@ -73,195 +73,35 @@ ln -s node_modules/claude-code-sdk/skills/transcript-intelligence ~/.claude/skil
 
 ## Available Skills
 
-### [claude-code-reference](skills/claude-code-reference/SKILL.md)
-Reference guide for Claude Code extensions - skills, hooks, commands, MCP, and plugin marketplaces.
+### Extension Development Skills
 
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/claude-code-reference/SKILL.md) | Quick reference, decision flowchart, common patterns |
-| [CONCEPTS.md](skills/claude-code-reference/CONCEPTS.md) | Core concepts and architecture |
-| [HEADLESS.md](skills/claude-code-reference/HEADLESS.md) | Headless mode and SDK usage |
-| [SUBAGENTS.md](skills/claude-code-reference/SUBAGENTS.md) | Sub-agent implementation |
-| [WHATS-NEW.md](skills/claude-code-reference/WHATS-NEW.md) | Version history and new features (2.1.0) |
+Skills for building Claude Code extensions (hooks, MCP servers, plugins, etc.):
 
----
+| Skill | Description | Files |
+|-------|-------------|-------|
+| [claude-code-reference](skills/claude-code-reference/SKILL.md) | Reference guide for Claude Code extensions | [SKILL](skills/claude-code-reference/SKILL.md) ยท [CONCEPTS](skills/claude-code-reference/CONCEPTS.md) ยท [HEADLESS](skills/claude-code-reference/HEADLESS.md) ยท [SUBAGENTS](skills/claude-code-reference/SUBAGENTS.md) ยท [WHATS-NEW](skills/claude-code-reference/WHATS-NEW.md) |
+| [creating-hooks](skills/creating-hooks/SKILL.md) | All 10 hook events with examples | [SKILL](skills/creating-hooks/SKILL.md) ยท [EVENTS](skills/creating-hooks/EVENTS.md) ยท [EXAMPLES](skills/creating-hooks/EXAMPLES.md) ยท [TROUBLESHOOTING](skills/creating-hooks/TROUBLESHOOTING.md) |
+| [creating-mcp-servers](skills/creating-mcp-servers/SKILL.md) | MCP server development and integration | [SKILL](skills/creating-mcp-servers/SKILL.md) ยท [TRANSPORTS](skills/creating-mcp-servers/TRANSPORTS.md) ยท [EXAMPLES](skills/creating-mcp-servers/EXAMPLES.md) ยท [TROUBLESHOOTING](skills/creating-mcp-servers/TROUBLESHOOTING.md) |
+| [creating-plugins](skills/creating-plugins/SKILL.md) | Full plugin bundling and distribution | [SKILL](skills/creating-plugins/SKILL.md) ยท [MANIFEST](skills/creating-plugins/MANIFEST.md) ยท [COMPONENTS](skills/creating-plugins/COMPONENTS.md) ยท [DISTRIBUTION](skills/creating-plugins/DISTRIBUTION.md) |
+| [creating-subagents](skills/creating-subagents/SKILL.md) | Custom Task tool agents | [SKILL](skills/creating-subagents/SKILL.md) ยท [DEFINITION](skills/creating-subagents/DEFINITION.md) ยท [EXAMPLES](skills/creating-subagents/EXAMPLES.md) ยท [PATTERNS](skills/creating-subagents/PATTERNS.md) |
+| [custom-slash-commands](skills/custom-slash-commands/SKILL.md) | Create custom slash commands | [SKILL](skills/custom-slash-commands/SKILL.md) ยท [EXAMPLES](skills/custom-slash-commands/EXAMPLES.md) ยท [TROUBLESHOOTING](skills/custom-slash-commands/TROUBLESHOOTING.md) |
+| [headless-mode](skills/headless-mode/SKILL.md) | CLI flags and SDKs for automation | [SKILL](skills/headless-mode/SKILL.md) ยท [CLI-FLAGS](skills/headless-mode/CLI-FLAGS.md) ยท [SDK](skills/headless-mode/SDK.md) ยท [EXAMPLES](skills/headless-mode/EXAMPLES.md) |
+| [transcript-intelligence](skills/transcript-intelligence/SKILL.md) | Search session transcripts | [SKILL](skills/transcript-intelligence/SKILL.md) ยท [TYPES](skills/transcript-intelligence/TYPES.md) ยท [SEARCH](skills/transcript-intelligence/SEARCH.md) |
+| [writing-skills](skills/writing-skills/SKILL.md) | Create effective skills | [SKILL](skills/writing-skills/SKILL.md) ยท [TEMPLATES](skills/writing-skills/TEMPLATES.md) ยท [EXAMPLES](skills/writing-skills/EXAMPLES.md) |
 
-### [creating-hooks](skills/creating-hooks/SKILL.md)
-Complete guide for implementing all 10 Claude Code hook events with examples and troubleshooting.
+### User-Focused Skills
 
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/creating-hooks/SKILL.md) | Quick reference tables, decision guide, common patterns |
-| [EVENTS.md](skills/creating-hooks/EVENTS.md) | All 10 hook events with input/output schemas |
-| [EXAMPLES.md](skills/creating-hooks/EXAMPLES.md) | 8 copy-paste ready examples |
-| [TROUBLESHOOTING.md](skills/creating-hooks/TROUBLESHOOTING.md) | Debugging guide with symptom-cause-solution |
+Skills for everyday Claude Code usage:
 
----
-
-### [creating-mcp-servers](skills/creating-mcp-servers/SKILL.md)
-Guide for creating and integrating MCP (Model Context Protocol) servers with Claude Code. Covers transports, OAuth, server development, and troubleshooting.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/creating-mcp-servers/SKILL.md) | Quick reference, adding servers, configuration scopes |
-| [TRANSPORTS.md](skills/creating-mcp-servers/TRANSPORTS.md) | HTTP, SSE, stdio transport details |
-| [EXAMPLES.md](skills/creating-mcp-servers/EXAMPLES.md) | 6 complete MCP server implementations |
-| [TROUBLESHOOTING.md](skills/creating-mcp-servers/TROUBLESHOOTING.md) | Connection issues, OAuth, debugging |
-
----
-
-### [transcript-intelligence](skills/transcript-intelligence/SKILL.md)
-Deep memory search across Claude Code session transcripts to recall past decisions and solutions.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/transcript-intelligence/SKILL.md) | Search patterns, use cases, workflow |
-| [TYPES.md](skills/transcript-intelligence/TYPES.md) | JSONL format documentation, all message types |
-| [SEARCH.md](skills/transcript-intelligence/SEARCH.md) | Advanced search patterns and recipes |
-
----
-
-### [writing-skills](skills/writing-skills/SKILL.md)
-Best practices for creating effective Claude Code skills with progressive disclosure.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/writing-skills/SKILL.md) | Skill structure, naming, best practices |
-| [TEMPLATES.md](skills/writing-skills/TEMPLATES.md) | Starter templates for different skill types |
-| [EXAMPLES.md](skills/writing-skills/EXAMPLES.md) | Real-world skill examples |
-
----
-
-### [custom-slash-commands](skills/custom-slash-commands/SKILL.md)
-Guide for creating custom Claude Code slash commands - shortcuts for frequently-used prompts.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/custom-slash-commands/SKILL.md) | Frontmatter options, patterns, workflow |
-| [EXAMPLES.md](skills/custom-slash-commands/EXAMPLES.md) | 12 copy-paste ready command examples |
-| [TROUBLESHOOTING.md](skills/custom-slash-commands/TROUBLESHOOTING.md) | Common issues and solutions |
-
----
-
-### [creating-plugins](skills/creating-plugins/SKILL.md)
-Guide for creating full Claude Code plugins that bundle commands, agents, hooks, MCP, and LSP servers.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/creating-plugins/SKILL.md) | Plugin structure, manifest basics, distribution |
-| [MANIFEST.md](skills/creating-plugins/MANIFEST.md) | Complete manifest.json schema |
-| [COMPONENTS.md](skills/creating-plugins/COMPONENTS.md) | Commands, agents, hooks, MCP, LSP components |
-| [DISTRIBUTION.md](skills/creating-plugins/DISTRIBUTION.md) | Marketplace publishing, team distribution |
-
----
-
-### [creating-subagents](skills/creating-subagents/SKILL.md)
-Guide for creating custom Claude Code subagents (Task tool agents) for specialized workflows.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/creating-subagents/SKILL.md) | Agent basics, frontmatter, when to use |
-| [DEFINITION.md](skills/creating-subagents/DEFINITION.md) | Complete agent definition reference |
-| [EXAMPLES.md](skills/creating-subagents/EXAMPLES.md) | 8 production-ready agent examples |
-| [PATTERNS.md](skills/creating-subagents/PATTERNS.md) | Best practices, composition, anti-patterns |
-
----
-
-### [headless-mode](skills/headless-mode/SKILL.md)
-Guide for using Claude Code programmatically via CLI flags and SDKs for automation and CI/CD.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/headless-mode/SKILL.md) | Overview, essential flags, output formats |
-| [CLI-FLAGS.md](skills/headless-mode/CLI-FLAGS.md) | Complete CLI flag reference |
-| [SDK.md](skills/headless-mode/SDK.md) | TypeScript and Python SDK usage |
-| [EXAMPLES.md](skills/headless-mode/EXAMPLES.md) | CI/CD, automation, batch processing examples |
-
----
-
-## User-Focused Skills
-
-### [effective-prompting](skills/effective-prompting/SKILL.md)
-Master prompting techniques for Claude Code - @ mentions, thinking modes, task framing, and common patterns.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/effective-prompting/SKILL.md) | Quick reference, @ mentions, thinking keywords |
-| [PATTERNS.md](skills/effective-prompting/PATTERNS.md) | Task decomposition, code review, debugging patterns |
-| [EXAMPLES.md](skills/effective-prompting/EXAMPLES.md) | Real-world prompt examples |
-| [ANTI-PATTERNS.md](skills/effective-prompting/ANTI-PATTERNS.md) | Common mistakes to avoid |
-
----
-
-### [memory-management](skills/memory-management/SKILL.md)
-Configure CLAUDE.md, rules, and memory strategies for persistent project context across sessions.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/memory-management/SKILL.md) | Memory hierarchy, quick reference |
-| [CLAUDE-MD.md](skills/memory-management/CLAUDE-MD.md) | CLAUDE.md structure and examples |
-| [RULES.md](skills/memory-management/RULES.md) | .claude/rules/ documentation |
-| [STRATEGIES.md](skills/memory-management/STRATEGIES.md) | Advanced memory strategies |
-
----
-
-### [debugging-claude-code](skills/debugging-claude-code/SKILL.md)
-Troubleshoot Claude Code issues with diagnostics, common fixes, and recovery procedures.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/debugging-claude-code/SKILL.md) | Quick diagnostic commands |
-| [DIAGNOSTICS.md](skills/debugging-claude-code/DIAGNOSTICS.md) | claude doctor, --debug, ANTHROPIC_LOG |
-| [COMMON-ISSUES.md](skills/debugging-claude-code/COMMON-ISSUES.md) | Common problems and solutions |
-| [RECOVERY.md](skills/debugging-claude-code/RECOVERY.md) | Cache clearing, reinstall, recovery |
-
----
-
-### [project-setup](skills/project-setup/SKILL.md)
-Complete project setup guide - configuration, permissions, and migration checklists.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/project-setup/SKILL.md) | Quick setup checklist |
-| [CONFIGURATION.md](skills/project-setup/CONFIGURATION.md) | settings.json, .mcp.json structure |
-| [PERMISSIONS.md](skills/project-setup/PERMISSIONS.md) | Permission patterns |
-| [CHECKLIST.md](skills/project-setup/CHECKLIST.md) | Setup and migration checklists |
-
----
-
-### [git-workflows](skills/git-workflows/SKILL.md)
-Git best practices with Claude Code - commits, PRs, branch strategies, and safety rules.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/git-workflows/SKILL.md) | Git safety rules, commit workflow |
-| [COMMITS.md](skills/git-workflows/COMMITS.md) | Conventional commits, heredoc syntax |
-| [PULL-REQUESTS.md](skills/git-workflows/PULL-REQUESTS.md) | gh CLI, PR templates |
-| [PATTERNS.md](skills/git-workflows/PATTERNS.md) | Branch strategies, conflict resolution |
-
----
-
-### [context-optimization](skills/context-optimization/SKILL.md)
-Optimize context usage with /compact, /clear, and efficient workflow patterns.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/context-optimization/SKILL.md) | Context basics, /compact vs /clear |
-| [STRATEGIES.md](skills/context-optimization/STRATEGIES.md) | Optimization strategies |
-| [INDICATORS.md](skills/context-optimization/INDICATORS.md) | Context pressure indicators |
-| [WORKFLOWS.md](skills/context-optimization/WORKFLOWS.md) | Efficient workflow patterns |
-
----
-
-### [permission-patterns](skills/permission-patterns/SKILL.md)
-Permission modes and patterns - default, plan, trusted modes with security best practices.
-
-| File | Contents |
-|------|----------|
-| [SKILL.md](skills/permission-patterns/SKILL.md) | Permission mode overview |
-| [MODES.md](skills/permission-patterns/MODES.md) | default, plan, trusted modes |
-| [PATTERNS.md](skills/permission-patterns/PATTERNS.md) | Bash, file, MCP patterns |
-| [SECURITY.md](skills/permission-patterns/SECURITY.md) | Security best practices |
+| Skill | Description | Files |
+|-------|-------------|-------|
+| [effective-prompting](skills/effective-prompting/SKILL.md) | @ mentions, thinking modes, task framing | [SKILL](skills/effective-prompting/SKILL.md) ยท [PATTERNS](skills/effective-prompting/PATTERNS.md) ยท [EXAMPLES](skills/effective-prompting/EXAMPLES.md) ยท [ANTI-PATTERNS](skills/effective-prompting/ANTI-PATTERNS.md) |
+| [memory-management](skills/memory-management/SKILL.md) | CLAUDE.md, rules, memory strategies | [SKILL](skills/memory-management/SKILL.md) ยท [CLAUDE-MD](skills/memory-management/CLAUDE-MD.md) ยท [RULES](skills/memory-management/RULES.md) ยท [STRATEGIES](skills/memory-management/STRATEGIES.md) |
+| [debugging-claude-code](skills/debugging-claude-code/SKILL.md) | Diagnostics, common fixes, recovery | [SKILL](skills/debugging-claude-code/SKILL.md) ยท [DIAGNOSTICS](skills/debugging-claude-code/DIAGNOSTICS.md) ยท [COMMON-ISSUES](skills/debugging-claude-code/COMMON-ISSUES.md) ยท [RECOVERY](skills/debugging-claude-code/RECOVERY.md) |
+| [project-setup](skills/project-setup/SKILL.md) | Configuration, permissions, checklists | [SKILL](skills/project-setup/SKILL.md) ยท [CONFIGURATION](skills/project-setup/CONFIGURATION.md) ยท [PERMISSIONS](skills/project-setup/PERMISSIONS.md) ยท [CHECKLIST](skills/project-setup/CHECKLIST.md) |
+| [git-workflows](skills/git-workflows/SKILL.md) | Commits, PRs, branch strategies | [SKILL](skills/git-workflows/SKILL.md) ยท [COMMITS](skills/git-workflows/COMMITS.md) ยท [PULL-REQUESTS](skills/git-workflows/PULL-REQUESTS.md) ยท [PATTERNS](skills/git-workflows/PATTERNS.md) |
+| [context-optimization](skills/context-optimization/SKILL.md) | /compact, /clear, context management | [SKILL](skills/context-optimization/SKILL.md) ยท [STRATEGIES](skills/context-optimization/STRATEGIES.md) ยท [INDICATORS](skills/context-optimization/INDICATORS.md) ยท [WORKFLOWS](skills/context-optimization/WORKFLOWS.md) |
+| [permission-patterns](skills/permission-patterns/SKILL.md) | Default, plan, trusted modes | [SKILL](skills/permission-patterns/SKILL.md) ยท [MODES](skills/permission-patterns/MODES.md) ยท [PATTERNS](skills/permission-patterns/PATTERNS.md) ยท [SECURITY](skills/permission-patterns/SECURITY.md) |
 
 ## SDK Installation
 
