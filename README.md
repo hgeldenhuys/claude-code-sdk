@@ -39,6 +39,22 @@ This repo is a **Claude Code plugin marketplace**. Install skills directly in Cl
 /plugin install git-workflows@claude-code-sdk
 /plugin install context-optimization@claude-code-sdk
 /plugin install permission-patterns@claude-code-sdk
+
+# Advanced workflow skills
+/plugin install testing-patterns@claude-code-sdk
+/plugin install code-review@claude-code-sdk
+/plugin install refactoring-safely@claude-code-sdk
+/plugin install multi-file-editing@claude-code-sdk
+/plugin install cost-optimization@claude-code-sdk
+/plugin install ide-integration@claude-code-sdk
+/plugin install team-workflows@claude-code-sdk
+/plugin install documentation-generation@claude-code-sdk
+/plugin install database-workflows@claude-code-sdk
+/plugin install error-recovery@claude-code-sdk
+/plugin install migration-guides@claude-code-sdk
+/plugin install security-practices@claude-code-sdk
+/plugin install monorepo-patterns@claude-code-sdk
+/plugin install ci-cd-integration@claude-code-sdk
 ```
 
 ### Method 2: Direct Copy
@@ -102,6 +118,27 @@ Skills for everyday Claude Code usage:
 | [git-workflows](skills/git-workflows/SKILL.md) | Commits, PRs, branch strategies |
 | [context-optimization](skills/context-optimization/SKILL.md) | /compact, /clear, context management |
 | [permission-patterns](skills/permission-patterns/SKILL.md) | Default, plan, trusted modes |
+
+### Advanced Workflow Skills
+
+Skills for advanced development workflows:
+
+| Skill | Description |
+|-------|-------------|
+| [testing-patterns](skills/testing-patterns/SKILL.md) | TDD workflows, test generation, coverage strategies |
+| [code-review](skills/code-review/SKILL.md) | PR workflows, review prompts, checklists |
+| [refactoring-safely](skills/refactoring-safely/SKILL.md) | Large-scale changes, validation, rollback |
+| [multi-file-editing](skills/multi-file-editing/SKILL.md) | Coordinated changes across multiple files |
+| [cost-optimization](skills/cost-optimization/SKILL.md) | Token strategies, model selection, monitoring |
+| [ide-integration](skills/ide-integration/SKILL.md) | VS Code, JetBrains, terminal workflows |
+| [team-workflows](skills/team-workflows/SKILL.md) | Shared configs, standards, onboarding |
+| [documentation-generation](skills/documentation-generation/SKILL.md) | READMEs, API docs, inline comments |
+| [database-workflows](skills/database-workflows/SKILL.md) | Schema design, migrations, query optimization |
+| [error-recovery](skills/error-recovery/SKILL.md) | Error types, recovery patterns, prevention |
+| [migration-guides](skills/migration-guides/SKILL.md) | From other AI tools, version upgrades |
+| [security-practices](skills/security-practices/SKILL.md) | Vulnerability prevention, secrets, security review |
+| [monorepo-patterns](skills/monorepo-patterns/SKILL.md) | Navigation, cross-package changes, tooling |
+| [ci-cd-integration](skills/ci-cd-integration/SKILL.md) | GitHub Actions, automation, pipelines |
 
 ## SDK Installation
 
@@ -238,7 +275,7 @@ bun run docs search <query>  # Search docs
 .claude-plugin/
 └── marketplace.json   # Plugin marketplace manifest
 
-skills/                # Distributable skills (16 total)
+skills/                # Distributable skills (30 total)
 ├── claude-code-reference/   # Extension reference guide
 ├── creating-hooks/          # Hook implementation guide
 ├── creating-mcp-servers/    # MCP server development
@@ -254,7 +291,21 @@ skills/                # Distributable skills (16 total)
 ├── project-setup/           # Project configuration
 ├── git-workflows/           # Git best practices
 ├── context-optimization/    # Context management
-└── permission-patterns/     # Permission modes
+├── permission-patterns/     # Permission modes
+├── testing-patterns/        # TDD and test generation
+├── code-review/             # PR review workflows
+├── refactoring-safely/      # Safe refactoring
+├── multi-file-editing/      # Coordinated changes
+├── cost-optimization/       # API cost management
+├── ide-integration/         # VS Code, JetBrains
+├── team-workflows/          # Team collaboration
+├── documentation-generation/ # Doc generation
+├── database-workflows/      # Schema, migrations
+├── error-recovery/          # Error handling
+├── migration-guides/        # Tool migrations
+├── security-practices/      # Security patterns
+├── monorepo-patterns/       # Monorepo workflows
+└── ci-cd-integration/       # CI/CD pipelines
 
 src/
 ├── index.ts           # Main SDK entry point

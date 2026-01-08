@@ -101,6 +101,90 @@
       "source": "./skills/permission-patterns",
       "description": "Permission modes and patterns - default, plan, trusted modes with security best practices.",
       "version": "1.0.0"
+    },
+    {
+      "name": "testing-patterns",
+      "source": "./skills/testing-patterns",
+      "description": "TDD workflows, test generation, and coverage strategies with Claude Code.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "code-review",
+      "source": "./skills/code-review",
+      "description": "Get quality code reviews from Claude Code - PR workflows, review prompts, checklists.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "refactoring-safely",
+      "source": "./skills/refactoring-safely",
+      "description": "Safe refactoring strategies - large-scale changes, validation, rollback.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "multi-file-editing",
+      "source": "./skills/multi-file-editing",
+      "description": "Strategies for coordinated changes across multiple files.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "cost-optimization",
+      "source": "./skills/cost-optimization",
+      "description": "Manage API costs - token strategies, model selection, monitoring.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ide-integration",
+      "source": "./skills/ide-integration",
+      "description": "IDE integration tips for VS Code, JetBrains, and terminal workflows.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "team-workflows",
+      "source": "./skills/team-workflows",
+      "description": "Team collaboration patterns - shared configs, standards, onboarding.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "documentation-generation",
+      "source": "./skills/documentation-generation",
+      "description": "Generate quality documentation - READMEs, API docs, inline comments.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "database-workflows",
+      "source": "./skills/database-workflows",
+      "description": "Database workflows - schema design, migrations, query optimization.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "error-recovery",
+      "source": "./skills/error-recovery",
+      "description": "Handle Claude Code errors gracefully - error types, recovery, prevention.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "migration-guides",
+      "source": "./skills/migration-guides",
+      "description": "Migration guides - from other AI tools, version upgrades, config migration.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "security-practices",
+      "source": "./skills/security-practices",
+      "description": "Secure coding - vulnerability prevention, secrets management, security review.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "monorepo-patterns",
+      "source": "./skills/monorepo-patterns",
+      "description": "Monorepo workflows - navigation, cross-package changes, tooling.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ci-cd-integration",
+      "source": "./skills/ci-cd-integration",
+      "description": "CI/CD integration - GitHub Actions, automation, pipeline integration.",
+      "version": "1.0.0"
     }
   ]
 }
