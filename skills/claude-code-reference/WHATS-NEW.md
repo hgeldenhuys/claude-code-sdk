@@ -2,24 +2,68 @@
 
 This document tracks recent Claude Code features and changes. Updated when docs sync detects changes.
 
-**Current Version:** 2.0.74
-**Last Synced:** 2026-01-06
+**Current Version:** 2.1.0
+**Last Synced:** 2026-01-08
 
 ---
 
 ## Recent Highlights
 
-### Version 2.0.74 (Latest)
-- **LSP Tool** - Language Server Protocol support for code intelligence (go-to-definition, find references, hover documentation)
-- **Terminal Setup** - Added support for Kitty, Alacritty, Zed, and Warp terminals
-- **Theme Improvements** - Ctrl+T shortcut to toggle syntax highlighting in `/theme`
-- **Context Command** - Improved visualization with grouped skills/agents and sorted token counts
+### Version 2.1.0 (Latest) - Major Release
+
+**Skills & Commands:**
+- **Skill Hot-Reload** - Skills created or modified are immediately available without restart
+- **Forked Skill Context** - `context: fork` in frontmatter runs skills in sub-agent context
+- **Agent Field in Skills** - `agent` field to specify agent type for execution
+- **`/plan` Command** - Quick shortcut to enable plan mode
+- **Slash Command Anywhere** - Autocomplete works when `/` appears anywhere in input
+- **Skills in Slash Menu** - Skills from `/skills/` directories visible in slash command menu by default
+
+**Hooks:**
+- **Hooks in Agent Frontmatter** - Define PreToolUse, PostToolUse, Stop hooks scoped to agent lifecycle
+- **Hooks in Skill/Command Frontmatter** - Hooks can be defined directly in skills and commands
+- **`once: true` Config** - Hooks that run only once
+- **Plugin Prompt/Agent Hooks** - Prompt and agent hook types now supported from plugins
+
+**Permissions & Tools:**
+- **Wildcard Bash Permissions** - `Bash(npm *)`, `Bash(* install)`, `Bash(git * main)` patterns
+- **Disable Specific Agents** - `Task(AgentName)` syntax in permissions or `--disallowedTools`
+- **`--tools` Flag** - Restrict built-in tools in interactive mode
+
+**Terminal & UI:**
+- **Shift+Enter Works OOTB** - Works in iTerm2, WezTerm, Ghostty, Kitty without config
+- **Unified Ctrl+B Backgrounding** - Backgrounds all running foreground tasks (bash + agents)
+- **New Vim Motions** - `;`, `,`, `y`/`yy`/`Y`, `p`/`P`, text objects, `>>`, `<<`, `J`
+- **Real-time Thinking Display** - Thinking blocks shown in Ctrl+O transcript mode
+
+**MCP:**
+- **MCP `list_changed`** - Servers can dynamically update tools/prompts/resources without reconnection
+
+**Configuration:**
+- **Language Setting** - `language: "japanese"` for response language
+- **`IS_DEMO` Env Var** - Hide email/org from UI for streaming/recording
+- **`CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS`** - Override default file read token limit
+- **YAML Lists in Frontmatter** - `allowed-tools` supports YAML-style lists
+
+**Bug Fixes (Selected):**
+- Fixed security issue where sensitive data could be exposed in debug logs
+- Fixed files/skills not discovered when resuming sessions with `-c`/`--resume`
+- Fixed pasted content lost when replaying prompts from history
+- Fixed background tasks "git repository not found" for repos with dots in names
+- Fixed Write tool using hardcoded permissions instead of system umask
+
+### Version 2.0.75-2.0.76
+- Minor bug fixes and stability improvements
+
+### Version 2.0.74
+- **LSP Tool** - Language Server Protocol support for code intelligence
+- **Terminal Setup** - Support for Kitty, Alacritty, Zed, and Warp terminals
+- **Theme Improvements** - Ctrl+T shortcut to toggle syntax highlighting
 
 ### Version 2.0.72-2.0.73
-- **Claude in Chrome (Beta)** - Browser control via Chrome extension (https://claude.ai/chrome)
-- **Clickable Image Links** - `[Image #N]` links open attached images in default viewer
-- **Plugin Search** - Filter by name, description, or marketplace in discover screen
-- **Custom Session IDs** - Support for `--session-id` with `--resume`/`--continue` and `--fork-session`
+- **Claude in Chrome (Beta)** - Browser control via Chrome extension
+- **Clickable Image Links** - `[Image #N]` links open attached images
+- **Plugin Search** - Filter by name, description, or marketplace
 
 ### Version 2.0.60-2.0.64
 - **Background Agents** - Run agents in the background while you work
@@ -35,6 +79,13 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.0 | Skill Hot-Reload | Skills immediately available without restart |
+| 2.1.0 | Forked Skill Context | `context: fork` runs skills in sub-agent |
+| 2.1.0 | Agent Field | `agent` field specifies agent type for execution |
+| 2.1.0 | `/plan` Command | Quick shortcut to enable plan mode |
+| 2.1.0 | Slash Anywhere | Autocomplete works when `/` appears anywhere |
+| 2.1.0 | Skills in Menu | Skills visible in slash command menu by default |
+| 2.1.0 | `--tools` Flag | Restrict built-in tools in interactive mode |
 | 2.0.74 | LSP Tool | Code intelligence via Language Server Protocol |
 | 2.0.70 | Wildcard MCP Permissions | `mcp__server__*` syntax for bulk tool permissions |
 | 2.0.65 | Model Switching | Alt+P (Linux/Win) or Option+P (Mac) to switch models mid-prompt |
@@ -49,6 +100,10 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.0 | Hooks in Agent Frontmatter | PreToolUse, PostToolUse, Stop hooks scoped to agent |
+| 2.1.0 | Hooks in Skill/Command | Hooks defined directly in skills and commands |
+| 2.1.0 | `once: true` Config | Hooks that run only once |
+| 2.1.0 | Plugin Prompt/Agent Hooks | Prompt and agent hook types from plugins |
 | 2.0.54 | PermissionRequest Hooks | Process 'always allow' suggestions and apply updates |
 | 2.0.45 | PermissionRequest Hook | Auto-approve/deny tool permission requests |
 | 2.0.43 | SubagentStart Hook | Hook event when subagents start |
@@ -67,6 +122,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.0 | MCP `list_changed` | Servers dynamically update tools/prompts/resources |
 | 2.0.71 | MCP Fix | Fixed servers from `.mcp.json` not loading with `--dangerously-skip-permissions` |
 | 2.0.70 | Wildcard Permissions | `mcp__server__*` for allowing/denying all server tools |
 | 2.0.31 | SSE on Native | Enabled SSE MCP servers on native build |
@@ -118,6 +174,10 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.0 | Shift+Enter OOTB | Works in iTerm2, WezTerm, Ghostty, Kitty without config |
+| 2.1.0 | Ctrl+B Backgrounding | Unified backgrounding for bash + agents |
+| 2.1.0 | New Vim Motions | `;`, `,`, `y`, `p`, text objects, `>>`, `<<`, `J` |
+| 2.1.0 | Thinking Display | Real-time thinking blocks in Ctrl+O transcript |
 | 2.0.74 | Terminal Setup | Support for Kitty, Alacritty, Zed, Warp terminals |
 | 2.0.73 | Tab Badges | VSCode badges for permissions (blue) and completions (orange) |
 | 2.0.64 | Copy Button | VSCode copy-to-clipboard on code blocks |
@@ -134,6 +194,12 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.0 | Language Setting | `language: "japanese"` for response language |
+| 2.1.0 | `IS_DEMO` Env Var | Hide email/org from UI for streaming |
+| 2.1.0 | File Read Token Limit | `CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS` env var |
+| 2.1.0 | YAML Frontmatter Lists | `allowed-tools` supports YAML-style lists |
+| 2.1.0 | Wildcard Bash Perms | `Bash(npm *)`, `Bash(* install)` patterns |
+| 2.1.0 | Disable Agents | `Task(AgentName)` in permissions or `--disallowedTools` |
 | 2.0.68 | Enterprise Managed Settings | Enterprise-managed settings support |
 | 2.0.65 | fileSuggestion Setting | Custom `@` file search commands |
 | 2.0.65 | CLAUDE_CODE_SHELL | Environment variable for shell override |
