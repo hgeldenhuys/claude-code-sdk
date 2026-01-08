@@ -23,6 +23,11 @@ This repo is a **Claude Code plugin marketplace**. Install skills directly in Cl
 # Then install any skill
 /plugin install claude-code-reference@claude-code-sdk
 /plugin install creating-hooks@claude-code-sdk
+/plugin install creating-mcp-servers@claude-code-sdk
+/plugin install custom-slash-commands@claude-code-sdk
+/plugin install creating-plugins@claude-code-sdk
+/plugin install creating-subagents@claude-code-sdk
+/plugin install headless-mode@claude-code-sdk
 /plugin install transcript-intelligence@claude-code-sdk
 /plugin install writing-skills@claude-code-sdk
 ```
@@ -46,6 +51,7 @@ bun add claude-code-sdk
 
 # Symlink skills from node_modules
 ln -s node_modules/claude-code-sdk/skills/creating-hooks ~/.claude/skills/
+ln -s node_modules/claude-code-sdk/skills/creating-mcp-servers ~/.claude/skills/
 ln -s node_modules/claude-code-sdk/skills/transcript-intelligence ~/.claude/skills/
 ```
 
@@ -83,6 +89,18 @@ Complete guide for implementing all 10 Claude Code hook events with examples and
 
 ---
 
+### [creating-mcp-servers](skills/creating-mcp-servers/SKILL.md)
+Guide for creating and integrating MCP (Model Context Protocol) servers with Claude Code. Covers transports, OAuth, server development, and troubleshooting.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/creating-mcp-servers/SKILL.md) | Quick reference, adding servers, configuration scopes |
+| [TRANSPORTS.md](skills/creating-mcp-servers/TRANSPORTS.md) | HTTP, SSE, stdio transport details |
+| [EXAMPLES.md](skills/creating-mcp-servers/EXAMPLES.md) | 6 complete MCP server implementations |
+| [TROUBLESHOOTING.md](skills/creating-mcp-servers/TROUBLESHOOTING.md) | Connection issues, OAuth, debugging |
+
+---
+
 ### [transcript-intelligence](skills/transcript-intelligence/SKILL.md)
 Deep memory search across Claude Code session transcripts to recall past decisions and solutions.
 
@@ -102,6 +120,53 @@ Best practices for creating effective Claude Code skills with progressive disclo
 | [SKILL.md](skills/writing-skills/SKILL.md) | Skill structure, naming, best practices |
 | [TEMPLATES.md](skills/writing-skills/TEMPLATES.md) | Starter templates for different skill types |
 | [EXAMPLES.md](skills/writing-skills/EXAMPLES.md) | Real-world skill examples |
+
+---
+
+### [custom-slash-commands](skills/custom-slash-commands/SKILL.md)
+Guide for creating custom Claude Code slash commands - shortcuts for frequently-used prompts.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/custom-slash-commands/SKILL.md) | Frontmatter options, patterns, workflow |
+| [EXAMPLES.md](skills/custom-slash-commands/EXAMPLES.md) | 12 copy-paste ready command examples |
+| [TROUBLESHOOTING.md](skills/custom-slash-commands/TROUBLESHOOTING.md) | Common issues and solutions |
+
+---
+
+### [creating-plugins](skills/creating-plugins/SKILL.md)
+Guide for creating full Claude Code plugins that bundle commands, agents, hooks, MCP, and LSP servers.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/creating-plugins/SKILL.md) | Plugin structure, manifest basics, distribution |
+| [MANIFEST.md](skills/creating-plugins/MANIFEST.md) | Complete manifest.json schema |
+| [COMPONENTS.md](skills/creating-plugins/COMPONENTS.md) | Commands, agents, hooks, MCP, LSP components |
+| [DISTRIBUTION.md](skills/creating-plugins/DISTRIBUTION.md) | Marketplace publishing, team distribution |
+
+---
+
+### [creating-subagents](skills/creating-subagents/SKILL.md)
+Guide for creating custom Claude Code subagents (Task tool agents) for specialized workflows.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/creating-subagents/SKILL.md) | Agent basics, frontmatter, when to use |
+| [DEFINITION.md](skills/creating-subagents/DEFINITION.md) | Complete agent definition reference |
+| [EXAMPLES.md](skills/creating-subagents/EXAMPLES.md) | 8 production-ready agent examples |
+| [PATTERNS.md](skills/creating-subagents/PATTERNS.md) | Best practices, composition, anti-patterns |
+
+---
+
+### [headless-mode](skills/headless-mode/SKILL.md)
+Guide for using Claude Code programmatically via CLI flags and SDKs for automation and CI/CD.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/headless-mode/SKILL.md) | Overview, essential flags, output formats |
+| [CLI-FLAGS.md](skills/headless-mode/CLI-FLAGS.md) | Complete CLI flag reference |
+| [SDK.md](skills/headless-mode/SDK.md) | TypeScript and Python SDK usage |
+| [EXAMPLES.md](skills/headless-mode/EXAMPLES.md) | CI/CD, automation, batch processing examples |
 
 ## SDK Installation
 
@@ -238,9 +303,14 @@ bun run docs search <query>  # Search docs
 .claude-plugin/
 └── marketplace.json   # Plugin marketplace manifest
 
-skills/                # Distributable skills
+skills/                # Distributable skills (9 total)
 ├── claude-code-reference/
 ├── creating-hooks/
+├── creating-mcp-servers/
+├── creating-plugins/
+├── creating-subagents/
+├── custom-slash-commands/
+├── headless-mode/
 ├── transcript-intelligence/
 └── writing-skills/
 

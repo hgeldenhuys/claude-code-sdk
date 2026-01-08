@@ -4,7 +4,7 @@
     "name": "Hennie Geldenhuys",
     "email": "hgeldenhuys@gmail.com"
   },
-  "description": "Skills and tools for extending Claude Code - hooks, transcript search, and best practices",
+  "description": "Complete skills library for Claude Code development - hooks, MCP servers, plugins, subagents, commands, and more",
   "plugins": [
     {
       "name": "claude-code-reference",
@@ -16,6 +16,36 @@
       "name": "creating-hooks",
       "source": "./skills/creating-hooks",
       "description": "Complete guide for implementing Claude Code hooks. All 10 events with examples and troubleshooting.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "creating-mcp-servers",
+      "source": "./skills/creating-mcp-servers",
+      "description": "Guide for creating and integrating MCP servers. Covers transports, OAuth, and server development.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "custom-slash-commands",
+      "source": "./skills/custom-slash-commands",
+      "description": "Guide for creating custom slash commands. Frontmatter options, arguments, and patterns.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "creating-plugins",
+      "source": "./skills/creating-plugins",
+      "description": "Guide for creating full plugins bundling commands, agents, hooks, MCP, and LSP servers.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "creating-subagents",
+      "source": "./skills/creating-subagents",
+      "description": "Guide for creating custom subagents (Task tool agents) for specialized workflows.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "headless-mode",
+      "source": "./skills/headless-mode",
+      "description": "Guide for using Claude Code programmatically via CLI flags and SDKs for automation.",
       "version": "1.0.0"
     },
     {

@@ -127,12 +127,14 @@ This SDK provides reusable skills in `skills/` for distribution. These skills he
 
 | Skill | Purpose |
 |-------|---------|
+| `claude-code-reference` | Reference guide for Claude Code extensions |
+| `creating-hooks` | Guide for implementing Claude Code hooks |
+| `creating-mcp-servers` | Guide for MCP server creation and integration |
+| `transcript-intelligence` | Search and analyze Claude Code transcripts |
 | `writing-skills` | Guide for creating effective Claude Code skills |
 
 Planned skills:
-- `creating-hooks` - Guide for implementing Claude Code hooks
 - `creating-slash-commands` - Guide for custom slash commands
-- `creating-mcp-servers` - Guide for MCP server development
 
 ### Documentation Sources
 
