@@ -77,31 +77,31 @@ ln -s node_modules/claude-code-sdk/skills/transcript-intelligence ~/.claude/skil
 
 Skills for building Claude Code extensions (hooks, MCP servers, plugins, etc.):
 
-| Skill | Description | Files |
-|-------|-------------|-------|
-| [claude-code-reference](skills/claude-code-reference/SKILL.md) | Reference guide for Claude Code extensions | [SKILL](skills/claude-code-reference/SKILL.md) ยท [CONCEPTS](skills/claude-code-reference/CONCEPTS.md) ยท [HEADLESS](skills/claude-code-reference/HEADLESS.md) ยท [SUBAGENTS](skills/claude-code-reference/SUBAGENTS.md) ยท [WHATS-NEW](skills/claude-code-reference/WHATS-NEW.md) |
-| [creating-hooks](skills/creating-hooks/SKILL.md) | All 10 hook events with examples | [SKILL](skills/creating-hooks/SKILL.md) ยท [EVENTS](skills/creating-hooks/EVENTS.md) ยท [EXAMPLES](skills/creating-hooks/EXAMPLES.md) ยท [TROUBLESHOOTING](skills/creating-hooks/TROUBLESHOOTING.md) |
-| [creating-mcp-servers](skills/creating-mcp-servers/SKILL.md) | MCP server development and integration | [SKILL](skills/creating-mcp-servers/SKILL.md) ยท [TRANSPORTS](skills/creating-mcp-servers/TRANSPORTS.md) ยท [EXAMPLES](skills/creating-mcp-servers/EXAMPLES.md) ยท [TROUBLESHOOTING](skills/creating-mcp-servers/TROUBLESHOOTING.md) |
-| [creating-plugins](skills/creating-plugins/SKILL.md) | Full plugin bundling and distribution | [SKILL](skills/creating-plugins/SKILL.md) ยท [MANIFEST](skills/creating-plugins/MANIFEST.md) ยท [COMPONENTS](skills/creating-plugins/COMPONENTS.md) ยท [DISTRIBUTION](skills/creating-plugins/DISTRIBUTION.md) |
-| [creating-subagents](skills/creating-subagents/SKILL.md) | Custom Task tool agents | [SKILL](skills/creating-subagents/SKILL.md) ยท [DEFINITION](skills/creating-subagents/DEFINITION.md) ยท [EXAMPLES](skills/creating-subagents/EXAMPLES.md) ยท [PATTERNS](skills/creating-subagents/PATTERNS.md) |
-| [custom-slash-commands](skills/custom-slash-commands/SKILL.md) | Create custom slash commands | [SKILL](skills/custom-slash-commands/SKILL.md) ยท [EXAMPLES](skills/custom-slash-commands/EXAMPLES.md) ยท [TROUBLESHOOTING](skills/custom-slash-commands/TROUBLESHOOTING.md) |
-| [headless-mode](skills/headless-mode/SKILL.md) | CLI flags and SDKs for automation | [SKILL](skills/headless-mode/SKILL.md) ยท [CLI-FLAGS](skills/headless-mode/CLI-FLAGS.md) ยท [SDK](skills/headless-mode/SDK.md) ยท [EXAMPLES](skills/headless-mode/EXAMPLES.md) |
-| [transcript-intelligence](skills/transcript-intelligence/SKILL.md) | Search session transcripts | [SKILL](skills/transcript-intelligence/SKILL.md) ยท [TYPES](skills/transcript-intelligence/TYPES.md) ยท [SEARCH](skills/transcript-intelligence/SEARCH.md) |
-| [writing-skills](skills/writing-skills/SKILL.md) | Create effective skills | [SKILL](skills/writing-skills/SKILL.md) ยท [TEMPLATES](skills/writing-skills/TEMPLATES.md) ยท [EXAMPLES](skills/writing-skills/EXAMPLES.md) |
+| Skill | Description |
+|-------|-------------|
+| [claude-code-reference](skills/claude-code-reference/SKILL.md) | Reference guide for Claude Code extensions |
+| [creating-hooks](skills/creating-hooks/SKILL.md) | All 10 hook events with examples |
+| [creating-mcp-servers](skills/creating-mcp-servers/SKILL.md) | MCP server development and integration |
+| [creating-plugins](skills/creating-plugins/SKILL.md) | Full plugin bundling and distribution |
+| [creating-subagents](skills/creating-subagents/SKILL.md) | Custom Task tool agents |
+| [custom-slash-commands](skills/custom-slash-commands/SKILL.md) | Create custom slash commands |
+| [headless-mode](skills/headless-mode/SKILL.md) | CLI flags and SDKs for automation |
+| [transcript-intelligence](skills/transcript-intelligence/SKILL.md) | Search session transcripts |
+| [writing-skills](skills/writing-skills/SKILL.md) | Create effective skills |
 
 ### User-Focused Skills
 
 Skills for everyday Claude Code usage:
 
-| Skill | Description | Files |
-|-------|-------------|-------|
-| [effective-prompting](skills/effective-prompting/SKILL.md) | @ mentions, thinking modes, task framing | [SKILL](skills/effective-prompting/SKILL.md) ยท [PATTERNS](skills/effective-prompting/PATTERNS.md) ยท [EXAMPLES](skills/effective-prompting/EXAMPLES.md) ยท [ANTI-PATTERNS](skills/effective-prompting/ANTI-PATTERNS.md) |
-| [memory-management](skills/memory-management/SKILL.md) | CLAUDE.md, rules, memory strategies | [SKILL](skills/memory-management/SKILL.md) ยท [CLAUDE-MD](skills/memory-management/CLAUDE-MD.md) ยท [RULES](skills/memory-management/RULES.md) ยท [STRATEGIES](skills/memory-management/STRATEGIES.md) |
-| [debugging-claude-code](skills/debugging-claude-code/SKILL.md) | Diagnostics, common fixes, recovery | [SKILL](skills/debugging-claude-code/SKILL.md) ยท [DIAGNOSTICS](skills/debugging-claude-code/DIAGNOSTICS.md) ยท [COMMON-ISSUES](skills/debugging-claude-code/COMMON-ISSUES.md) ยท [RECOVERY](skills/debugging-claude-code/RECOVERY.md) |
-| [project-setup](skills/project-setup/SKILL.md) | Configuration, permissions, checklists | [SKILL](skills/project-setup/SKILL.md) ยท [CONFIGURATION](skills/project-setup/CONFIGURATION.md) ยท [PERMISSIONS](skills/project-setup/PERMISSIONS.md) ยท [CHECKLIST](skills/project-setup/CHECKLIST.md) |
-| [git-workflows](skills/git-workflows/SKILL.md) | Commits, PRs, branch strategies | [SKILL](skills/git-workflows/SKILL.md) ยท [COMMITS](skills/git-workflows/COMMITS.md) ยท [PULL-REQUESTS](skills/git-workflows/PULL-REQUESTS.md) ยท [PATTERNS](skills/git-workflows/PATTERNS.md) |
-| [context-optimization](skills/context-optimization/SKILL.md) | /compact, /clear, context management | [SKILL](skills/context-optimization/SKILL.md) ยท [STRATEGIES](skills/context-optimization/STRATEGIES.md) ยท [INDICATORS](skills/context-optimization/INDICATORS.md) ยท [WORKFLOWS](skills/context-optimization/WORKFLOWS.md) |
-| [permission-patterns](skills/permission-patterns/SKILL.md) | Default, plan, trusted modes | [SKILL](skills/permission-patterns/SKILL.md) ยท [MODES](skills/permission-patterns/MODES.md) ยท [PATTERNS](skills/permission-patterns/PATTERNS.md) ยท [SECURITY](skills/permission-patterns/SECURITY.md) |
+| Skill | Description |
+|-------|-------------|
+| [effective-prompting](skills/effective-prompting/SKILL.md) | @ mentions, thinking modes, task framing |
+| [memory-management](skills/memory-management/SKILL.md) | CLAUDE.md, rules, memory strategies |
+| [debugging-claude-code](skills/debugging-claude-code/SKILL.md) | Diagnostics, common fixes, recovery |
+| [project-setup](skills/project-setup/SKILL.md) | Configuration, permissions, checklists |
+| [git-workflows](skills/git-workflows/SKILL.md) | Commits, PRs, branch strategies |
+| [context-optimization](skills/context-optimization/SKILL.md) | /compact, /clear, context management |
+| [permission-patterns](skills/permission-patterns/SKILL.md) | Default, plan, trusted modes |
 
 ## SDK Installation
 
