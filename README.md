@@ -58,12 +58,50 @@ ln -s node_modules/claude-code-sdk/skills/transcript-intelligence ~/.claude/skil
 
 ## Available Skills
 
-| Skill | Description |
-|-------|-------------|
-| `claude-code-reference` | Reference guide for Claude Code extensions - skills, hooks, commands, MCP, marketplaces |
-| `creating-hooks` | Complete guide for all 10 hook events with examples and troubleshooting |
-| `transcript-intelligence` | Deep memory search across session transcripts to recall past decisions |
-| `writing-skills` | Best practices for creating effective Claude Code skills |
+### [claude-code-reference](skills/claude-code-reference/SKILL.md)
+Reference guide for Claude Code extensions - skills, hooks, commands, MCP, and plugin marketplaces.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/claude-code-reference/SKILL.md) | Quick reference, decision flowchart, common patterns |
+| [CONCEPTS.md](skills/claude-code-reference/CONCEPTS.md) | Core concepts and architecture |
+| [HEADLESS.md](skills/claude-code-reference/HEADLESS.md) | Headless mode and SDK usage |
+| [SUBAGENTS.md](skills/claude-code-reference/SUBAGENTS.md) | Sub-agent implementation |
+| [WHATS-NEW.md](skills/claude-code-reference/WHATS-NEW.md) | Version history and new features (2.1.0) |
+
+---
+
+### [creating-hooks](skills/creating-hooks/SKILL.md)
+Complete guide for implementing all 10 Claude Code hook events with examples and troubleshooting.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/creating-hooks/SKILL.md) | Quick reference tables, decision guide, common patterns |
+| [EVENTS.md](skills/creating-hooks/EVENTS.md) | All 10 hook events with input/output schemas |
+| [EXAMPLES.md](skills/creating-hooks/EXAMPLES.md) | 8 copy-paste ready examples |
+| [TROUBLESHOOTING.md](skills/creating-hooks/TROUBLESHOOTING.md) | Debugging guide with symptom-cause-solution |
+
+---
+
+### [transcript-intelligence](skills/transcript-intelligence/SKILL.md)
+Deep memory search across Claude Code session transcripts to recall past decisions and solutions.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/transcript-intelligence/SKILL.md) | Search patterns, use cases, workflow |
+| [TYPES.md](skills/transcript-intelligence/TYPES.md) | JSONL format documentation, all message types |
+| [SEARCH.md](skills/transcript-intelligence/SEARCH.md) | Advanced search patterns and recipes |
+
+---
+
+### [writing-skills](skills/writing-skills/SKILL.md)
+Best practices for creating effective Claude Code skills with progressive disclosure.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/writing-skills/SKILL.md) | Skill structure, naming, best practices |
+| [TEMPLATES.md](skills/writing-skills/TEMPLATES.md) | Starter templates for different skill types |
+| [EXAMPLES.md](skills/writing-skills/EXAMPLES.md) | Real-world skill examples |
 
 ## SDK Installation
 
