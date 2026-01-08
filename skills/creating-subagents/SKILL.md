@@ -292,6 +292,55 @@ When agent names conflict:
 2. **CLI** (`--agents` flag)
 3. **User** (`~/.claude/agents/`) - Lowest
 
+## Disabling Specific Subagents
+
+Disable built-in or custom subagents using permission rules or CLI flags.
+
+### Via settings.json
+
+```json
+{
+  "permissions": {
+    "deny": ["Task(Explore)", "Task(Plan)"]
+  }
+}
+```
+
+### Via CLI
+
+```bash
+claude --disallowedTools "Task(Explore)"
+```
+
+### Permission Rule Syntax
+
+| Pattern | Effect |
+|---------|--------|
+| `Task(Explore)` | Disable built-in Explore agent |
+| `Task(Plan)` | Disable built-in Plan agent |
+| `Task(code-reviewer)` | Disable custom code-reviewer agent |
+| `Task(*)` | Disable all subagents |
+
+### Use Cases
+
+- **Security** - Prevent delegation to agents with write access
+- **Workflow control** - Force specific agents for certain tasks
+- **Debugging** - Isolate main thread behavior without subagents
+- **Cost management** - Disable expensive opus-based agents
+
+### Example: Read-Only Mode
+
+Disable all write-capable agents for safe exploration:
+
+```json
+{
+  "permissions": {
+    "deny": ["Task(general-purpose)", "Task(code-reviewer)"],
+    "allow": ["Task(Explore)"]
+  }
+}
+```
+
 ## Reference Files
 
 | File | Contents |

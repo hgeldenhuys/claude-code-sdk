@@ -26,7 +26,8 @@ Create reusable prompts and workflows as slash commands that Claude Code can exe
 | `argument-hint` | Hint shown in autocomplete | None |
 | `description` | Brief description | First line of prompt |
 | `model` | Force specific model | Inherits from conversation |
-| `disable-model-invocation` | Prevent SlashCommand tool access | false |
+| `hooks` | Lifecycle-scoped hooks (PreToolUse, PostToolUse, Stop) | None |
+| `disable-model-invocation` | Prevent Skill tool access | false |
 
 ## Command vs Skill Decision Guide
 
@@ -183,6 +184,31 @@ Quickly answer: $ARGUMENTS
 Be concise. No code changes.
 ```
 
+### Pattern 8: Command with Hooks
+
+```markdown
+# .claude/commands/deploy.md
+---
+description: Deploy with pre-flight validation
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./scripts/preflight-check.sh"
+          once: true
+  Stop:
+    - hooks:
+        - type: command
+          command: "./scripts/notify-deploy.sh"
+---
+
+Deploy the current branch to the staging environment.
+Ensure all tests pass before deploying.
+```
+
+Hooks in commands are lifecycle-scoped and only active during command execution.
+
 ## Namespacing
 
 Subdirectories group related commands and appear in descriptions:
@@ -240,13 +266,16 @@ Subdirectories group related commands and appear in descriptions:
 - [ ] Bash execution has `allowed-tools`
 - [ ] Description is helpful
 
-## SlashCommand Tool Integration
+## Skill Tool Integration
 
-Claude can invoke custom commands programmatically via the `SlashCommand` tool.
+Claude can invoke custom commands and skills programmatically via the `Skill` tool (replaces the deprecated `SlashCommand` tool).
 
-**Requirements for SlashCommand tool:**
+**Requirements for Skill tool invocation:**
 - Must have `description` in frontmatter
 - Cannot be a built-in command
+- Not blocked by `disable-model-invocation: true`
+
+**Character budget:** Default 15,000 characters. Override with `SLASH_COMMAND_TOOL_CHAR_BUDGET` env var.
 
 **To encourage usage:**
 ```markdown
@@ -260,6 +289,28 @@ Run /write-test when starting to write tests.
 disable-model-invocation: true
 ---
 ```
+
+### Permission Rules
+
+Control which commands Claude can invoke via the Skill tool:
+
+| Pattern | Meaning |
+|---------|---------|
+| `Skill(/commit)` | Exact match (no arguments) |
+| `Skill(/review-pr:*)` | Prefix match (any arguments) |
+| `Skill(/deploy:*)` | Prefix match |
+
+```json
+// settings.json
+{
+  "permissions": {
+    "allow": ["Skill(/commit)", "Skill(/review-pr:*)"],
+    "deny": ["Skill(/deploy:*)"]
+  }
+}
+```
+
+**Migration:** If you have existing `SlashCommand` permission rules, update them to use `Skill`.
 
 ## Security Considerations
 

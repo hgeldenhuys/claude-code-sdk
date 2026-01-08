@@ -804,6 +804,180 @@
         "summary": "+2/-2 lines"
       },
       "reviewed": false
+    },
+    {
+      "id": "delta-1767905489842-ldwfq24",
+      "url": "https://code.claude.com/docs/en/hooks.md",
+      "title": "Hooks reference",
+      "detectedAt": "2026-01-08T20:51:29.840Z",
+      "previousVersion": 4,
+      "newVersion": 5,
+      "previousHash": "f9a516605587c1c2665179d02b5bdcfe59bf338074bb87e39bc0e1d78ab1c77d",
+      "newHash": "45d9b8170d332b998d97adb6d1b24f691cd56212544b034186670bee36a04a7d",
+      "diffSummary": {
+        "linesAdded": 30,
+        "linesRemoved": 3,
+        "linesModified": 3,
+        "changedSections": [
+          "### Hooks in Skills, Agents, and Slash Commands"
+        ],
+        "summary": "+30/-3 lines, 1 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1767905490296-lyiyu3l",
+      "url": "https://code.claude.com/docs/en/skills.md",
+      "title": "Agent Skills",
+      "detectedAt": "2026-01-08T20:51:30.295Z",
+      "previousVersion": 3,
+      "newVersion": 4,
+      "previousHash": "b81e3be87f2e90532bc690cc13cc73a83dc94c43943b9d4c245a1b7ec52a7b9e",
+      "newHash": "40a8d9731adfd53b173acf78dd6cfaee24cdc3a0c4b41b97cbf91e495481f798",
+      "diffSummary": {
+        "linesAdded": 64,
+        "linesRemoved": 18,
+        "linesModified": 18,
+        "changedSections": [
+          "### Run Skills in a forked context",
+          "### Define hooks for Skills",
+          "### Control Skill visibility",
+          "#### When to use each setting",
+          "#### Example: model-only Skill",
+          "### Skills and subagents",
+          "#### Give a subagent access to Skills",
+          "# .claude/agents/code-reviewer.md",
+          "#### Run a Skill in a subagent context"
+        ],
+        "summary": "+64/-18 lines, 9 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1767905490531-tpxo2f8",
+      "url": "https://code.claude.com/docs/en/sub-agents.md",
+      "title": "Subagents",
+      "detectedAt": "2026-01-08T20:51:30.531Z",
+      "previousVersion": 3,
+      "newVersion": 4,
+      "previousHash": "e09eace86a27625862884c3cc6a057c0f1b8d64ec1c4201aefdf62262d726054",
+      "newHash": "772fa3ce5227039c7c042d0fe2aa862d789fc469f120400527be4dd249826f18",
+      "diffSummary": {
+        "linesAdded": 23,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [
+          "### Define hooks for subagents",
+          "### Disabling specific subagents"
+        ],
+        "summary": "+23/-0 lines, 2 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1767905491590-pik8mrg",
+      "url": "https://code.claude.com/docs/en/mcp.md",
+      "title": "Connect Claude Code to tools via MCP",
+      "detectedAt": "2026-01-08T20:51:31.588Z",
+      "previousVersion": 4,
+      "newVersion": 5,
+      "previousHash": "6def753f8bf64b2c5dac147cef5690891dee2f417f0c85754d7b565121601778",
+      "newHash": "85d2edb1635818ecf8eb0f55d318b303c13fdb82e4e829e9d5473bde3c796eb0",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [
+          "### Dynamic tool updates"
+        ],
+        "summary": "+2/-0 lines, 1 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1767905491853-fvhjo5y",
+      "url": "https://code.claude.com/docs/en/settings.md",
+      "title": "Claude Code settings",
+      "detectedAt": "2026-01-08T20:51:31.852Z",
+      "previousVersion": 6,
+      "newVersion": 7,
+      "previousHash": "456a38ee6428ba2fec5bc3424c358cc9d61cf6d974e0282123dcac7e5b824b67",
+      "newHash": "6660b0a8c0f7ddab3f52df905d336c6116038e3ba0bf08971ea9a03e24b50526",
+      "diffSummary": {
+        "linesAdded": 7,
+        "linesRemoved": 3,
+        "linesModified": 3,
+        "changedSections": [],
+        "summary": "+7/-3 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1767905493294-dy2y5y2",
+      "url": "https://code.claude.com/docs/en/slash-commands.md",
+      "title": "Slash commands",
+      "detectedAt": "2026-01-08T20:51:33.293Z",
+      "previousVersion": 3,
+      "newVersion": 4,
+      "previousHash": "bc627ceda7280c34ea2f23c82ed2328a9956482867253ef643bad05457ddc9e5",
+      "newHash": "d42a7f5b9649eb27481f8acfd3fa5f16a83262d8c96c7e8a09a902d8fad44978",
+      "diffSummary": {
+        "linesAdded": 48,
+        "linesRemoved": 30,
+        "linesModified": 30,
+        "changedSections": [
+          "#### Define hooks for commands",
+          "## `Skill` tool",
+          "### What the `Skill` tool can invoke",
+          "### Encourage Claude to use specific commands",
+          "### Disable the `Skill` tool",
+          "# Add to deny rules: Skill",
+          "### Disable specific commands or Skills",
+          "### `Skill` permission rules"
+        ],
+        "summary": "+48/-30 lines, 8 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1767905493484-iksswt0",
+      "url": "https://code.claude.com/docs/en/interactive-mode.md",
+      "title": "Interactive mode",
+      "detectedAt": "2026-01-08T20:51:33.483Z",
+      "previousVersion": 2,
+      "newVersion": 3,
+      "previousHash": "1dd8b7df024968fd9d7afe041349522898fdb2d96b650a515c46c0b3a6c037ec",
+      "newHash": "4942b8d7e7d81d622472de077191d819cf8f0bd6fb7835f6efbb2c245d5446b2",
+      "diffSummary": {
+        "linesAdded": 78,
+        "linesRemoved": 32,
+        "linesModified": 32,
+        "changedSections": [
+          "### Text editing",
+          "### Theme and display",
+          "### Text objects (NORMAL mode)"
+        ],
+        "summary": "+78/-32 lines, 3 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1767905498902-7wfzo7x",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/claude-code/sdk-overview",
+      "title": "Untitled",
+      "detectedAt": "2026-01-08T20:51:38.899Z",
+      "previousVersion": 5,
+      "newVersion": 6,
+      "previousHash": "fc9fb51edfdeb192c9d04dbe0fc5f18d4df6fc1f245c2a4f1692e91fbee4ce5e",
+      "newHash": "cd8c8ba2541821fb266279fc9b2f9efc1035b48c3b1baa9761caa4f2fb2699fb",
+      "diffSummary": {
+        "linesAdded": 1,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+1/-1 lines"
+      },
+      "reviewed": false
     }
   ]
 }

@@ -74,6 +74,13 @@ Hooks are configured in settings files (in order of precedence):
 | `command` | Execute bash script | `command`: bash command to run |
 | `prompt` | LLM-based evaluation | `prompt`: prompt text for Haiku |
 
+### Hook Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `timeout` | number | Timeout in seconds (default: 60) |
+| `once` | boolean | Run only once per session (frontmatter hooks only) |
+
 ## Exit Codes
 
 | Exit Code | Meaning | Behavior |
@@ -287,10 +294,49 @@ claude --debug
 - [ ] Use absolute paths for scripts
 - [ ] Skip sensitive files (`.env`, keys)
 
+## Frontmatter Hooks
+
+Hooks can also be defined directly in YAML frontmatter of Skills, Agents, and Slash Commands. These hooks are:
+
+- **Lifecycle-scoped** - Only active while the component executes
+- **Auto-cleanup** - Removed when the component finishes
+- **Portable** - Packaged with the component for distribution
+
+**Supported events:** `PreToolUse`, `PostToolUse`, `Stop`
+
+### Quick Example (in a Skill)
+
+```yaml
+---
+name: my-skill
+description: A skill with lifecycle hooks
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
+          once: true
+---
+```
+
+### Key Differences from Settings Hooks
+
+| Aspect | Settings Hooks | Frontmatter Hooks |
+|--------|----------------|-------------------|
+| Location | `settings.json` | Skill/Agent/Command YAML |
+| Scope | Global or project | Component lifecycle |
+| Events | All 10 events | PreToolUse, PostToolUse, Stop |
+| Cleanup | Manual | Automatic |
+| `once` option | No | Yes |
+
+See [FRONTMATTER-HOOKS.md](./FRONTMATTER-HOOKS.md) for complete documentation.
+
 ## Reference Files
 
 | File | Contents |
 |------|----------|
 | [EVENTS.md](./EVENTS.md) | Detailed event documentation with input/output schemas |
 | [EXAMPLES.md](./EXAMPLES.md) | Complete working examples |
+| [FRONTMATTER-HOOKS.md](./FRONTMATTER-HOOKS.md) | Frontmatter hooks in skills, agents, commands |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Common issues and solutions |

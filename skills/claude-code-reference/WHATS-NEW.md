@@ -12,9 +12,12 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 ### Version 2.1.0 (Latest) - Major Release
 
 **Skills & Commands:**
+- **Skill Tool** - Programmatically invoke skills/commands (replaces SlashCommand tool)
 - **Skill Hot-Reload** - Skills created or modified are immediately available without restart
 - **Forked Skill Context** - `context: fork` in frontmatter runs skills in sub-agent context
 - **Agent Field in Skills** - `agent` field to specify agent type for execution
+- **Visibility Control** - `user-invocable: false` hides from menu; `disable-model-invocation: true` blocks Skill tool
+- **Skills in Subagents** - `skills` field in agent definitions to auto-load skills for subagents
 - **`/plan` Command** - Quick shortcut to enable plan mode
 - **Slash Command Anywhere** - Autocomplete works when `/` appears anywhere in input
 - **Skills in Slash Menu** - Skills from `/skills/` directories visible in slash command menu by default
@@ -33,7 +36,10 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 **Terminal & UI:**
 - **Shift+Enter Works OOTB** - Works in iTerm2, WezTerm, Ghostty, Kitty without config
 - **Unified Ctrl+B Backgrounding** - Backgrounds all running foreground tasks (bash + agents)
-- **New Vim Motions** - `;`, `,`, `y`/`yy`/`Y`, `p`/`P`, text objects, `>>`, `<<`, `J`
+- **Text Editing Shortcuts** - `Ctrl+K` (kill to end), `Ctrl+U` (kill to start), `Ctrl+Y` (yank), `Alt+B/F` (word nav)
+- **Vim Text Objects** - `iw`/`aw` (word), `i"`/`a"` (quotes), `i(`/`a(` (parens), etc. with operators
+- **New Vim Motions** - `;`, `,`, `y`/`yy`/`Y`, `p`/`P`, `>>`, `<<`, `J`
+- **Theme Toggle** - `Ctrl+T` in theme picker to toggle syntax highlighting
 - **Real-time Thinking Display** - Thinking blocks shown in Ctrl+O transcript mode
 
 **MCP:**
@@ -79,6 +85,9 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.0 | Skill Tool | Programmatically invoke skills/commands (replaces SlashCommand) |
+| 2.1.0 | Visibility Control | `user-invocable: false`, `disable-model-invocation: true` |
+| 2.1.0 | Skills in Subagents | `skills` field in agent definitions to auto-load skills |
 | 2.1.0 | Skill Hot-Reload | Skills immediately available without restart |
 | 2.1.0 | Forked Skill Context | `context: fork` runs skills in sub-agent |
 | 2.1.0 | Agent Field | `agent` field specifies agent type for execution |
@@ -176,7 +185,10 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 |---------|---------|-------------|
 | 2.1.0 | Shift+Enter OOTB | Works in iTerm2, WezTerm, Ghostty, Kitty without config |
 | 2.1.0 | Ctrl+B Backgrounding | Unified backgrounding for bash + agents |
-| 2.1.0 | New Vim Motions | `;`, `,`, `y`, `p`, text objects, `>>`, `<<`, `J` |
+| 2.1.0 | Text Editing | `Ctrl+K/U/Y`, `Alt+B/F/Y` for line/word editing |
+| 2.1.0 | Vim Text Objects | `iw`, `aw`, `i"`, `a(`, etc. work with operators |
+| 2.1.0 | New Vim Motions | `;`, `,`, `y`, `p`, `>>`, `<<`, `J` |
+| 2.1.0 | Theme Toggle | `Ctrl+T` in theme picker for syntax highlighting |
 | 2.1.0 | Thinking Display | Real-time thinking blocks in Ctrl+O transcript |
 | 2.0.74 | Terminal Setup | Support for Kitty, Alacritty, Zed, Warp terminals |
 | 2.0.73 | Tab Badges | VSCode badges for permissions (blue) and completions (orange) |

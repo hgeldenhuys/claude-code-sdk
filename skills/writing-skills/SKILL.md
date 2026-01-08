@@ -38,6 +38,11 @@ model: sonnet  # Optional: opus, sonnet, haiku
 | `description` | Yes | Third person. Max 1024 chars. Include when to use |
 | `allowed-tools` | No | Restricts which tools the skill can use |
 | `model` | No | Force specific model (opus, sonnet, haiku) |
+| `context` | No | Set to `fork` to run in sub-agent context |
+| `agent` | No | Agent type when `context: fork` (requires context) |
+| `hooks` | No | Lifecycle-scoped hooks (PreToolUse, PostToolUse, Stop) |
+| `user-invocable` | No | `false` hides from slash menu but allows Skill tool |
+| `disable-model-invocation` | No | `true` blocks Skill tool invocation |
 
 ## Naming Conventions
 
@@ -203,6 +208,82 @@ Before finalizing a skill:
 | No workflows | Add step-by-step procedures |
 | Missing examples | Add input/output pairs |
 | Deep file nesting | Keep references one level deep |
+
+## Advanced Configuration
+
+### Forked Context
+
+Run skills in an isolated sub-agent context using `context: fork`:
+
+```yaml
+---
+name: complex-analysis
+description: Deep analysis that benefits from isolated context
+context: fork
+agent: Explore  # Optional: specify agent type
+---
+```
+
+**When to use:**
+- Long-running analysis that shouldn't pollute main context
+- Skills that generate large outputs
+- Isolated workflows that should not affect main conversation
+
+### Visibility Control
+
+Control how skills appear and can be invoked:
+
+| Setting | Slash Menu | Skill Tool | Use Case |
+|---------|------------|------------|----------|
+| (default) | Visible | Allowed | Normal skill |
+| `user-invocable: false` | Hidden | Allowed | Model-only skills |
+| `disable-model-invocation: true` | Visible | Blocked | User-only skills |
+| Both false/true | Hidden | Blocked | Completely hidden |
+
+```yaml
+---
+name: internal-helper
+description: Helper skill only invoked by other skills
+user-invocable: false  # Hide from slash menu
+---
+```
+
+### Skills with Hooks
+
+Add lifecycle hooks that run during skill execution:
+
+```yaml
+---
+name: validated-deploy
+description: Deploy with validation hooks
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
+          once: true
+---
+```
+
+See [creating-hooks](../creating-hooks/FRONTMATTER-HOOKS.md) for complete hook documentation.
+
+### Skills in Subagents
+
+Skills can be auto-loaded for custom subagents using the `skills` field in agent definitions:
+
+```yaml
+# .claude/agents/code-reviewer.md
+---
+name: code-reviewer
+description: Reviews code using specialized skills
+skills:
+  - code-review
+  - security-practices
+---
+```
+
+**Note:** Built-in agents (Explore, Plan, general-purpose) do not have skill access.
 
 ## Reference Files
 
