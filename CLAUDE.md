@@ -128,8 +128,11 @@ This SDK provides reusable skills in `skills/` for distribution. These skills he
 | Skill | Purpose |
 |-------|---------|
 | `claude-code-reference` | Reference guide for Claude Code extensions |
+| `context-optimization` | Guide for managing and optimizing context window usage |
 | `creating-hooks` | Guide for implementing Claude Code hooks |
 | `creating-mcp-servers` | Guide for MCP server creation and integration |
+| `debugging-claude-code` | Troubleshooting guide for diagnosing Claude Code issues |
+| `permission-patterns` | Guide for configuring Claude Code permissions and security |
 | `transcript-intelligence` | Search and analyze Claude Code transcripts |
 | `writing-skills` | Guide for creating effective Claude Code skills |
 

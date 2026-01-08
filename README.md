@@ -30,6 +30,15 @@ This repo is a **Claude Code plugin marketplace**. Install skills directly in Cl
 /plugin install headless-mode@claude-code-sdk
 /plugin install transcript-intelligence@claude-code-sdk
 /plugin install writing-skills@claude-code-sdk
+
+# User-focused skills
+/plugin install effective-prompting@claude-code-sdk
+/plugin install memory-management@claude-code-sdk
+/plugin install debugging-claude-code@claude-code-sdk
+/plugin install project-setup@claude-code-sdk
+/plugin install git-workflows@claude-code-sdk
+/plugin install context-optimization@claude-code-sdk
+/plugin install permission-patterns@claude-code-sdk
 ```
 
 ### Method 2: Direct Copy
@@ -168,6 +177,92 @@ Guide for using Claude Code programmatically via CLI flags and SDKs for automati
 | [SDK.md](skills/headless-mode/SDK.md) | TypeScript and Python SDK usage |
 | [EXAMPLES.md](skills/headless-mode/EXAMPLES.md) | CI/CD, automation, batch processing examples |
 
+---
+
+## User-Focused Skills
+
+### [effective-prompting](skills/effective-prompting/SKILL.md)
+Master prompting techniques for Claude Code - @ mentions, thinking modes, task framing, and common patterns.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/effective-prompting/SKILL.md) | Quick reference, @ mentions, thinking keywords |
+| [PATTERNS.md](skills/effective-prompting/PATTERNS.md) | Task decomposition, code review, debugging patterns |
+| [EXAMPLES.md](skills/effective-prompting/EXAMPLES.md) | Real-world prompt examples |
+| [ANTI-PATTERNS.md](skills/effective-prompting/ANTI-PATTERNS.md) | Common mistakes to avoid |
+
+---
+
+### [memory-management](skills/memory-management/SKILL.md)
+Configure CLAUDE.md, rules, and memory strategies for persistent project context across sessions.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/memory-management/SKILL.md) | Memory hierarchy, quick reference |
+| [CLAUDE-MD.md](skills/memory-management/CLAUDE-MD.md) | CLAUDE.md structure and examples |
+| [RULES.md](skills/memory-management/RULES.md) | .claude/rules/ documentation |
+| [STRATEGIES.md](skills/memory-management/STRATEGIES.md) | Advanced memory strategies |
+
+---
+
+### [debugging-claude-code](skills/debugging-claude-code/SKILL.md)
+Troubleshoot Claude Code issues with diagnostics, common fixes, and recovery procedures.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/debugging-claude-code/SKILL.md) | Quick diagnostic commands |
+| [DIAGNOSTICS.md](skills/debugging-claude-code/DIAGNOSTICS.md) | claude doctor, --debug, ANTHROPIC_LOG |
+| [COMMON-ISSUES.md](skills/debugging-claude-code/COMMON-ISSUES.md) | Common problems and solutions |
+| [RECOVERY.md](skills/debugging-claude-code/RECOVERY.md) | Cache clearing, reinstall, recovery |
+
+---
+
+### [project-setup](skills/project-setup/SKILL.md)
+Complete project setup guide - configuration, permissions, and migration checklists.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/project-setup/SKILL.md) | Quick setup checklist |
+| [CONFIGURATION.md](skills/project-setup/CONFIGURATION.md) | settings.json, .mcp.json structure |
+| [PERMISSIONS.md](skills/project-setup/PERMISSIONS.md) | Permission patterns |
+| [CHECKLIST.md](skills/project-setup/CHECKLIST.md) | Setup and migration checklists |
+
+---
+
+### [git-workflows](skills/git-workflows/SKILL.md)
+Git best practices with Claude Code - commits, PRs, branch strategies, and safety rules.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/git-workflows/SKILL.md) | Git safety rules, commit workflow |
+| [COMMITS.md](skills/git-workflows/COMMITS.md) | Conventional commits, heredoc syntax |
+| [PULL-REQUESTS.md](skills/git-workflows/PULL-REQUESTS.md) | gh CLI, PR templates |
+| [PATTERNS.md](skills/git-workflows/PATTERNS.md) | Branch strategies, conflict resolution |
+
+---
+
+### [context-optimization](skills/context-optimization/SKILL.md)
+Optimize context usage with /compact, /clear, and efficient workflow patterns.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/context-optimization/SKILL.md) | Context basics, /compact vs /clear |
+| [STRATEGIES.md](skills/context-optimization/STRATEGIES.md) | Optimization strategies |
+| [INDICATORS.md](skills/context-optimization/INDICATORS.md) | Context pressure indicators |
+| [WORKFLOWS.md](skills/context-optimization/WORKFLOWS.md) | Efficient workflow patterns |
+
+---
+
+### [permission-patterns](skills/permission-patterns/SKILL.md)
+Permission modes and patterns - default, plan, trusted modes with security best practices.
+
+| File | Contents |
+|------|----------|
+| [SKILL.md](skills/permission-patterns/SKILL.md) | Permission mode overview |
+| [MODES.md](skills/permission-patterns/MODES.md) | default, plan, trusted modes |
+| [PATTERNS.md](skills/permission-patterns/PATTERNS.md) | Bash, file, MCP patterns |
+| [SECURITY.md](skills/permission-patterns/SECURITY.md) | Security best practices |
+
 ## SDK Installation
 
 For programmatic access to documentation tracking and transcript search:
@@ -303,16 +398,23 @@ bun run docs search <query>  # Search docs
 .claude-plugin/
 └── marketplace.json   # Plugin marketplace manifest
 
-skills/                # Distributable skills (9 total)
-├── claude-code-reference/
-├── creating-hooks/
-├── creating-mcp-servers/
-├── creating-plugins/
-├── creating-subagents/
-├── custom-slash-commands/
-├── headless-mode/
-├── transcript-intelligence/
-└── writing-skills/
+skills/                # Distributable skills (16 total)
+├── claude-code-reference/   # Extension reference guide
+├── creating-hooks/          # Hook implementation guide
+├── creating-mcp-servers/    # MCP server development
+├── creating-plugins/        # Full plugin creation
+├── creating-subagents/      # Custom subagents
+├── custom-slash-commands/   # Slash command creation
+├── headless-mode/           # Programmatic usage
+├── transcript-intelligence/ # Session search
+├── writing-skills/          # Skill creation guide
+├── effective-prompting/     # Prompting techniques
+├── memory-management/       # CLAUDE.md and rules
+├── debugging-claude-code/   # Troubleshooting
+├── project-setup/           # Project configuration
+├── git-workflows/           # Git best practices
+├── context-optimization/    # Context management
+└── permission-patterns/     # Permission modes
 
 src/
 ├── index.ts           # Main SDK entry point

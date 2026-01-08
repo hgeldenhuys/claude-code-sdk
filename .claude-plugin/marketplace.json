@@ -59,6 +59,48 @@
       "source": "./skills/writing-skills",
       "description": "Best practices for creating effective Claude Code skills with progressive disclosure.",
       "version": "1.0.0"
+    },
+    {
+      "name": "effective-prompting",
+      "source": "./skills/effective-prompting",
+      "description": "Master prompting techniques for Claude Code - @ mentions, thinking modes, task framing.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "memory-management",
+      "source": "./skills/memory-management",
+      "description": "Configure CLAUDE.md, rules, and memory strategies for persistent project context.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "debugging-claude-code",
+      "source": "./skills/debugging-claude-code",
+      "description": "Troubleshoot Claude Code issues with diagnostics, common fixes, and recovery procedures.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "project-setup",
+      "source": "./skills/project-setup",
+      "description": "Complete project setup guide - configuration, permissions, and migration checklists.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "git-workflows",
+      "source": "./skills/git-workflows",
+      "description": "Git best practices with Claude Code - commits, PRs, branch strategies, and safety rules.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "context-optimization",
+      "source": "./skills/context-optimization",
+      "description": "Optimize context usage with /compact, /clear, and efficient workflow patterns.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "permission-patterns",
+      "source": "./skills/permission-patterns",
+      "description": "Permission modes and patterns - default, plan, trusted modes with security best practices.",
+      "version": "1.0.0"
     }
   ]
 }
