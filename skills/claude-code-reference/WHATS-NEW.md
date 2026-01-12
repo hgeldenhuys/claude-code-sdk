@@ -2,14 +2,59 @@
 
 This document tracks recent Claude Code features and changes. Updated when docs sync detects changes.
 
-**Current Version:** 2.1.0
-**Last Synced:** 2026-01-08
+**Current Version:** 2.1.4
+**Last Synced:** 2026-01-12
 
 ---
 
 ## Recent Highlights
 
-### Version 2.1.0 (Latest) - Major Release
+### Version 2.1.4 (Latest)
+
+- **`CLAUDE_CODE_DISABLE_BACKGROUND_TASKS`** - Environment variable to disable all background task functionality
+- **OAuth Token Fix** - Fixed "Help improve Claude" setting fetch to refresh OAuth and retry on stale tokens
+
+### Version 2.1.3
+
+**Key Features:**
+- **Merged Slash Commands/Skills** - Simplified mental model with no behavior change
+- **Release Channel Toggle** - Switch between `stable` and `latest` in `/config`
+- **Unreachable Permission Warnings** - Detection and warnings in `/doctor` for unreachable rules
+- **Hook Timeout Increased** - Tool hook execution timeout changed from 60 seconds to 10 minutes
+- **[VSCode] Destination Selector** - Clickable permission request destinations (project, all projects, team, session)
+
+**Bug Fixes:**
+- Fixed plan files persisting across `/clear` commands
+- Fixed false skill duplicate detection on large inode filesystems (ExFAT)
+- Fixed sub-agents using wrong model during compaction
+- Fixed web search in sub-agents using incorrect model
+- Fixed trust dialog acceptance from home directory not enabling hooks
+- Improved terminal rendering stability
+- Improved slash command suggestion readability (2-line truncation)
+
+### Version 2.1.2
+
+**Key Features:**
+- **Source Path Metadata** - Images dragged onto terminal include origin path
+- **Clickable File Paths** - Hyperlinks in tool output (OSC 8 terminals like iTerm)
+- **Windows Package Manager** - Automatic winget detection and update instructions
+- **Shift+Tab in Plan Mode** - Quick select "auto-accept edits"
+- **`FORCE_AUTOUPDATE_PLUGINS`** - Force plugin autoupdate when main updater disabled
+- **`agent_type` in SessionStart** - Hook input populated when `--agent` specified
+
+**Bug Fixes:**
+- Fixed command injection vulnerability in bash command processing
+- Fixed memory leak where tree-sitter parse trees weren't freed (WASM memory growth)
+- Fixed binary files being included in memory via `@include` directives
+- Fixed updates claiming another installation in progress
+- Fixed remote session URL and teleport with `/tasks`
+- Large bash/tool outputs now saved to disk instead of truncated (30K chars + file reference)
+
+**Deprecations:**
+- Windows managed settings path deprecated - migrate to `C:\Program Files\ClaudeCode\managed-settings.json`
+- [SDK] Minimum zod peer dependency changed to ^4.0.0
+
+### Version 2.1.0 - Major Release
 
 **Skills & Commands:**
 - **Skill Tool** - Programmatically invoke skills/commands (replaces SlashCommand tool)
@@ -85,6 +130,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.3 | Merged Commands/Skills | Slash commands and skills unified, simplified mental model |
 | 2.1.0 | Skill Tool | Programmatically invoke skills/commands (replaces SlashCommand) |
 | 2.1.0 | Visibility Control | `user-invocable: false`, `disable-model-invocation: true` |
 | 2.1.0 | Skills in Subagents | `skills` field in agent definitions to auto-load skills |
@@ -109,6 +155,8 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.3 | Hook Timeout Increase | Tool hook execution timeout: 60s → 10 minutes |
+| 2.1.2 | `agent_type` in SessionStart | Hook input includes agent type when `--agent` specified |
 | 2.1.0 | Hooks in Agent Frontmatter | PreToolUse, PostToolUse, Stop hooks scoped to agent |
 | 2.1.0 | Hooks in Skill/Command | Hooks defined directly in skills and commands |
 | 2.1.0 | `once: true` Config | Hooks that run only once |
@@ -147,6 +195,8 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.3 | Subagent Model Fixes | Fixed sub-agents using wrong model during compaction |
+| 2.1.3 | Web Search Fix | Fixed web search in sub-agents using incorrect model |
 | 2.0.64 | TaskOutputTool | Unified tool replacing AgentOutputTool and BashOutputTool |
 | 2.0.59 | Agent Setting | Configure main thread with agent's system prompt/tools/model |
 | 2.0.43 | Skills Auto-load | Declare skills to auto-load for subagents |
@@ -162,6 +212,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.2 | Relative Path Fix | Plugins with relative paths now work in URL-based marketplaces |
 | 2.0.72 | Plugin Search | Filter by name, description, or marketplace in discover screen |
 | 2.0.70 | Plugin Marketplaces | Create and distribute plugin marketplaces via GitHub |
 | 2.0.65 | Plugin Discovery | `/plugin` menu for browsing and installing plugins |
@@ -183,6 +234,10 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.3 | VSCode Destination Selector | Clickable permission destination (project, all, team, session) |
+| 2.1.2 | Clickable File Paths | Hyperlinks in tool output (OSC 8 terminals) |
+| 2.1.2 | Shift+Tab Plan Mode | Quick select "auto-accept edits" in plan mode |
+| 2.1.2 | Windows Package Manager | Winget detection and update instructions |
 | 2.1.0 | Shift+Enter OOTB | Works in iTerm2, WezTerm, Ghostty, Kitty without config |
 | 2.1.0 | Ctrl+B Backgrounding | Unified backgrounding for bash + agents |
 | 2.1.0 | Text Editing | `Ctrl+K/U/Y`, `Alt+B/F/Y` for line/word editing |
@@ -206,6 +261,10 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.4 | Disable Background Tasks | `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` env var |
+| 2.1.3 | Release Channel Toggle | Switch between `stable` and `latest` in `/config` |
+| 2.1.3 | Permission Warnings | `/doctor` warns about unreachable permission rules |
+| 2.1.2 | Plugin Autoupdate Force | `FORCE_AUTOUPDATE_PLUGINS` env var |
 | 2.1.0 | Language Setting | `language: "japanese"` for response language |
 | 2.1.0 | `IS_DEMO` Env Var | Hide email/org from UI for streaming |
 | 2.1.0 | File Read Token Limit | `CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS` env var |

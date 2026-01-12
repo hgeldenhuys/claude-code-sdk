@@ -78,8 +78,10 @@ Hooks are configured in settings files (in order of precedence):
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `timeout` | number | Timeout in seconds (default: 60) |
+| `timeout` | number | Timeout in seconds (default: 60, max: 600 as of 2.1.3) |
 | `once` | boolean | Run only once per session (frontmatter hooks only) |
+
+**Note:** As of 2.1.3, the maximum hook timeout was increased from 60 seconds to 10 minutes (600s).
 
 ## Exit Codes
 
@@ -209,6 +211,122 @@ All hooks receive JSON via stdin with common fields:
 - [ ] JSON input/output is valid
 - [ ] Exit codes are correct
 - [ ] Matcher pattern works
+
+## Tool-Specific Hooks
+
+Common patterns for hooks targeting specific tools.
+
+### Bash Tool Hooks
+
+Validate commands before execution, log sensitive operations, or block dangerous commands.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-bash.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Common validations:**
+- Block `rm -rf /` patterns
+- Require approval for `sudo` commands
+- Log all commands to audit file
+- Block network commands in certain contexts
+
+### Write Tool Hooks
+
+Validate file paths, enforce naming conventions, or auto-format after write.
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/after-write.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Common patterns:**
+- Auto-format with Prettier/Black
+- Validate file encoding (UTF-8)
+- Check for accidental credential writes
+- Run type-checking after TypeScript writes
+
+### Edit Tool Hooks
+
+Validate edits, prevent changes to critical files, or run linting after edits.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-edit.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Common patterns:**
+- Block edits to lock files (package-lock.json)
+- Prevent edits to generated files
+- Run linter after file edits
+- Validate imports/exports after module changes
+
+### Read Tool Hooks
+
+Log file access, validate read permissions, or inject context based on files read.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/validate-read.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Common patterns:**
+- Block reading sensitive files (.env, credentials)
+- Log file access for auditing
+- Auto-approve reading documentation
+- Inject related context when reading specific files
 
 ## Common Patterns
 

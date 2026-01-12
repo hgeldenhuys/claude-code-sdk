@@ -33,13 +33,16 @@ When Claude encounters a task matching a subagent's expertise, it spawns the sub
 
 ### Built-in Agents
 
-Claude Code includes three built-in agents:
+Claude Code includes several built-in agents:
 
 | Agent | Model | Mode | Purpose |
 |-------|-------|------|---------|
 | **Explore** | Haiku | Read-only | Fast codebase search and analysis |
-| **Plan** | Sonnet | Read-only | Research for plan mode |
-| **General** | Sonnet | Read/Write | Complex multi-step tasks |
+| **Plan** | Inherits | Read-only | Research for plan mode |
+| **General-purpose** | Inherits | Read/Write | Complex multi-step tasks |
+| **Bash** | Inherits | Commands | Running terminal commands in separate context |
+| **statusline-setup** | Sonnet | Config | Configuring status line via `/statusline` |
+| **Claude Code Guide** | Haiku | Read-only | Answering questions about Claude Code features |
 
 ### When to Create Custom Agents
 
@@ -76,11 +79,14 @@ expertise area, and approach to problem-solving.
 |-------|----------|------|-------------|
 | `name` | Yes | string | Unique identifier (lowercase, hyphens) |
 | `description` | Yes | string | When to invoke (include "PROACTIVELY" for auto-use) |
-| `tools` | No | string | Comma-separated tool list. Omit to inherit all tools |
+| `tools` | No | string | Comma-separated tool list (allowlist). Omit to inherit all tools |
+| `disallowedTools` | No | string | Comma-separated tools to deny (denylist), removed from inherited list |
 | `model` | No | string | `sonnet`, `opus`, `haiku`, or `inherit` |
 | `permissionMode` | No | string | Permission handling mode |
-| `skills` | No | string | Comma-separated skills to auto-load |
+| `skills` | No | string | Skills to load into subagent's context at startup |
 | `hooks` | No | object | Agent-scoped hooks (2.1.0+) |
+
+**Note on `skills`:** The full skill content is injected into the subagent, not just made available for invocation. Subagents don't inherit skills from the parent conversation.
 
 ### Model Options
 
@@ -93,13 +99,17 @@ expertise area, and approach to problem-solving.
 
 ### Permission Modes
 
+Subagents inherit permission context from the main conversation but can override the mode.
+
 | Mode | Description |
 |------|-------------|
-| `default` | Normal permission prompts |
+| `default` | Standard permission checking with prompts |
 | `acceptEdits` | Auto-accept file edits |
-| `dontAsk` | Skip permission dialogs |
-| `bypassPermissions` | Bypass all permissions |
-| `plan` | Plan mode (read-only research) |
+| `dontAsk` | Auto-deny permission prompts (explicitly allowed tools still work) |
+| `bypassPermissions` | Skip all permission checks (**use with caution**) |
+| `plan` | Plan mode (read-only exploration) |
+
+**Important:** If the parent uses `bypassPermissions`, this takes precedence and cannot be overridden by subagents.
 
 ## Critical Constraint
 
@@ -107,7 +117,10 @@ expertise area, and approach to problem-solving.
 
 ## Hooks in Agent Frontmatter (2.1.0+)
 
-Agents can define hooks scoped to their lifecycle:
+Agents can define hooks scoped to their lifecycle. These hooks are:
+- **Lifecycle-scoped** - Only active while the agent executes
+- **Auto-cleanup** - Removed when the agent finishes
+- **Portable** - Packaged with the agent for distribution
 
 ```yaml
 ---
@@ -131,6 +144,48 @@ Supported hook events in agent frontmatter:
 - `PostToolUse` - After tool completion
 - `Stop` - When agent finishes
 
+### Conditional Rules with Hooks
+
+For dynamic control over tool usage, use `PreToolUse` hooks to validate operations. This is useful when you need to allow some operations of a tool while blocking others.
+
+**Example: Read-only database agent**
+
+```yaml
+---
+name: db-reader
+description: Execute read-only database queries
+tools: Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./scripts/validate-readonly-query.sh"
+---
+```
+
+The validation script reads JSON from stdin, extracts the command, and exits with code 2 to block:
+
+```bash
+#!/bin/bash
+# ./scripts/validate-readonly-query.sh
+
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+
+# Block SQL write operations (case-insensitive)
+if echo "$COMMAND" | grep -iE '\b(INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)\b' > /dev/null; then
+  echo "Blocked: Only SELECT queries are allowed" >&2
+  exit 2
+fi
+
+exit 0
+```
+
+**Hook exit codes:**
+- `0` - Allow operation
+- `2` - Block operation (with message to stderr)
+
 ## Creating an Agent
 
 ### Via /agents Command (Recommended)
@@ -139,11 +194,14 @@ Supported hook events in agent frontmatter:
 /agents
 ```
 
-Interactive menu to:
-- View all agents (built-in, user, project)
-- Create with guided setup
-- Edit tool access
-- Delete custom agents
+Interactive interface to:
+- **View** all available subagents (built-in, user, project, plugin)
+- **Create** new subagents with guided setup or Claude generation
+- **Edit** existing subagent configuration and tool access
+- **Delete** custom subagents
+- **See active** subagents when duplicates exist (higher priority wins)
+
+**Generate with Claude:** Select "Generate with Claude" and describe your subagent. Claude generates the system prompt and configuration. Press `e` to open in your editor.
 
 ### Via File Creation
 
@@ -286,11 +344,20 @@ Omit the `tools` field entirely to inherit all tools from main thread, including
 
 ## Priority Order
 
-When agent names conflict:
+When agent names conflict, higher priority wins:
 
-1. **Project** (`.claude/agents/`) - Highest
-2. **CLI** (`--agents` flag)
-3. **User** (`~/.claude/agents/`) - Lowest
+| Priority | Location | Scope |
+|----------|----------|-------|
+| 1 (highest) | `--agents` CLI flag | Current session only |
+| 2 | `.claude/agents/` | Current project |
+| 3 | `~/.claude/agents/` | All your projects |
+| 4 (lowest) | Plugin's `agents/` directory | Where plugin is enabled |
+
+**Project agents** (`.claude/agents/`) are ideal for team sharing - check them into version control.
+
+**User agents** (`~/.claude/agents/`) are personal agents available in all your projects.
+
+**CLI agents** exist only for that session - useful for quick testing or automation scripts.
 
 ## Disabling Specific Subagents
 
