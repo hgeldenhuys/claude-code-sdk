@@ -390,6 +390,15 @@ export const CLAUDE_CODE_DOCS: DocSource[] = [
     priority: 6,
   },
 
+  // IDE / Browser Integration
+  {
+    id: 'chrome',
+    url: 'https://code.claude.com/docs/en/chrome.md',
+    category: 'ide',
+    tags: ['chrome', 'browser', 'extension', 'automation'],
+    priority: 7,
+  },
+
   // Troubleshooting
   {
     id: 'troubleshooting',
