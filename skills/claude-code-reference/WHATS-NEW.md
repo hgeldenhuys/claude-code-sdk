@@ -2,17 +2,37 @@
 
 This document tracks recent Claude Code features and changes. Updated when docs sync detects changes.
 
-**Current Version:** 2.1.5
-**Last Synced:** 2026-01-12
+**Current Version:** 2.1.6
+**Last Synced:** 2026-01-13
 
 ---
 
 ## Recent Highlights
 
-### Version 2.1.5 (Latest)
+### Version 2.1.6 (Latest)
 
-- **`CLAUDE_CODE_TMPDIR`** - Environment variable to override temp directory for internal temp files (useful for custom temp directory requirements)
-- **Private Repository Support** - Install plugins from private GitHub, GitLab, and Bitbucket repositories using authentication tokens
+**New Features:**
+- **`/config` Search** - Search functionality for quickly filtering settings
+- **`/doctor` Updates Section** - Shows auto-update channel and available npm versions (stable/latest)
+- **`/stats` Date Filtering** - Press `r` to cycle: Last 7 days, Last 30 days, All time
+- **Nested Skills Discovery** - Automatic discovery of skills from nested `.claude/skills` directories when working in subdirectories
+- **Status Line Fields** - `context_window.used_percentage` and `context_window.remaining_percentage`
+- **Improved @ Autocomplete** - Icons for different suggestion types, single-line formatting
+
+**Bug Fixes:**
+- Fixed permission bypass via shell line continuation (security)
+- Fixed false "File has been unexpectedly modified" errors
+- Fixed text styling misalignment in multi-line responses
+- Fixed `mcp list`/`mcp get` leaving orphaned MCP server processes
+- Fixed numpad keys and Option+Return in Kitty terminals
+
+**Breaking Changes:**
+- Removed @-mention for MCP servers - use `/mcp enable <name>` instead
+
+### Version 2.1.5
+
+- **`CLAUDE_CODE_TMPDIR`** - Environment variable to override temp directory for internal temp files
+- **Private Repository Support** - Install plugins from private GitHub, GitLab, and Bitbucket repositories
 
 ### Version 2.1.4
 
@@ -135,6 +155,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.6 | Nested Skills Discovery | Auto-discover skills from nested `.claude/skills` directories |
 | 2.1.3 | Merged Commands/Skills | Slash commands and skills unified, simplified mental model |
 | 2.1.0 | Skill Tool | Programmatically invoke skills/commands (replaces SlashCommand) |
 | 2.1.0 | Visibility Control | `user-invocable: false`, `disable-model-invocation: true` |
@@ -184,6 +205,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.6 | @-mention Removed | Use `/mcp enable <name>` instead of @-mentioning servers |
 | 2.1.0 | MCP `list_changed` | Servers dynamically update tools/prompts/resources |
 | 2.0.71 | MCP Fix | Fixed servers from `.mcp.json` not loading with `--dangerously-skip-permissions` |
 | 2.0.70 | Wildcard Permissions | `mcp__server__*` for allowing/denying all server tools |
@@ -240,6 +262,8 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.6 | Status Line Context Fields | `context_window.used_percentage`, `remaining_percentage` |
+| 2.1.6 | @ Autocomplete Icons | Icons for suggestion types, single-line formatting |
 | 2.1.3 | VSCode Destination Selector | Clickable permission destination (project, all, team, session) |
 | 2.1.2 | Clickable File Paths | Hyperlinks in tool output (OSC 8 terminals) |
 | 2.1.2 | Shift+Tab Plan Mode | Quick select "auto-accept edits" in plan mode |
@@ -267,6 +291,9 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.6 | `/config` Search | Search functionality for filtering settings |
+| 2.1.6 | `/doctor` Updates | Shows auto-update channel and npm versions |
+| 2.1.6 | `/stats` Date Range | Press `r` to cycle: 7 days, 30 days, All time |
 | 2.1.5 | Custom Temp Directory | `CLAUDE_CODE_TMPDIR` env var for custom temp directory |
 | 2.1.4 | Disable Background Tasks | `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` env var |
 | 2.1.3 | Release Channel Toggle | Switch between `stable` and `latest` in `/config` |

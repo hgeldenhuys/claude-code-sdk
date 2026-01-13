@@ -1366,6 +1366,44 @@
         "summary": "+2/-2 lines"
       },
       "reviewed": false
+    },
+    {
+      "id": "delta-1768316272471-n8e0s6p",
+      "url": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md",
+      "title": "Changelog",
+      "detectedAt": "2026-01-13T14:57:52.466Z",
+      "previousVersion": 5,
+      "newVersion": 6,
+      "previousHash": "f72f66b9f383667a6ca86db9b741618c5a1659e483070b0e6e00bdbe34487f52",
+      "newHash": "b5c77a8786080c274b6386bfb607870009ee5a66059d82774d1fd0a44093aa58",
+      "diffSummary": {
+        "linesAdded": 26,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [
+          "## 2.1.6"
+        ],
+        "summary": "+26/-0 lines, 1 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768316287433-zli1o4z",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/claude-code/sdk-overview",
+      "title": "Untitled",
+      "detectedAt": "2026-01-13T14:58:07.429Z",
+      "previousVersion": 8,
+      "newVersion": 9,
+      "previousHash": "15e16309499cabf689a4924711302c4738d8cede70ddca9468387c0c315042e8",
+      "newHash": "03f32c9e5743155991252971434620cd01bee5f38571db63ca15e13d25596633",
+      "diffSummary": {
+        "linesAdded": 1,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+1/-1 lines"
+      },
+      "reviewed": false
     }
   ]
 }

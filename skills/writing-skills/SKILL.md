@@ -111,6 +111,31 @@ skills/
     └── TROUBLESHOOTING.md # Common issues (optional)
 ```
 
+### Skill Discovery Locations
+
+Skills are discovered from these locations:
+
+| Location | Scope | Priority |
+|----------|-------|----------|
+| `.claude/skills/` | Current project | Highest |
+| `~/.claude/skills/` | All your projects | Lower |
+| Plugin `skills/` | Where plugin enabled | Lowest |
+
+**Nested Skills Discovery (2.1.6+):** When working with files in subdirectories, Claude Code automatically discovers skills from nested `.claude/skills` directories. This enables monorepos and multi-package projects to have package-specific skills.
+
+```
+my-monorepo/
+├── .claude/skills/          # Root skills (always available)
+│   └── deploy/
+├── packages/
+│   ├── frontend/
+│   │   └── .claude/skills/  # Auto-discovered when working in frontend/
+│   │       └── component-generator/
+│   └── backend/
+│       └── .claude/skills/  # Auto-discovered when working in backend/
+│           └── api-scaffolder/
+```
+
 ## Writing Effective Descriptions
 
 Descriptions appear in skill discovery. Make them count.
