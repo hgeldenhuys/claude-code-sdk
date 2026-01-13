@@ -78,6 +78,25 @@ Shows:
 | Session cost | Varies | Unexpected spike | Review recent operations |
 | Output ratio | Balanced | Output >> Input | Responses too verbose |
 
+## The /stats Command
+
+View usage statistics over time:
+
+```
+> /stats
+```
+
+**Date Range Filtering (2.1.6+):** Press `r` to cycle between:
+- Last 7 days
+- Last 30 days
+- All time
+
+Shows:
+- Total tokens used (input/output)
+- Number of sessions
+- Cost breakdown by period
+- Model usage distribution
+
 ## Token Reduction Strategies
 
 ### 1. Selective File Reading

@@ -16,6 +16,9 @@ Run these commands first when experiencing issues:
 # Health check - comprehensive system status
 claude doctor
 
+# Or in-session
+/doctor
+
 # Check Claude Code version
 claude --version
 
@@ -118,6 +121,13 @@ claude doctor --component api
 claude doctor --component mcp
 claude doctor --component hooks
 ```
+
+**`/doctor` reports (2.1.6+):**
+- **Updates section** - Shows auto-update channel and available npm versions (stable/latest)
+- **Permission warnings** - Detects unreachable permission rules with fix guidance
+- **API connectivity** - Verifies connection to Anthropic API
+- **MCP servers** - Lists connected servers and their status
+- **Hooks** - Validates hook configurations
 
 ### Permission Diagnostics
 

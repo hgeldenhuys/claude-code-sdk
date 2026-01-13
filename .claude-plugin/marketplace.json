@@ -61,6 +61,12 @@
       "version": "1.0.0"
     },
     {
+      "name": "chrome-integration",
+      "source": "./skills/chrome-integration",
+      "description": "Browser automation with Chrome - web app testing, live debugging, data extraction.",
+      "version": "1.0.0"
+    },
+    {
       "name": "effective-prompting",
       "source": "./skills/effective-prompting",
       "description": "Master prompting techniques for Claude Code - @ mentions, thinking modes, task framing.",

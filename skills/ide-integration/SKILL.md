@@ -17,6 +17,35 @@ Optimize your Claude Code workflow by integrating with VS Code, JetBrains IDEs, 
 | VS Code | Integrated terminal, extensions | Full-featured editing + Claude |
 | JetBrains | External terminal recommended | Heavy refactoring, debugging |
 | Terminal-only | tmux/screen for sessions | SSH, server-side, minimal setups |
+| Chrome | `claude --chrome` | Web app testing, browser automation |
+
+## Chrome Integration (2.0.73+)
+
+Connect Claude Code to Chrome for browser automation and live debugging.
+
+```bash
+# Start with Chrome enabled
+claude --chrome
+
+# Or enable in-session
+/chrome
+```
+
+**Capabilities:**
+- Live debugging (console errors, DOM state)
+- Web app testing (forms, flows, regressions)
+- Design verification (compare UI to mocks)
+- Data extraction from websites
+- Authenticated app access (uses your login state)
+
+**Requirements:** Chrome browser, [Claude in Chrome extension](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) v1.0.36+, Pro/Team/Enterprise plan.
+
+See [chrome-integration](../chrome-integration/SKILL.md) skill for detailed workflows.
+
+## UI Improvements (2.1.6+)
+
+- **@ Autocomplete Icons** - Different suggestion types now have icons
+- **Status Line Fields** - `context_window.used_percentage` and `remaining_percentage` available
 
 ## Core Integration Patterns
 

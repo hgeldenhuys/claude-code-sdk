@@ -264,6 +264,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 |---------|---------|-------------|
 | 2.1.6 | Status Line Context Fields | `context_window.used_percentage`, `remaining_percentage` |
 | 2.1.6 | @ Autocomplete Icons | Icons for suggestion types, single-line formatting |
+| 2.0.73 | Chrome Integration | `claude --chrome` for browser automation and debugging |
 | 2.1.3 | VSCode Destination Selector | Clickable permission destination (project, all, team, session) |
 | 2.1.2 | Clickable File Paths | Hyperlinks in tool output (OSC 8 terminals) |
 | 2.1.2 | Shift+Tab Plan Mode | Quick select "auto-accept edits" in plan mode |

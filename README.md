@@ -32,6 +32,7 @@ This repo is a **Claude Code plugin marketplace**. Install skills directly in Cl
 /plugin install writing-skills@claude-code-sdk
 
 # User-focused skills
+/plugin install chrome-integration@claude-code-sdk
 /plugin install effective-prompting@claude-code-sdk
 /plugin install memory-management@claude-code-sdk
 /plugin install debugging-claude-code@claude-code-sdk
@@ -111,6 +112,7 @@ Skills for everyday Claude Code usage:
 
 | Skill | Description |
 |-------|-------------|
+| [chrome-integration](skills/chrome-integration/SKILL.md) | Browser automation, web app testing, live debugging |
 | [effective-prompting](skills/effective-prompting/SKILL.md) | @ mentions, thinking modes, task framing |
 | [memory-management](skills/memory-management/SKILL.md) | CLAUDE.md, rules, memory strategies |
 | [debugging-claude-code](skills/debugging-claude-code/SKILL.md) | Diagnostics, common fixes, recovery |

@@ -110,6 +110,18 @@ claude mcp remove <name>
 claude mcp add-from-claude-desktop
 ```
 
+### Enable/Disable Servers (2.1.6+)
+
+Use `/mcp` command to enable or disable servers:
+
+```bash
+# In Claude Code
+/mcp enable <server-name>
+/mcp disable <server-name>
+```
+
+**Note:** As of 2.1.6, @-mentioning MCP servers to enable/disable them is no longer supported. Use `/mcp enable <name>` instead.
+
 ## OAuth Authentication
 
 Many cloud MCP servers require OAuth:
