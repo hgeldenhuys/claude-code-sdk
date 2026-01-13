@@ -2,14 +2,19 @@
 
 This document tracks recent Claude Code features and changes. Updated when docs sync detects changes.
 
-**Current Version:** 2.1.4
+**Current Version:** 2.1.5
 **Last Synced:** 2026-01-12
 
 ---
 
 ## Recent Highlights
 
-### Version 2.1.4 (Latest)
+### Version 2.1.5 (Latest)
+
+- **`CLAUDE_CODE_TMPDIR`** - Environment variable to override temp directory for internal temp files (useful for custom temp directory requirements)
+- **Private Repository Support** - Install plugins from private GitHub, GitLab, and Bitbucket repositories using authentication tokens
+
+### Version 2.1.4
 
 - **`CLAUDE_CODE_DISABLE_BACKGROUND_TASKS`** - Environment variable to disable all background task functionality
 - **OAuth Token Fix** - Fixed "Help improve Claude" setting fetch to refresh OAuth and retry on stale tokens
@@ -212,6 +217,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.5 | Private Repositories | Install from private GitHub/GitLab/Bitbucket repos with auth tokens |
 | 2.1.2 | Relative Path Fix | Plugins with relative paths now work in URL-based marketplaces |
 | 2.0.72 | Plugin Search | Filter by name, description, or marketplace in discover screen |
 | 2.0.70 | Plugin Marketplaces | Create and distribute plugin marketplaces via GitHub |
@@ -261,6 +267,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.5 | Custom Temp Directory | `CLAUDE_CODE_TMPDIR` env var for custom temp directory |
 | 2.1.4 | Disable Background Tasks | `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` env var |
 | 2.1.3 | Release Channel Toggle | Switch between `stable` and `latest` in `/config` |
 | 2.1.3 | Permission Warnings | `/doctor` warns about unreachable permission rules |

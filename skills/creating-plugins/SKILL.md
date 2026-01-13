@@ -187,6 +187,22 @@ Add to `.claude/settings.json`:
 }
 ```
 
+### Private Repository Support (2.1.5+)
+
+Distribute plugins via private repositories using authentication tokens:
+
+| Provider | Environment Variable | Notes |
+|----------|---------------------|-------|
+| GitHub | `GITHUB_TOKEN` or `GH_TOKEN` | PAT with `repo` scope |
+| GitLab | `GITLAB_TOKEN` or `GL_TOKEN` | Token with `read_repository` scope |
+| Bitbucket | `BITBUCKET_TOKEN` | App password or repo access token |
+
+Set in shell config or when running Claude Code:
+
+```bash
+export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+```
+
 See [DISTRIBUTION.md](./DISTRIBUTION.md) for complete distribution guide.
 
 ## Workflow: Create a Plugin
