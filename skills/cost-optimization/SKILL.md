@@ -97,6 +97,36 @@ Shows:
 - Cost breakdown by period
 - Model usage distribution
 
+## MCP Tool Search Auto Mode (2.1.7+)
+
+When you have many MCP tools configured, their descriptions can consume significant context space. Version 2.1.7 introduces automatic MCP tool deferral:
+
+### How It Works
+
+- **Trigger**: When MCP tool descriptions exceed 10% of context window
+- **Behavior**: Tools are deferred and discovered via `MCPSearch` instead of loaded upfront
+- **Default**: Enabled for all users
+
+### Cost Impact
+
+| MCP Tools | Without Auto Mode | With Auto Mode | Savings |
+|-----------|-------------------|----------------|---------|
+| 10-20 tools | ~2-5% context | ~1% context | 50-80% |
+| 50+ tools | ~10-20% context | ~1% context | 90%+ |
+
+### Disabling Auto Mode
+
+If you need all MCP tools loaded upfront (e.g., for specific workflows):
+
+```json
+// settings.json
+{
+  "disallowedTools": ["MCPSearch"]
+}
+```
+
+**Note**: Only disable if you have few MCP tools or specifically need immediate tool availability.
+
 ## Token Reduction Strategies
 
 ### 1. Selective File Reading

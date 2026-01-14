@@ -2,14 +2,39 @@
 
 This document tracks recent Claude Code features and changes. Updated when docs sync detects changes.
 
-**Current Version:** 2.1.6
-**Last Synced:** 2026-01-13
+**Current Version:** 2.1.7
+**Last Synced:** 2026-01-14
 
 ---
 
 ## Recent Highlights
 
-### Version 2.1.6 (Latest)
+### Version 2.1.7 (Latest)
+
+**New Features:**
+- **`showTurnDuration` Setting** - Hide turn duration messages ("Cooked for 1m 6s")
+- **Permission Feedback** - Provide feedback when accepting permission prompts
+- **Task Notification Inline Response** - Agent's final response shown inline in task notifications
+- **MCP Tool Search Auto Mode** - Enabled by default; defers MCP tool descriptions when >10% of context window, uses MCPSearch tool instead. Disable by adding `MCPSearch` to `disallowedTools`.
+
+**Security Fixes:**
+- Fixed wildcard permission rules matching compound commands with shell operators
+
+**Bug Fixes:**
+- Fixed false "file modified" errors on Windows from cloud sync/antivirus/Git
+- Fixed orphaned tool_result errors when sibling tools fail during streaming
+- Fixed context window blocking using full window instead of effective window
+- Fixed spinner flash for local commands like `/model` or `/theme`
+- Fixed terminal title animation jitter (now uses fixed-width braille)
+- Fixed plugins with git submodules not fully initialized
+- Fixed bash commands on Windows with temp paths containing `t`/`n` escapes
+- Improved typing responsiveness (reduced memory allocation in terminal rendering)
+- [VSCode] Fixed `claudeProcessWrapper` setting passing wrong path
+
+**Other Changes:**
+- OAuth/API Console URLs changed to `platform.claude.com`
+
+### Version 2.1.6
 
 **New Features:**
 - **`/config` Search** - Search functionality for quickly filtering settings
@@ -262,6 +287,8 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.7 | Task Notification Inline Response | Agent's final response shown inline in notifications |
+| 2.1.7 | Permission Feedback | Provide feedback when accepting permission prompts |
 | 2.1.6 | Status Line Context Fields | `context_window.used_percentage`, `remaining_percentage` |
 | 2.1.6 | @ Autocomplete Icons | Icons for suggestion types, single-line formatting |
 | 2.0.73 | Chrome Integration | `claude --chrome` for browser automation and debugging |
@@ -292,6 +319,8 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.7 | `showTurnDuration` Setting | Hide turn duration messages ("Cooked for 1m 6s") |
+| 2.1.7 | MCP Tool Search Auto Mode | Enabled by default; defers MCP descriptions when >10% context |
 | 2.1.6 | `/config` Search | Search functionality for filtering settings |
 | 2.1.6 | `/doctor` Updates | Shows auto-update channel and npm versions |
 | 2.1.6 | `/stats` Date Range | Press `r` to cycle: 7 days, 30 days, All time |
