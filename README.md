@@ -142,24 +142,6 @@ Skills for advanced development workflows:
 | [monorepo-patterns](skills/monorepo-patterns/SKILL.md) | Navigation, cross-package changes, tooling |
 | [ci-cd-integration](skills/ci-cd-integration/SKILL.md) | GitHub Actions, automation, pipelines |
 
-## Available Commands
-
-Slash commands that can be installed from this SDK:
-
-| Command | Description | Usage |
-|---------|-------------|-------|
-| [/sdk-plugins](commands/sdk-plugins.md) | List all skills from this SDK | `/sdk-plugins [extension\|user\|advanced]` |
-
-### Installing Commands
-
-```bash
-# Copy to user commands (available everywhere)
-cp commands/sdk-plugins.md ~/.claude/commands/
-
-# Or copy to project commands (shared with team)
-cp commands/sdk-plugins.md .claude/commands/
-```
-
 ## SDK Installation
 
 For programmatic access to documentation tracking and transcript search:
