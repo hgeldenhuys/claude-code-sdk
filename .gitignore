@@ -37,6 +37,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .agent/
 .claude/
 notify-service/
-hooks/
+/hooks/
 data/
 .board.db*

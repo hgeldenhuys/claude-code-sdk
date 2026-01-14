@@ -9,6 +9,7 @@ Claude Code SDK is a TypeScript library for:
 - **Documentation tracking** - Cache and track changes to Claude Code official docs
 - **Plugin marketplace** for discovering, installing, and managing Claude Code extensions
 - **Plugin management** for skills, tools, hooks, commands, and MCP servers
+- **Hooks SDK** - Utilities for building Claude Code hooks with session naming
 
 ## Commands
 
@@ -46,15 +47,32 @@ src/
 │   ├── index.ts       # Barrel export
 │   ├── types.ts       # Doc tracking types (DocMetadata, DeltaResult, etc.)
 │   └── tracker.ts     # DocsTracker - fetch, cache, delta detection
+├── hooks/             # Hooks SDK for building Claude Code hooks
+│   ├── index.ts       # Main hooks exports
+│   ├── types.ts       # Hook event type definitions (10 events)
+│   ├── helpers.ts     # Hook creators and I/O utilities
+│   └── sessions/      # Session naming module
+│       ├── store.ts   # SessionStore - name-centric session storage
+│       ├── namer.ts   # NameGenerator - adjective-animal names
+│       ├── cli.ts     # CLI command implementations
+│       └── types.ts   # Session types
 ├── cli/
 │   └── docs.ts        # CLI for documentation management
 └── utils/index.ts     # Shared utilities (version comparison, file ops)
+
+bin/                   # Standalone CLI utilities
+└── sesh.ts            # Session name manager CLI
 
 skills/                # Distributable skills for Claude Code development
 └── writing-skills/    # Guide for creating effective skills
     ├── SKILL.md       # Main skill file
     ├── TEMPLATES.md   # Starter templates
     └── EXAMPLES.md    # Real-world examples
+
+examples/hooks/        # Example hook implementations
+├── session-namer-hook.ts   # Auto-assign session names
+├── tool-guard-hook.ts      # Block dangerous commands
+└── session-manager-cli.ts  # CLI usage example
 ```
 
 ### Core Classes
@@ -64,6 +82,51 @@ skills/                # Distributable skills for Claude Code development
 - **DocsTracker**: Fetches, caches, and tracks changes to Claude Code documentation
 - **Marketplace**: Searches packages, handles installation from marketplace API
 - **PluginManager**: Loads plugins from disk, validates manifests, manages hooks
+- **SessionStore**: Name-centric session storage with history tracking
+- **NameGenerator**: Human-friendly name generation (adjective-animal pattern)
+
+### Hooks SDK
+
+The `src/hooks/` module provides utilities for building Claude Code hooks:
+
+```typescript
+import {
+  createSessionStartHook,
+  trackSession,
+  getSessionName,
+  blockTool,
+  injectContext,
+} from 'claude-code-sdk/hooks';
+
+// Auto session tracking hook
+createSessionStartHook(({ sessionName }) => {
+  return sessionStartContext(`Session: ${sessionName}`);
+});
+```
+
+**Key features:**
+- Type definitions for all 10 hook events
+- Session naming that persists across compact/clear
+- Hook creators with automatic session tracking
+- Common patterns (blockTool, injectContext, etc.)
+
+### CLI Utilities
+
+**sesh** - Session name manager for easy session resumption:
+
+```bash
+# Resume by name
+claude --resume $(sesh my-project)
+
+# Convert between formats
+sesh jolly-squid           # → session ID
+sesh abc-123-...           # → name
+
+# List and manage
+sesh list
+sesh rename old-name new-name
+sesh info my-project
+```
 
 ### Documentation Tracking
 
