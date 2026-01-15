@@ -24,9 +24,13 @@ const result = store.track(data.session_id, {
 // Log for debugging
 console.error(`[session-hook] Tracked session: ${result.name} -> ${data.session_id} (source: ${data.source}, isNew: ${result.isNew})`);
 
-// Output response (context injection)
+// Output response with correct format for context injection
+// See: https://code.claude.com/docs/en/hooks
 const response = {
-  result: `Session tracked as: ${result.name}`,
+  hookSpecificOutput: {
+    hookEventName: 'SessionStart',
+    additionalContext: `Your session name is: ${result.name}`,
+  },
 };
 
 // Write JSON to stdout
