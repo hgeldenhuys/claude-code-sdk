@@ -72,8 +72,8 @@ cmd_install() {
         curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
         sudo apt-get install -y nodejs
 
-        # Install Claude Code
-        npm install -g @anthropic-ai/claude-code
+        # Install Claude Code globally (needs sudo)
+        sudo npm install -g @anthropic-ai/claude-code
 
         # Verify installation
         claude --version
