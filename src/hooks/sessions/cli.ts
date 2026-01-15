@@ -63,13 +63,15 @@ export function cmdGetName(sessionId: string): CLIResult {
 /**
  * List sessions with optional filters
  */
-export function cmdList(options: {
-  pattern?: string;
-  source?: string;
-  manual?: boolean;
-  limit?: number;
-  format?: 'table' | 'json' | 'names';
-} = {}): CLIResult {
+export function cmdList(
+  options: {
+    pattern?: string;
+    source?: string;
+    manual?: boolean;
+    limit?: number;
+    format?: 'table' | 'json' | 'names';
+  } = {}
+): CLIResult {
   const store = getSessionStore();
 
   const filter: SessionListFilter = {};
@@ -96,7 +98,6 @@ export function cmdList(options: {
     case 'names':
       message = sessions.map((s) => s.name).join('\n');
       break;
-    case 'table':
     default:
       message = formatTable(sessions);
       break;
@@ -283,13 +284,13 @@ export function runCLI(args: string[]): CLIResult {
       return cmdHistory(rest[0]);
 
     case 'describe':
-      if (!rest[0] || !rest[1]) return { success: false, message: 'Usage: describe <name-or-id> <description>' };
+      if (!rest[0] || !rest[1])
+        return { success: false, message: 'Usage: describe <name-or-id> <description>' };
       return cmdDescribe(rest[0], rest.slice(1).join(' '));
 
     case 'cleanup':
-      return cmdCleanup(rest[0] ? parseInt(rest[0], 10) : undefined);
+      return cmdCleanup(rest[0] ? Number.parseInt(rest[0], 10) : undefined);
 
-    case 'help':
     default:
       return {
         success: true,
@@ -303,7 +304,8 @@ export function runCLI(args: string[]): CLIResult {
 // ============================================================================
 
 function formatTable(sessions: SessionInfo[]): string {
-  const header = 'NAME                 SESSION ID                               LAST ACCESSED        SOURCE';
+  const header =
+    'NAME                 SESSION ID                               LAST ACCESSED        SOURCE';
   const divider = '-'.repeat(header.length);
 
   const rows = sessions.map((s) => {
@@ -351,7 +353,7 @@ function parseListOptions(args: string[]): Parameters<typeof cmdList>[0] {
       case '-n': {
         const limitValue = args[++i];
         if (limitValue) {
-          options.limit = parseInt(limitValue, 10);
+          options.limit = Number.parseInt(limitValue, 10);
         }
         break;
       }

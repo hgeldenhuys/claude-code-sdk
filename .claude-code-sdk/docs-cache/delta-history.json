@@ -1422,6 +1422,62 @@
         "summary": "+2/-2 lines"
       },
       "reviewed": false
+    },
+    {
+      "id": "delta-1768402622472-p90qrer",
+      "url": "https://code.claude.com/docs/en/settings.md",
+      "title": "Claude Code settings",
+      "detectedAt": "2026-01-14T14:57:02.467Z",
+      "previousVersion": 9,
+      "newVersion": 10,
+      "previousHash": "3df1110cb4b1e739c663de6ef069c1813dcb5b7696ad9d04b2e97f6b5f24e13c",
+      "newHash": "27c2ef6c139816f28b8fcd69152315fa1e3d8709663739ca2d6255bf06d14754",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+2/-1 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768402627502-4hv8ruu",
+      "url": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md",
+      "title": "Changelog",
+      "detectedAt": "2026-01-14T14:57:07.499Z",
+      "previousVersion": 6,
+      "newVersion": 7,
+      "previousHash": "b5c77a8786080c274b6386bfb607870009ee5a66059d82774d1fd0a44093aa58",
+      "newHash": "430672fd53873382fa1262d19b51b43a78c3ae06ec11e7437c3c60a2e1bcb71c",
+      "diffSummary": {
+        "linesAdded": 16,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [
+          "## 2.1.7"
+        ],
+        "summary": "+16/-0 lines, 1 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768402634497-z5n7mx9",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/claude-code/sdk-overview",
+      "title": "Untitled",
+      "detectedAt": "2026-01-14T14:57:14.495Z",
+      "previousVersion": 10,
+      "newVersion": 11,
+      "previousHash": "ea69323035b94703f61cf1fd8e2853fa6493cddcaf5761ae73679240ddc8e47c",
+      "newHash": "f1d096e3550b407abacf487ffba3ceebf327d7a90a282fc44fd0344c4b6741d3",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 2,
+        "linesModified": 2,
+        "changedSections": [],
+        "summary": "+2/-2 lines"
+      },
+      "reviewed": false
     }
   ]
 }

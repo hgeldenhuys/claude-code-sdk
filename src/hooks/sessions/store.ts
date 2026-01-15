@@ -11,19 +11,19 @@
  * - Last hook event to fire "wins" the name (enables fork/snapshot pattern)
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'fs';
-import { dirname, join } from 'path';
-import type {
-  SessionDatabase,
-  SessionStoreConfig,
-  NamedSession,
-  SessionRecord,
-  SessionInfo,
-  SessionListFilter,
-  TrackingResult,
-} from './types';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { SessionSource } from '../types';
 import { NameGenerator, generateUniqueName } from './namer';
+import type {
+  NamedSession,
+  SessionDatabase,
+  SessionInfo,
+  SessionListFilter,
+  SessionRecord,
+  SessionStoreConfig,
+  TrackingResult,
+} from './types';
 
 // ============================================================================
 // Constants
@@ -218,9 +218,9 @@ export class SessionStore {
    */
   rename(sessionIdOrName: string, newName: string): void {
     // Normalize new name
-    newName = this.nameGenerator.normalizeName(newName);
-    if (!this.nameGenerator.isValidName(newName)) {
-      throw new Error(`Invalid name format: ${newName}`);
+    const normalizedName = this.nameGenerator.normalizeName(newName);
+    if (!this.nameGenerator.isValidName(normalizedName)) {
+      throw new Error(`Invalid name format: ${normalizedName}`);
     }
 
     // Find the session
@@ -236,8 +236,8 @@ export class SessionStore {
     }
 
     // Check for collision
-    if (this.db.names[newName] && newName !== oldName) {
-      throw new Error(`Name already exists: ${newName}`);
+    if (this.db.names[normalizedName] && normalizedName !== oldName) {
+      throw new Error(`Name already exists: ${normalizedName}`);
     }
 
     // Perform rename
@@ -246,21 +246,21 @@ export class SessionStore {
       throw new Error(`Session not found: ${oldName}`);
     }
 
-    session.name = newName;
+    session.name = normalizedName;
     session.manual = true;
     session.lastAccessed = new Date().toISOString();
 
     // Update data structures
     delete this.db.names[oldName];
-    this.db.names[newName] = session;
+    this.db.names[normalizedName] = session;
 
     // Update reverse index for all session IDs in history
     for (const record of session.history) {
       if (this.db.sessionIndex[record.sessionId] === oldName) {
-        this.db.sessionIndex[record.sessionId] = newName;
+        this.db.sessionIndex[record.sessionId] = normalizedName;
       }
     }
-    this.db.sessionIndex[session.currentSessionId] = newName;
+    this.db.sessionIndex[session.currentSessionId] = normalizedName;
 
     this.dirty = true;
     this.save();
@@ -465,13 +465,27 @@ export class SessionStore {
     const db = this.createEmptyDatabase();
 
     if (typeof oldData === 'object' && oldData !== null) {
-      const old = oldData as { sessions?: Record<string, { name: string; created?: string; source?: string; manual?: boolean }> };
+      const old = oldData as {
+        sessions?: Record<
+          string,
+          { name: string; created?: string; source?: string; manual?: boolean }
+        >;
+      };
       if (old.sessions) {
         for (const [sessionId, info] of Object.entries(old.sessions)) {
-          this.track.call({ db, dirty: false, save: () => {}, nameGenerator: this.nameGenerator } as unknown as SessionStore, sessionId, {
-            name: info.name,
-            source: (info.source as SessionSource) ?? 'startup',
-          });
+          this.track.call(
+            {
+              db,
+              dirty: false,
+              save: () => {},
+              nameGenerator: this.nameGenerator,
+            } as unknown as SessionStore,
+            sessionId,
+            {
+              name: info.name,
+              source: (info.source as SessionSource) ?? 'startup',
+            }
+          );
         }
       }
     }
@@ -527,7 +541,7 @@ export function getSessionId(name: string): string | undefined {
 }
 
 export function renameSession(sessionIdOrName: string, newName: string): void {
-  return getSessionStore().rename(sessionIdOrName, newName);
+  getSessionStore().rename(sessionIdOrName, newName);
 }
 
 export function listSessions(filter?: SessionListFilter): SessionInfo[] {

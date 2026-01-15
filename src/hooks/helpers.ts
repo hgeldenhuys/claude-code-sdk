@@ -5,30 +5,30 @@
  * session tracking and standardized I/O handling.
  */
 
-import { trackSession, getSessionName } from './sessions';
+import { getSessionName, trackSession } from './sessions';
+import type { TrackingResult } from './sessions';
 import type {
-  HookEventName,
-  SessionSource,
   BaseHookInput,
-  SessionStartInput,
-  SessionStartOutput,
-  PreToolUseInput,
-  PreToolUseOutput,
-  PostToolUseInput,
-  PostToolUseOutput,
-  StopInput,
-  StopOutput,
-  UserPromptSubmitInput,
-  UserPromptSubmitOutput,
-  PreCompactInput,
-  PreCompactOutput,
-  SessionEndInput,
-  SubagentStartInput,
-  SubagentStopInput,
+  HookEventName,
   PermissionRequestInput,
   PermissionRequestOutput,
+  PostToolUseInput,
+  PostToolUseOutput,
+  PreCompactInput,
+  PreCompactOutput,
+  PreToolUseInput,
+  PreToolUseOutput,
+  SessionEndInput,
+  SessionSource,
+  SessionStartInput,
+  SessionStartOutput,
+  StopInput,
+  StopOutput,
+  SubagentStartInput,
+  SubagentStopInput,
+  UserPromptSubmitInput,
+  UserPromptSubmitOutput,
 } from './types';
-import type { TrackingResult } from './sessions';
 
 // ============================================================================
 // I/O Utilities
@@ -41,12 +41,14 @@ export function readHookInput<T extends BaseHookInput>(): T {
   const chunks: Buffer[] = [];
   const fd = process.stdin.fd;
   const buf = Buffer.alloc(1024);
+  // biome-ignore lint/style/useNodejsImportProtocol: dynamic require for sync stdin read
+  const fs = require('fs');
 
   try {
-    let bytesRead: number;
-    // eslint-disable-next-line no-cond-assign
-    while ((bytesRead = require('fs').readSync(fd, buf, 0, buf.length, null)) > 0) {
+    let bytesRead = fs.readSync(fd, buf, 0, buf.length, null);
+    while (bytesRead > 0) {
       chunks.push(buf.slice(0, bytesRead));
+      bytesRead = fs.readSync(fd, buf, 0, buf.length, null);
     }
   } catch {
     // End of input
@@ -128,7 +130,7 @@ export interface HookContext<T extends BaseHookInput> {
  * Create a session-aware SessionStart hook handler
  */
 export function createSessionStartHook(
-  handler: (ctx: HookContext<SessionStartInput>) => SessionStartOutput | void,
+  handler: (ctx: HookContext<SessionStartInput>) => SessionStartOutput | undefined,
   options: SessionAwareOptions = { trackSession: true }
 ): void {
   const input = readHookInput<SessionStartInput>();
@@ -160,7 +162,7 @@ export function createSessionStartHook(
  * Create a session-aware PreToolUse hook handler
  */
 export function createPreToolUseHook(
-  handler: (ctx: HookContext<PreToolUseInput>) => PreToolUseOutput | void,
+  handler: (ctx: HookContext<PreToolUseInput>) => PreToolUseOutput | undefined,
   options: SessionAwareOptions = { trackSession: true }
 ): void {
   const input = readHookInput<PreToolUseInput>();
@@ -192,7 +194,7 @@ export function createPreToolUseHook(
  * Create a session-aware PostToolUse hook handler
  */
 export function createPostToolUseHook(
-  handler: (ctx: HookContext<PostToolUseInput>) => PostToolUseOutput | void,
+  handler: (ctx: HookContext<PostToolUseInput>) => PostToolUseOutput | undefined,
   options: SessionAwareOptions = { trackSession: true }
 ): void {
   const input = readHookInput<PostToolUseInput>();
@@ -224,7 +226,7 @@ export function createPostToolUseHook(
  * Create a session-aware Stop hook handler
  */
 export function createStopHook(
-  handler: (ctx: HookContext<StopInput>) => StopOutput | void,
+  handler: (ctx: HookContext<StopInput>) => StopOutput | undefined,
   options: SessionAwareOptions = { trackSession: true }
 ): void {
   const input = readHookInput<StopInput>();
@@ -256,7 +258,7 @@ export function createStopHook(
  * Create a session-aware UserPromptSubmit hook handler
  */
 export function createUserPromptSubmitHook(
-  handler: (ctx: HookContext<UserPromptSubmitInput>) => UserPromptSubmitOutput | void,
+  handler: (ctx: HookContext<UserPromptSubmitInput>) => UserPromptSubmitOutput | undefined,
   options: SessionAwareOptions = { trackSession: true }
 ): void {
   const input = readHookInput<UserPromptSubmitInput>();
@@ -288,7 +290,7 @@ export function createUserPromptSubmitHook(
  * Create a session-aware PreCompact hook handler
  */
 export function createPreCompactHook(
-  handler: (ctx: HookContext<PreCompactInput>) => PreCompactOutput | void,
+  handler: (ctx: HookContext<PreCompactInput>) => PreCompactOutput | undefined,
   options: SessionAwareOptions = { trackSession: true }
 ): void {
   const input = readHookInput<PreCompactInput>();
@@ -348,7 +350,7 @@ export function createSessionEndHook(
  * Create a PermissionRequest hook handler
  */
 export function createPermissionRequestHook(
-  handler: (ctx: HookContext<PermissionRequestInput>) => PermissionRequestOutput | void,
+  handler: (ctx: HookContext<PermissionRequestInput>) => PermissionRequestOutput | undefined,
   options: SessionAwareOptions = { trackSession: false }
 ): void {
   const input = readHookInput<PermissionRequestInput>();
@@ -418,7 +420,10 @@ export function blockPrompt(reason: string): UserPromptSubmitOutput {
 /**
  * Inject context with session start
  */
-export function sessionStartContext(message: string, env?: Record<string, string>): SessionStartOutput {
+export function sessionStartContext(
+  message: string,
+  env?: Record<string, string>
+): SessionStartOutput {
   return { result: message, env };
 }
 
@@ -441,12 +446,12 @@ type HookInputMap = {
 
 type HookOutputMap = {
   SessionStart: SessionStartOutput;
-  SessionEnd: void;
+  SessionEnd: undefined;
   PreToolUse: PreToolUseOutput;
   PostToolUse: PostToolUseOutput;
   Stop: StopOutput;
-  SubagentStart: void;
-  SubagentStop: void;
+  SubagentStart: undefined;
+  SubagentStop: undefined;
   UserPromptSubmit: UserPromptSubmitOutput;
   PreCompact: PreCompactOutput;
   PermissionRequest: PermissionRequestOutput;
@@ -457,7 +462,7 @@ type HookOutputMap = {
  */
 export function runHook<E extends HookEventName>(
   _event: E,
-  handler: (ctx: HookContext<HookInputMap[E]>) => HookOutputMap[E] | void,
+  handler: (ctx: HookContext<HookInputMap[E]>) => HookOutputMap[E] | undefined,
   options: SessionAwareOptions = { trackSession: true }
 ): void {
   const input = readHookInput<HookInputMap[E]>();

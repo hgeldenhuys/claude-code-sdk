@@ -158,6 +158,7 @@ Code through hierarchical settings:
 | `awsCredentialExport`        | Custom script that outputs JSON with AWS credentials (see [advanced credential configuration](/en/amazon-bedrock#advanced-credential-configuration))                                                                                                                            | `/bin/generate_aws_grant.sh`                                            |
 | `alwaysThinkingEnabled`      | Enable [extended thinking](/en/common-workflows#use-extended-thinking) by default for all sessions. Typically configured via the `/config` command rather than editing directly                                                                                                 | `true`                                                                  |
 | `language`                   | Configure Claude's preferred response language (e.g., `"japanese"`, `"spanish"`, `"french"`). Claude will respond in this language by default                                                                                                                                   | `"japanese"`                                                            |
+| `autoUpdatesChannel`         | Release channel to follow for updates. Use `"stable"` for a version that is typically about one week old and skips versions with major regressions, or `"latest"` (default) for the most recent release                                                                         | `"stable"`                                                              |
 
 ### Permission settings
 
@@ -741,7 +742,7 @@ Claude Code has access to a set of powerful tools that help it understand and mo
 
 | Tool                | Description                                                                                       | Permission Required |
 | :------------------ | :------------------------------------------------------------------------------------------------ | :------------------ |
-| **AskUserQuestion** | Asks the user multiple choice questions to gather information or clarify ambiguity                | No                  |
+| **AskUserQuestion** | Asks multiple-choice questions to gather requirements or clarify ambiguity                        | No                  |
 | **Bash**            | Executes shell commands in your environment (see [Bash tool behavior](#bash-tool-behavior) below) | Yes                 |
 | **BashOutput**      | Retrieves output from a background bash shell                                                     | No                  |
 | **Edit**            | Makes targeted edits to specific files                                                            | Yes                 |
