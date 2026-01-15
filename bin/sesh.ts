@@ -166,7 +166,7 @@ function cmdList(args: string[]): number {
       case '--limit':
       case '-n': {
         const val = args[++i];
-        if (val) limit = parseInt(val, 10);
+        if (val) limit = Number.parseInt(val, 10);
         break;
       }
       case '--json':
@@ -211,7 +211,6 @@ function cmdList(args: string[]): number {
         console.log(s.sessionId);
       }
       break;
-    case 'table':
     default: {
       const header = 'NAME                 SESSION ID                           LAST ACCESSED';
       console.log(header);
@@ -309,6 +308,20 @@ function cmdHistory(name: string): number {
   return 0;
 }
 
+function cmdCleanup(maxAgeHours?: number): number {
+  const store = getSessionStore();
+  const maxAge = maxAgeHours ? maxAgeHours * 60 * 60 * 1000 : undefined;
+  const deleted = store.cleanup(maxAge);
+
+  if (deleted > 0) {
+    console.log(`Cleaned up ${deleted} session(s)`);
+  } else {
+    console.log('No sessions to clean up');
+  }
+
+  return 0;
+}
+
 // ============================================================================
 // Main
 // ============================================================================
@@ -390,6 +403,9 @@ function main(): number {
         return 1;
       }
       return cmdHistory(args[1]);
+
+    case 'cleanup':
+      return cmdCleanup(args[1] ? Number.parseInt(args[1], 10) : undefined);
 
     default:
       // Auto-detect mode: input is either a name or session ID

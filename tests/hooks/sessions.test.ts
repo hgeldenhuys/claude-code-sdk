@@ -2,12 +2,12 @@
  * Session Naming Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { existsSync, mkdirSync, rmSync } from 'fs';
-import { join } from 'path';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import {
-  SessionStore,
   NameGenerator,
+  SessionStore,
   generateName,
   generateUniqueName,
 } from '../../src/hooks/sessions';
