@@ -1,0 +1,22 @@
+{
+  "name": "claude-code-sdk",
+  "owner": {
+    "name": "Herman Geldenhuys",
+    "email": "hgeldenhuys@gmail.com",
+    "url": "https://github.com/hgeldenhuys"
+  },
+  "description": "Claude Code SDK plugins - session naming, documentation tracking, and more",
+  "plugins": [
+    {
+      "name": "session-naming",
+      "description": "Human-friendly session names for Claude Code. Assigns memorable names like 'brave-elephant' to sessions.",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/hgeldenhuys/claude-code-sdk.git",
+        "path": ".claude-plugin"
+      },
+      "version": "1.0.0",
+      "keywords": ["sessions", "naming", "productivity"]
+    }
+  ]
+}
