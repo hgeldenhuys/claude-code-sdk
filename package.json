@@ -33,7 +33,7 @@
   },
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target node",
+    "build": "bun build src/index.ts --outdir dist --target bun",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "lint": "bunx @biomejs/biome check src/",
