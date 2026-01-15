@@ -157,6 +157,14 @@ export class SessionStore {
     // Update reverse index
     this.db.sessionIndex[sessionId] = name;
 
+    // Track latest session per directory (for recovery after /clear)
+    if (cwd) {
+      if (!this.db.latestByDirectory) {
+        this.db.latestByDirectory = {};
+      }
+      this.db.latestByDirectory[cwd] = name;
+    }
+
     this.dirty = true;
     this.save();
 
@@ -376,6 +384,36 @@ export class SessionStore {
   }
 
   /**
+   * Get the latest session name used in a directory.
+   * Useful for recovery after /clear creates a new session ID.
+   */
+  getLatestForDirectory(cwd: string): string | undefined {
+    return this.db.latestByDirectory?.[cwd];
+  }
+
+  /**
+   * Resume the latest session for a directory.
+   * Call this after /clear to reconnect the new session ID to the existing name.
+   */
+  resumeLatestForDirectory(
+    sessionId: string,
+    cwd: string,
+    source: SessionSource = 'clear'
+  ): TrackingResult | undefined {
+    const latestName = this.getLatestForDirectory(cwd);
+    if (!latestName) {
+      return undefined;
+    }
+
+    // Track with the existing name - this will add the new session ID to its history
+    return this.track(sessionId, {
+      name: latestName,
+      source,
+      cwd,
+    });
+  }
+
+  /**
    * Cleanup old sessions
    */
   cleanup(maxAge?: number): number {
@@ -546,4 +584,16 @@ export function renameSession(sessionIdOrName: string, newName: string): void {
 
 export function listSessions(filter?: SessionListFilter): SessionInfo[] {
   return getSessionStore().list(filter);
+}
+
+export function getLatestForDirectory(cwd: string): string | undefined {
+  return getSessionStore().getLatestForDirectory(cwd);
+}
+
+export function resumeLatestForDirectory(
+  sessionId: string,
+  cwd: string,
+  source?: SessionSource
+): TrackingResult | undefined {
+  return getSessionStore().resumeLatestForDirectory(sessionId, cwd, source);
 }

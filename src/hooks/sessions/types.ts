@@ -59,6 +59,12 @@ export interface SessionDatabase {
   names: Record<string, NamedSession>;
   /** Reverse index: sessionId -> name (for O(1) lookups) */
   sessionIndex: Record<string, string>;
+  /**
+   * Track the latest session name per working directory.
+   * Enables recovery after /clear creates a new session ID.
+   * Key: normalized cwd path, Value: session name
+   */
+  latestByDirectory?: Record<string, string>;
 }
 
 // ============================================================================
