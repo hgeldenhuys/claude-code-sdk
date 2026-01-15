@@ -9,10 +9,10 @@
   "plugins": [
     {
       "name": "session-naming",
-      "description": "Human-friendly session names for Claude Code. Assigns memorable names like 'brave-elephant' to sessions.",
-      "source": "./.claude-plugin",
+      "description": "Human-friendly session names for Claude Code. Assigns memorable names like 'brave-elephant' to sessions, persists across /compact and /clear.",
+      "source": "./",
       "version": "1.0.0",
-      "keywords": ["sessions", "naming", "productivity"]
+      "keywords": ["sessions", "naming", "productivity", "hooks"]
     }
   ]
 }
