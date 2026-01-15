@@ -1,0 +1,21 @@
+{
+  "name": "session-naming",
+  "version": "1.0.0",
+  "description": "Human-friendly session names for Claude Code. Assigns memorable names like 'brave-elephant' to sessions, persists across /compact and /clear, enables resume by name.",
+  "author": {
+    "name": "Herman Geldenhuys",
+    "email": "hgeldenhuys@gmail.com",
+    "url": "https://github.com/hgeldenhuys"
+  },
+  "homepage": "https://github.com/hgeldenhuys/claude-code-sdk",
+  "repository": "https://github.com/hgeldenhuys/claude-code-sdk",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "sessions",
+    "naming",
+    "hooks",
+    "productivity"
+  ],
+  "hooks": "./hooks.json"
+}

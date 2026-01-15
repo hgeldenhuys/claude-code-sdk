@@ -38,6 +38,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .claude/
 notify-service/
 /hooks/
+!/hooks/session-start.ts
 data/
 .board.db*
 
