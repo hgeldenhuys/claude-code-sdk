@@ -140,7 +140,8 @@ function normalizeTranscriptLine(
       rawType === 'assistant' ||
       rawType === 'file-history-snapshot' ||
       rawType === 'system' ||
-      rawType === 'summary'
+      rawType === 'summary' ||
+      rawType === 'progress'
     ) {
       type = rawType as TranscriptLine['type'];
     }
@@ -168,6 +169,13 @@ function normalizeTranscriptLine(
     message: raw.message,
     toolUseResult: raw.toolUseResult,
     raw: rawString,
+    // Additional fields for system/progress messages
+    subtype: raw.subtype,
+    data: raw.data as Record<string, unknown> | undefined,
+    summary: raw.summary,
+    hookInfos: raw.hookInfos as Array<{ command: string }> | undefined,
+    hookErrors: raw.hookErrors,
+    hookCount: raw.hookCount,
   };
 }
 

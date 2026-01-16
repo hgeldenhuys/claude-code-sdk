@@ -39,7 +39,7 @@ export interface TranscriptMessage {
  */
 export interface TranscriptLine {
   lineNumber: number;
-  type: 'user' | 'assistant' | 'file-history-snapshot' | 'system' | 'summary';
+  type: 'user' | 'assistant' | 'file-history-snapshot' | 'system' | 'summary' | 'progress';
   uuid: string;
   parentUuid: string | null;
   sessionId: string;
@@ -51,6 +51,14 @@ export interface TranscriptLine {
   message?: TranscriptMessage;
   toolUseResult?: Record<string, unknown>;
   raw: string;
+  // Additional fields for system/progress messages
+  subtype?: string;
+  data?: Record<string, unknown>;
+  summary?: string;
+  // Hook-related fields that appear at top level
+  hookInfos?: Array<{ command: string }>;
+  hookErrors?: string[];
+  hookCount?: number;
 }
 
 /**
@@ -113,5 +121,12 @@ export interface RawTranscriptEntry {
   slug?: string;
   message?: TranscriptMessage;
   toolUseResult?: Record<string, unknown>;
+  // Additional fields for system/progress messages
+  subtype?: string;
+  data?: unknown;
+  summary?: string;
+  hookInfos?: unknown[];
+  hookErrors?: string[];
+  hookCount?: number;
   [key: string]: unknown;
 }

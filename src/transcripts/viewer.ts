@@ -224,6 +224,49 @@ export function extractAllText(line: TranscriptLine): string {
     }
   }
 
+  // Handle system/progress messages with data field
+  if (line.data && typeof line.data === 'object') {
+    const data = line.data as Record<string, unknown>;
+    // Hook progress events
+    if (data.type === 'hook_progress' && data.hookEvent) {
+      const hookName = data.hookName || data.hookEvent;
+      parts.push(`Hook: ${hookName}`);
+    }
+    // Session start info
+    if (data.type === 'session_start') {
+      parts.push('Session started');
+    }
+  }
+
+  // Handle top-level hook info (stop_hook_summary)
+  if (line.subtype === 'stop_hook_summary' && line.hookInfos) {
+    parts.push(`${line.hookInfos.length} hook(s) executed`);
+  }
+
+  // Handle turn_duration subtype
+  if (line.subtype === 'turn_duration') {
+    try {
+      const rawData = JSON.parse(line.raw);
+      if (rawData.durationMs) {
+        const seconds = Math.round(rawData.durationMs / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        if (minutes > 0) {
+          parts.push(`Turn: ${minutes}m ${remainingSeconds}s`);
+        } else {
+          parts.push(`Turn: ${seconds}s`);
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  // Handle summary messages
+  if (line.type === 'summary' && line.summary) {
+    parts.push(line.summary);
+  }
+
   return parts.join('\n');
 }
 
@@ -282,9 +325,13 @@ export function getDisplayType(line: TranscriptLine): string {
     }
   }
 
-  const lineWithSubtype = line as TranscriptLine & { subtype?: string };
-  if (lineWithSubtype.subtype) {
-    return `${line.type}:${lineWithSubtype.subtype}`;
+  // Handle progress type with data.type (hook_progress, etc.)
+  if (line.type === 'progress' && line.data?.type) {
+    return line.data.type as string;
+  }
+
+  if (line.subtype) {
+    return `${line.type}:${line.subtype}`;
   }
 
   return line.type;
