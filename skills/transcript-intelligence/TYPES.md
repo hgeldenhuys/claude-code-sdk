@@ -30,6 +30,7 @@ type TranscriptLineType =
   | 'assistant'             // Claude responses, tool calls
   | 'file-history-snapshot' // File state tracking
   | 'system'                // System messages (hooks, etc.)
+  | 'progress'              // Progress updates (hook events, etc.)
   | 'summary';              // Session summary
 ```
 
@@ -327,9 +328,27 @@ interface SystemMessage extends TranscriptLineBase {
 
 type SystemSubtype =
   | 'stop_hook_summary'    // Hook execution summary
+  | 'turn_duration'        // Turn timing metrics
   | 'permission_granted'   // Permission was granted
   | 'permission_denied'    // Permission was denied
   | 'error';               // System error
+
+interface StopHookSummary extends SystemMessage {
+  subtype: 'stop_hook_summary';
+  hookCount: number;                          // Number of hooks executed
+  hookInfos: Array<{ command: string }>;      // Hook commands
+  hookErrors: string[];                       // Any errors
+  preventedContinuation: boolean;
+  stopReason: string;
+  hasOutput: boolean;
+  level: string;
+}
+
+interface TurnDuration extends SystemMessage {
+  subtype: 'turn_duration';
+  durationMs: number;                         // Turn duration in milliseconds
+  isMeta?: boolean;
+}
 ```
 
 #### Example: Stop Hook Summary
@@ -364,9 +383,76 @@ type SystemSubtype =
 }
 ```
 
+#### Example: Turn Duration
+
+```json
+{
+  "parentUuid": "abc123...",
+  "type": "system",
+  "subtype": "turn_duration",
+  "durationMs": 65000,
+  "timestamp": "2026-01-06T10:00:00Z",
+  "uuid": "def456...",
+  "sessionId": "session-123"
+}
+```
+
 ---
 
-### 5. Summary
+### 5. Progress Message
+
+Progress updates during execution, primarily for hook events.
+
+```typescript
+interface ProgressMessage extends TranscriptLineBase {
+  type: 'progress';
+  data: ProgressData;
+  toolUseID?: string;
+  parentToolUseID?: string;
+}
+
+interface ProgressData {
+  type: 'hook_progress';         // Hook is executing
+  hookEvent: HookEvent;          // Hook event type
+  hookName: string;              // Hook name (e.g., "Stop", "PreToolUse:Read")
+  command: string;               // Hook command being run
+}
+
+type HookEvent =
+  | 'PreToolUse'
+  | 'PostToolUse'
+  | 'Stop'
+  | 'SubagentStop'
+  | 'SessionStart'
+  | 'SessionEnd'
+  | 'UserPromptSubmit'
+  | 'PreCompact'
+  | 'Notification';
+```
+
+#### Example: Hook Progress
+
+```json
+{
+  "parentUuid": "82668b9b-b6ba-4eaf-b5ba-408c8c1c9f82",
+  "type": "progress",
+  "data": {
+    "type": "hook_progress",
+    "hookEvent": "Stop",
+    "hookName": "Stop",
+    "command": "bun \"$CLAUDE_PROJECT_DIR\"/hooks/notification-hook.ts"
+  },
+  "toolUseID": "276ccff2-5f4b-4547-8367-a4bf2acfac92",
+  "parentToolUseID": "276ccff2-5f4b-4547-8367-a4bf2acfac92",
+  "timestamp": "2026-01-16T22:51:55.393Z",
+  "uuid": "82668b9b-b6ba-4eaf-b5ba-408c8c1c9f82",
+  "sessionId": "be59ef1a-4085-4f98-84ce-e9cbcb9500cc"
+}
+```
+
+---
+
+### 6. Summary
 
 Session summary for display and search.
 

@@ -504,4 +504,48 @@ describe('File Operations', () => {
       expect(line).toBeNull();
     });
   });
+
+  describe('progress type parsing', () => {
+    const progressTranscript = `{"type":"progress","uuid":"p1","sessionId":"session-123","timestamp":"2025-01-06T10:00:00Z","cwd":"/project","data":{"type":"hook_progress","hookEvent":"Stop","hookName":"Stop","command":"bun hooks/stop.ts"}}
+{"type":"system","uuid":"s1","sessionId":"session-123","timestamp":"2025-01-06T10:00:01Z","cwd":"/project","subtype":"stop_hook_summary","hookCount":3,"hookInfos":[{"command":"hook1.ts"},{"command":"hook2.ts"},{"command":"hook3.ts"}],"hookErrors":[]}
+{"type":"system","uuid":"s2","sessionId":"session-123","timestamp":"2025-01-06T10:00:02Z","cwd":"/project","subtype":"turn_duration","durationMs":65000}
+{"type":"summary","uuid":"sum1","sessionId":"session-123","timestamp":"2025-01-06T10:00:03Z","cwd":"/project","summary":"This session discussed TypeScript parsing."}`;
+
+    it('should parse progress type', () => {
+      const lines = parseTranscript(progressTranscript);
+
+      expect(lines[0]!.type).toBe('progress');
+      expect(lines[0]!.data).toBeDefined();
+      expect(lines[0]!.data!.type).toBe('hook_progress');
+      expect(lines[0]!.data!.hookEvent).toBe('Stop');
+    });
+
+    it('should parse subtype field', () => {
+      const lines = parseTranscript(progressTranscript);
+
+      expect(lines[1]!.subtype).toBe('stop_hook_summary');
+      expect(lines[2]!.subtype).toBe('turn_duration');
+    });
+
+    it('should parse hookInfos array', () => {
+      const lines = parseTranscript(progressTranscript);
+
+      expect(lines[1]!.hookInfos).toBeDefined();
+      expect(lines[1]!.hookInfos).toHaveLength(3);
+      expect(lines[1]!.hookInfos![0]!.command).toBe('hook1.ts');
+    });
+
+    it('should parse hookCount', () => {
+      const lines = parseTranscript(progressTranscript);
+
+      expect(lines[1]!.hookCount).toBe(3);
+    });
+
+    it('should parse summary field', () => {
+      const lines = parseTranscript(progressTranscript);
+
+      expect(lines[3]!.type).toBe('summary');
+      expect(lines[3]!.summary).toBe('This session discussed TypeScript parsing.');
+    });
+  });
 });

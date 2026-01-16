@@ -22,6 +22,7 @@ import {
   type FilterOptions,
 } from '../src/transcripts/viewer';
 import { parseTranscript } from '../src/transcripts/parser';
+import type { TranscriptLine } from '../src/transcripts/types';
 
 // ============================================================================
 // Test Data
@@ -246,6 +247,103 @@ describe('Transcript Viewer Module', () => {
     test('returns summary for summary type', () => {
       const summaryLine = lines.find((l) => l.uuid === 's1');
       expect(getDisplayType(summaryLine!)).toBe('summary');
+    });
+
+    test('returns hook_progress for progress type with hook_progress data', () => {
+      const progressLine: TranscriptLine = {
+        lineNumber: 1,
+        type: 'progress',
+        uuid: 'test-progress',
+        parentUuid: null,
+        sessionId: 'session',
+        timestamp: '2025-01-06T10:00:00Z',
+        cwd: '/project',
+        data: { type: 'hook_progress', hookEvent: 'Stop', hookName: 'Stop' },
+        raw: '{}',
+      };
+      expect(getDisplayType(progressLine)).toBe('hook_progress');
+    });
+
+    test('returns system:subtype for system with subtype', () => {
+      const systemLine: TranscriptLine = {
+        lineNumber: 1,
+        type: 'system',
+        uuid: 'test-system',
+        parentUuid: null,
+        sessionId: 'session',
+        timestamp: '2025-01-06T10:00:00Z',
+        cwd: '/project',
+        subtype: 'stop_hook_summary',
+        raw: '{}',
+      };
+      expect(getDisplayType(systemLine)).toBe('system:stop_hook_summary');
+    });
+  });
+
+  describe('extractAllText with progress/system types', () => {
+    test('extracts hook name from hook_progress', () => {
+      const progressLine: TranscriptLine = {
+        lineNumber: 1,
+        type: 'progress',
+        uuid: 'test-progress',
+        parentUuid: null,
+        sessionId: 'session',
+        timestamp: '2025-01-06T10:00:00Z',
+        cwd: '/project',
+        data: { type: 'hook_progress', hookEvent: 'Stop', hookName: 'MyHook' },
+        raw: '{}',
+      };
+      const text = extractAllText(progressLine);
+      expect(text).toContain('Hook: MyHook');
+    });
+
+    test('extracts hook count from stop_hook_summary', () => {
+      const systemLine: TranscriptLine = {
+        lineNumber: 1,
+        type: 'system',
+        uuid: 'test-system',
+        parentUuid: null,
+        sessionId: 'session',
+        timestamp: '2025-01-06T10:00:00Z',
+        cwd: '/project',
+        subtype: 'stop_hook_summary',
+        hookInfos: [{ command: 'hook1.ts' }, { command: 'hook2.ts' }],
+        raw: '{}',
+      };
+      const text = extractAllText(systemLine);
+      expect(text).toContain('2 hook(s) executed');
+    });
+
+    test('extracts duration from turn_duration', () => {
+      const systemLine: TranscriptLine = {
+        lineNumber: 1,
+        type: 'system',
+        uuid: 'test-system',
+        parentUuid: null,
+        sessionId: 'session',
+        timestamp: '2025-01-06T10:00:00Z',
+        cwd: '/project',
+        subtype: 'turn_duration',
+        raw: '{"durationMs":65000}',
+      };
+      const text = extractAllText(systemLine);
+      expect(text).toContain('Turn: 1m 5s');
+    });
+
+    test('extracts summary from summary type', () => {
+      const summaryLine: TranscriptLine = {
+        lineNumber: 1,
+        type: 'summary',
+        uuid: 'test-summary',
+        parentUuid: null,
+        sessionId: 'session',
+        timestamp: '2025-01-06T10:00:00Z',
+        cwd: '/project',
+        summary: 'This is a test summary',
+        raw: '{}',
+      };
+      const text = extractAllText(summaryLine);
+      expect(text).toContain('This is a test summary');
     });
   });
 
