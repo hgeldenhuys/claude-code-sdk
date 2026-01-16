@@ -21,6 +21,7 @@
 import { join } from 'node:path';
 import { watch } from 'node:fs';
 import { parseTranscriptFile } from '../src/transcripts/parser';
+import type { TranscriptLine } from '../src/transcripts/types';
 import {
   findTranscriptFiles,
   getSessionInfo,
@@ -437,11 +438,28 @@ async function tailMode(
 ): Promise<number> {
   let lastLineCount = 0;
 
+  // Helper to format a line based on the selected format
+  const formatLine = (line: TranscriptLine): string | null => {
+    switch (format) {
+      case 'json':
+        return formatJson(line, pretty);
+      case 'minimal':
+        return formatMinimal(line);
+      case 'human': {
+        const rendered = renderLine(line);
+        return rendered.fullContent + '\n';
+      }
+      default:
+        return formatTailLine(line);
+    }
+  };
+
   // Print existing last few lines
   const initialLines = await parseTranscriptFile(filePath);
   const initialFiltered = filterLines(initialLines, { ...filterOpts, last: 10 });
   for (const line of initialFiltered) {
-    console.log(formatTailLine(line));
+    const formatted = formatLine(line);
+    if (formatted) console.log(formatted);
   }
   lastLineCount = initialLines.length;
 
@@ -462,19 +480,8 @@ async function tailMode(
             const newLines = allLines.slice(lastLineCount);
             const filtered = filterLines(newLines, filterOpts);
             for (const line of filtered) {
-              if (format === 'json') {
-                console.log(formatJson(line, pretty));
-              } else if (format === 'minimal') {
-                const minimal = formatMinimal(line);
-                if (minimal) console.log(minimal);
-              } else if (format === 'human') {
-                const rendered = renderLine(line);
-                console.log(rendered.fullContent);
-                console.log('');
-              } else {
-                // Default to tail format for live mode
-                console.log(formatTailLine(line));
-              }
+              const formatted = formatLine(line);
+              if (formatted) console.log(formatted);
             }
             lastLineCount = allLines.length;
           }
