@@ -99,7 +99,7 @@ export function getMachineId(): string {
     mkdirSync(claudeDir, { recursive: true });
   }
 
-  writeFileSync(machineIdPath, newId + '\n');
+  writeFileSync(machineIdPath, `${newId}\n`);
   return newId;
 }
 
@@ -159,7 +159,7 @@ export function setMachineAlias(alias: string): void {
     mkdirSync(claudeDir, { recursive: true });
   }
 
-  writeFileSync(aliasPath, normalizedAlias + '\n');
+  writeFileSync(aliasPath, `${normalizedAlias}\n`);
 }
 
 /**

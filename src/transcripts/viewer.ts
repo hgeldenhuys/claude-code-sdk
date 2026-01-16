@@ -68,17 +68,12 @@ export interface RenderedLine {
 /**
  * Filter transcript lines based on options
  */
-export function filterLines(
-  lines: TranscriptLine[],
-  options: FilterOptions
-): TranscriptLine[] {
+export function filterLines(lines: TranscriptLine[], options: FilterOptions): TranscriptLine[] {
   let filtered = [...lines];
 
   // Session ID filtering (applied early for efficiency)
   if (options.sessionIds && options.sessionIds.length > 0) {
-    filtered = filtered.filter((line) =>
-      options.sessionIds!.includes(line.sessionId)
-    );
+    filtered = filtered.filter((line) => options.sessionIds!.includes(line.sessionId));
   }
 
   // Type filtering
@@ -115,9 +110,7 @@ export function filterLines(
       if (line.type !== 'assistant') return false;
       if (!line.message?.content || !Array.isArray(line.message.content)) return false;
       // Only include if there's at least one text block
-      return line.message.content.some(
-        (block) => (block as ContentBlock).type === 'text'
-      );
+      return line.message.content.some((block) => (block as ContentBlock).type === 'text');
     });
   }
 
@@ -132,9 +125,7 @@ export function filterLines(
       }
       if (line.type === 'assistant' && line.message?.content) {
         if (Array.isArray(line.message.content)) {
-          return line.message.content.some(
-            (block) => (block as ContentBlock).type === 'tool_use'
-          );
+          return line.message.content.some((block) => (block as ContentBlock).type === 'tool_use');
         }
       }
       return false;
@@ -144,9 +135,7 @@ export function filterLines(
   if (options.thinking) {
     filtered = filtered.filter((line) => {
       if (line.message?.content && Array.isArray(line.message.content)) {
-        return line.message.content.some(
-          (block) => (block as any).type === 'thinking'
-        );
+        return line.message.content.some((block) => (block as ContentBlock).type === 'thinking');
       }
       return false;
     });
@@ -165,9 +154,7 @@ export function filterLines(
   if (options.fromLine !== undefined || options.toLine !== undefined) {
     const from = options.fromLine ?? 1;
     const to = options.toLine ?? filtered.length;
-    filtered = filtered.filter(
-      (line) => line.lineNumber >= from && line.lineNumber <= to
-    );
+    filtered = filtered.filter((line) => line.lineNumber >= from && line.lineNumber <= to);
   }
 
   // Timestamp filtering
@@ -217,11 +204,12 @@ export function extractAllText(line: TranscriptLine): string {
             parts.push(JSON.stringify(block.input));
           }
         } else if (block.type === 'tool_result') {
-          if (typeof (block as any).content === 'string') {
-            parts.push((block as any).content);
+          const resultBlock = block as ContentBlock & { content?: string };
+          if (typeof resultBlock.content === 'string') {
+            parts.push(resultBlock.content);
           }
-        } else if ((block as any).thinking) {
-          parts.push((block as any).thinking);
+        } else if ('thinking' in block && typeof block.thinking === 'string') {
+          parts.push(block.thinking);
         }
       }
     }
@@ -276,15 +264,10 @@ export function renderLine(line: TranscriptLine): RenderedLine {
 export function getDisplayType(line: TranscriptLine): string {
   if (line.type === 'assistant' && line.message?.content) {
     if (Array.isArray(line.message.content)) {
-      const hasThinking = line.message.content.some(
-        (b: any) => b.type === 'thinking'
-      );
-      const hasToolUse = line.message.content.some(
-        (b: any) => b.type === 'tool_use'
-      );
-      const hasText = line.message.content.some(
-        (b: any) => b.type === 'text'
-      );
+      const blocks = line.message.content as ContentBlock[];
+      const hasThinking = blocks.some((b) => b.type === 'thinking');
+      const hasToolUse = blocks.some((b) => b.type === 'tool_use');
+      const hasText = blocks.some((b) => b.type === 'text');
 
       if (hasThinking && !hasToolUse && !hasText) return 'thinking';
       if (hasToolUse) return 'tool_use';
@@ -293,15 +276,15 @@ export function getDisplayType(line: TranscriptLine): string {
 
   if (line.type === 'user' && line.message?.content) {
     if (Array.isArray(line.message.content)) {
-      const hasToolResult = line.message.content.some(
-        (b: any) => b.type === 'tool_result'
-      );
+      const blocks = line.message.content as ContentBlock[];
+      const hasToolResult = blocks.some((b) => b.type === 'tool_result');
       if (hasToolResult) return 'tool_result';
     }
   }
 
-  if ((line as any).subtype) {
-    return `${line.type}:${(line as any).subtype}`;
+  const lineWithSubtype = line as TranscriptLine & { subtype?: string };
+  if (lineWithSubtype.subtype) {
+    return `${line.type}:${lineWithSubtype.subtype}`;
   }
 
   return line.type;
@@ -315,14 +298,9 @@ export function getPreview(line: TranscriptLine, maxLength: number): string {
   if (!text) return '(empty)';
 
   // Clean up and truncate
-  const cleaned = text
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, maxLength);
+  const cleaned = text.replace(/\s+/g, ' ').trim().slice(0, maxLength);
 
-  return cleaned.length < text.replace(/\s+/g, ' ').trim().length
-    ? `${cleaned}...`
-    : cleaned;
+  return cleaned.length < text.replace(/\s+/g, ' ').trim().length ? `${cleaned}...` : cleaned;
 }
 
 /**
@@ -372,7 +350,7 @@ function renderUserMessage(line: TranscriptLine): string {
 
   const parts: string[] = ['User:'];
 
-  for (const block of line.message.content as any[]) {
+  for (const block of line.message.content as ContentBlock[]) {
     if (block.type === 'text' && block.text) {
       parts.push(block.text);
     } else if (block.type === 'tool_result') {
@@ -407,7 +385,7 @@ function renderAssistantMessage(line: TranscriptLine): string {
   const model = line.message.model ? ` (${line.message.model})` : '';
   if (model) parts[0] += model;
 
-  for (const block of line.message.content as any[]) {
+  for (const block of line.message.content as ContentBlock[]) {
     if (block.type === 'thinking' && block.thinking) {
       parts.push(`\n[Thinking]\n${truncateContent(block.thinking, 300)}`);
     } else if (block.type === 'text' && block.text) {
@@ -423,9 +401,7 @@ function renderAssistantMessage(line: TranscriptLine): string {
   // Add usage info if present
   if (line.message.usage) {
     const usage = line.message.usage;
-    parts.push(
-      `\n[Tokens: in=${usage.input_tokens}, out=${usage.output_tokens}]`
-    );
+    parts.push(`\n[Tokens: in=${usage.input_tokens}, out=${usage.output_tokens}]`);
   }
 
   return parts.join('\n');
@@ -443,7 +419,7 @@ export function renderTextOnlyContent(line: TranscriptLine): string {
   parts.push('');
 
   if (line.type !== 'assistant' || !line.message?.content) {
-    return parts.join('\n') + '(no text content)';
+    return `${parts.join('\n')}(no text content)`;
   }
 
   if (typeof line.message.content === 'string') {
@@ -452,7 +428,7 @@ export function renderTextOnlyContent(line: TranscriptLine): string {
   }
 
   // Extract only text blocks
-  for (const block of line.message.content as any[]) {
+  for (const block of line.message.content as ContentBlock[]) {
     if (block.type === 'text' && block.text) {
       parts.push(block.text);
     }
@@ -466,22 +442,31 @@ export function renderTextOnlyContent(line: TranscriptLine): string {
 }
 
 /**
+ * Extended line type for system messages with hook info
+ */
+interface SystemLine extends TranscriptLine {
+  subtype?: string;
+  hookInfos?: Array<{ command: string }>;
+  hookErrors?: string[];
+}
+
+/**
  * Render a system message
  */
 function renderSystemMessage(line: TranscriptLine): string {
-  const subtype = (line as any).subtype;
-  const parts: string[] = [`System: ${subtype || 'message'}`];
+  const sysLine = line as SystemLine;
+  const parts: string[] = [`System: ${sysLine.subtype || 'message'}`];
 
-  if ((line as any).hookInfos) {
+  if (sysLine.hookInfos) {
     parts.push('\nHooks:');
-    for (const hook of (line as any).hookInfos) {
+    for (const hook of sysLine.hookInfos) {
       parts.push(`  - ${hook.command}`);
     }
   }
 
-  if ((line as any).hookErrors?.length > 0) {
+  if (sysLine.hookErrors && sysLine.hookErrors.length > 0) {
     parts.push('\nHook Errors:');
-    for (const err of (line as any).hookErrors) {
+    for (const err of sysLine.hookErrors) {
       parts.push(`  - ${err}`);
     }
   }
@@ -490,34 +475,52 @@ function renderSystemMessage(line: TranscriptLine): string {
 }
 
 /**
+ * Extended line type for summary
+ */
+interface SummaryLine extends TranscriptLine {
+  summary?: string;
+  leafUuid?: string;
+}
+
+/**
  * Render a summary
  */
 function renderSummary(line: TranscriptLine): string {
+  const sumLine = line as SummaryLine;
   const parts: string[] = ['Summary:'];
 
-  if ((line as any).summary) {
-    parts.push((line as any).summary);
+  if (sumLine.summary) {
+    parts.push(sumLine.summary);
   }
 
-  if ((line as any).leafUuid) {
-    parts.push(`\nLeaf UUID: ${(line as any).leafUuid}`);
+  if (sumLine.leafUuid) {
+    parts.push(`\nLeaf UUID: ${sumLine.leafUuid}`);
   }
 
   return parts.join('\n');
 }
 
 /**
+ * Extended line type for file-history-snapshot
+ */
+interface SnapshotLine extends TranscriptLine {
+  snapshot?: Record<string, unknown>;
+  messageId?: string;
+}
+
+/**
  * Render a file-history-snapshot
  */
 function renderSnapshot(line: TranscriptLine): string {
+  const snapLine = line as SnapshotLine;
   const parts: string[] = ['File History Snapshot'];
 
-  if ((line as any).snapshot) {
-    parts.push(`Files: ${Object.keys((line as any).snapshot).length}`);
+  if (snapLine.snapshot) {
+    parts.push(`Files: ${Object.keys(snapLine.snapshot).length}`);
   }
 
-  if ((line as any).messageId) {
-    parts.push(`Message: ${(line as any).messageId}`);
+  if (snapLine.messageId) {
+    parts.push(`Message: ${snapLine.messageId}`);
   }
 
   return parts.join('\n');
@@ -586,9 +589,7 @@ export function formatJson(line: TranscriptLine, pretty = false): string {
 /**
  * Get session info from first few lines
  */
-export function getSessionMetadata(
-  lines: TranscriptLine[]
-): Record<string, unknown> {
+export function getSessionMetadata(lines: TranscriptLine[]): Record<string, unknown> {
   const metadata: Record<string, unknown> = {
     lineCount: lines.length,
   };
@@ -671,7 +672,7 @@ export function parseTimestamp(input: string): Date {
   const match = input.match(/^(\d+)([hdm])\s*ago$/i);
   if (match) {
     const [, numStr, unit] = match;
-    const num = parseInt(numStr!, 10);
+    const num = Number.parseInt(numStr!, 10);
     let ms: number;
     switch (unit!.toLowerCase()) {
       case 'h':
@@ -691,7 +692,7 @@ export function parseTimestamp(input: string): Date {
 
   // Try parsing as ISO date or any Date-parseable string
   const parsed = new Date(input);
-  if (isNaN(parsed.getTime())) {
+  if (Number.isNaN(parsed.getTime())) {
     throw new Error(`Invalid timestamp format: ${input}`);
   }
   return parsed;
