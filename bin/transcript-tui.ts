@@ -632,6 +632,7 @@ async function createTUI(): Promise<void> {
     height: '100%-6',
     border: 'line',
     label: ' Lines ',
+    tags: true, // Enable blessed tag parsing for colors
     style: {
       border: { fg: state.focusedPane === 'list' ? 'green' : 'blue' },
       selected: { bg: 'blue', fg: 'white', bold: true },
