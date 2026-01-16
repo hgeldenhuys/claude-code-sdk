@@ -47,3 +47,23 @@ export {
   getProjectDirectories,
   getRecentSessions,
 } from './indexer';
+
+// Viewer functions
+export type {
+  ExtendedLineType,
+  OutputFormat,
+  FilterOptions,
+  RenderedLine,
+} from './viewer';
+
+export {
+  filterLines,
+  extractAllText,
+  renderLine,
+  getDisplayType,
+  getPreview,
+  renderFullContent,
+  formatMinimal,
+  formatJson,
+  getSessionMetadata,
+} from './viewer';

@@ -5,6 +5,12 @@
  * A CLI tool for managing human-friendly session names.
  * Converts between session IDs and names for easy session resumption.
  *
+ * v3.0 features:
+ * - Centralized storage at ~/.claude/global-sessions.json
+ * - Machine namespacing for multi-machine support
+ * - Project-based session filtering
+ * - Migration from per-project sessions.json
+ *
  * Usage:
  *   sesh <name-or-id>           Auto-detect and convert
  *   sesh id <name>              Get session ID for a name
@@ -12,21 +18,34 @@
  *   sesh list [options]         List all sessions
  *   sesh info <name-or-id>      Show session details
  *   sesh rename <old> <new>     Rename a session
+ *   sesh machines               List registered machines
+ *   sesh machines alias <name>  Set alias for current machine
+ *   sesh migrate [path]         Migrate sessions from project path
  *   sesh help                   Show help
  *
  * Examples:
  *   claude --resume $(sesh my-project)
  *   sesh jolly-squid
  *   sesh list --limit 5
+ *   sesh list --project /path/to/project
+ *   sesh list --all-machines
+ *   sesh migrate /path/to/project
  */
 
 import { getSessionStore } from '../src/hooks/sessions';
+import {
+  getMachineId,
+  getMachineAlias,
+  getMachineDisplayName,
+  setMachineAlias,
+  listMachines,
+} from '../src/hooks/sessions/machine';
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const VERSION = '1.0.0';
+const VERSION = '3.0.0';
 
 // UUID v4 pattern (used by Claude Code)
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -46,6 +65,9 @@ function printError(message: string): void {
 function printHelp(): void {
   console.log(`sesh v${VERSION} - Claude Code Session Name Manager
 
+Centralized session storage with multi-machine support.
+Sessions are stored at ~/.claude/global-sessions.json
+
 Usage:
   sesh <name-or-id>           Auto-detect and convert (for shell substitution)
   sesh id <name>              Get session ID for a name
@@ -56,12 +78,18 @@ Usage:
   sesh describe <name> <text> Set session description
   sesh delete <name-or-id>    Delete a session
   sesh history <name>         Show session ID history
+  sesh machines               List registered machines
+  sesh machines alias <name>  Set alias for current machine
+  sesh migrate [path]         Migrate sessions from project's .claude/sessions.json
   sesh help                   Show this help
   sesh version                Show version
 
 List options:
   --pattern, -p <glob>        Filter by name pattern
   --limit, -n <count>         Limit results
+  --project <path>            Filter by project directory
+  --machine <id>              Filter by machine ID
+  --all-machines              Show sessions from all machines (default: current only)
   --json                      Output as JSON
   --names                     Output names only (one per line)
   --ids                       Output session IDs only (one per line)
@@ -71,8 +99,8 @@ Examples:
   claude --resume $(sesh my-project)
 
   # Convert between formats
-  sesh jolly-squid                    # → session ID
-  sesh abc12345-1234-1234-1234-...    # → name
+  sesh jolly-squid                    # -> session ID
+  sesh abc12345-1234-1234-1234-...    # -> name
 
   # List recent sessions
   sesh list --limit 10
@@ -80,8 +108,22 @@ Examples:
   # Find sessions matching pattern
   sesh list --pattern "feature-*"
 
+  # List sessions for a specific project
+  sesh list --project /path/to/project
+
+  # List sessions from all machines
+  sesh list --all-machines
+
   # Rename for easier recall
-  sesh rename brave-elephant auth-feature`);
+  sesh rename brave-elephant auth-feature
+
+  # Manage machines
+  sesh machines                       # List all machines
+  sesh machines alias my-laptop       # Set alias for this machine
+
+  # Migrate from old per-project storage
+  sesh migrate /path/to/project       # Migrate project's sessions
+  sesh migrate                        # Migrate current directory's sessions`);
 }
 
 function formatDate(isoString: string): string {
@@ -154,6 +196,9 @@ function cmdList(args: string[]): number {
   // Parse options
   let pattern: string | undefined;
   let limit: number | undefined;
+  let projectPath: string | undefined;
+  let machineId: string | undefined;
+  let allMachines = false;
   let format: 'table' | 'json' | 'names' | 'ids' = 'table';
 
   for (let i = 0; i < args.length; i++) {
@@ -169,6 +214,15 @@ function cmdList(args: string[]): number {
         if (val) limit = Number.parseInt(val, 10);
         break;
       }
+      case '--project':
+        projectPath = args[++i];
+        break;
+      case '--machine':
+        machineId = args[++i];
+        break;
+      case '--all-machines':
+        allMachines = true;
+        break;
       case '--json':
         format = 'json';
         break;
@@ -181,12 +235,36 @@ function cmdList(args: string[]): number {
     }
   }
 
-  const sessions = store.list({
-    namePattern: pattern,
-    limit,
-    sortBy: 'lastAccessed',
-    sortDir: 'desc',
-  });
+  // Get sessions based on filters
+  let sessions;
+  if (projectPath) {
+    // Filter by project directory
+    sessions = store.listByDirectory(projectPath);
+  } else if (machineId) {
+    // Filter by specific machine
+    sessions = store.listByMachine(machineId);
+  } else if (!allMachines) {
+    // Default: current machine only
+    sessions = store.listByMachine();
+  } else {
+    // All machines
+    sessions = store.list({
+      namePattern: pattern,
+      sortBy: 'lastAccessed',
+      sortDir: 'desc',
+    });
+  }
+
+  // Apply pattern filter if using listByDirectory or listByMachine
+  if (pattern && (projectPath || machineId || !allMachines)) {
+    const patternRegex = new RegExp(pattern.replace(/\*/g, '.*'));
+    sessions = sessions.filter((s) => patternRegex.test(s.name));
+  }
+
+  // Apply limit
+  if (limit && sessions.length > limit) {
+    sessions = sessions.slice(0, limit);
+  }
 
   if (sessions.length === 0) {
     if (format === 'json') {
@@ -212,14 +290,22 @@ function cmdList(args: string[]): number {
       }
       break;
     default: {
-      const header = 'NAME                 SESSION ID                           LAST ACCESSED';
+      const showMachine = allMachines || machineId;
+      const header = showMachine
+        ? 'NAME                 SESSION ID                           LAST ACCESSED        MACHINE'
+        : 'NAME                 SESSION ID                           LAST ACCESSED';
       console.log(header);
       console.log('-'.repeat(header.length));
       for (const s of sessions) {
         const name = s.name.padEnd(20).slice(0, 20);
         const id = s.sessionId.slice(0, 36).padEnd(36);
         const date = formatDate(s.lastAccessed);
-        console.log(`${name} ${id} ${date}`);
+        if (showMachine) {
+          const machine = (s.machineId?.slice(0, 8) ?? 'unknown').padEnd(12);
+          console.log(`${name} ${id} ${date}  ${machine}`);
+        } else {
+          console.log(`${name} ${id} ${date}`);
+        }
       }
       break;
     }
@@ -301,6 +387,7 @@ function cmdHistory(name: string): number {
   console.log(`History for '${name}':`);
   for (let i = 0; i < history.length; i++) {
     const record = history[i];
+    if (!record) continue;
     const date = formatDate(record.timestamp);
     console.log(`  ${i + 1}. ${record.sessionId.slice(0, 8)}... (${record.source}) - ${date}`);
   }
@@ -322,6 +409,96 @@ function cmdCleanup(maxAgeHours?: number): number {
   return 0;
 }
 
+function cmdMachines(args: string[]): number {
+  const store = getSessionStore();
+  const db = store.getDatabase();
+
+  // Handle subcommands
+  if (args[0] === 'alias') {
+    if (!args[1]) {
+      // Show current alias
+      const alias = getMachineAlias();
+      if (alias) {
+        console.log(`Current machine alias: ${alias}`);
+      } else {
+        console.log(`No alias set. Machine ID: ${getMachineId().slice(0, 8)}...`);
+      }
+      return 0;
+    }
+
+    // Set alias
+    try {
+      setMachineAlias(args[1]);
+      console.log(`Machine alias set to: ${args[1]}`);
+      return 0;
+    } catch (err) {
+      printError(err instanceof Error ? err.message : String(err));
+      return 1;
+    }
+  }
+
+  // List all machines
+  const machines = listMachines(db);
+  const currentId = getMachineId();
+
+  if (machines.length === 0) {
+    console.log('No machines registered yet.');
+    return 0;
+  }
+
+  console.log('Registered machines:');
+  console.log('');
+  const header = 'MACHINE ID   ALIAS                HOSTNAME             LAST SEEN';
+  console.log(header);
+  console.log('-'.repeat(header.length));
+
+  for (const machine of machines) {
+    const isCurrent = machine.id === currentId;
+    const idDisplay = machine.id.slice(0, 8) + (isCurrent ? ' *' : '  ');
+    const alias = (machine.alias ?? '-').padEnd(20).slice(0, 20);
+    const hostname = machine.hostname.padEnd(20).slice(0, 20);
+    const lastSeen = formatDate(machine.lastSeen);
+    console.log(`${idDisplay.padEnd(12)} ${alias} ${hostname} ${lastSeen}`);
+  }
+
+  console.log('');
+  console.log(`Current machine: ${getMachineDisplayName()} (${currentId.slice(0, 8)}...)`);
+
+  return 0;
+}
+
+function cmdMigrate(projectPath?: string): number {
+  const store = getSessionStore();
+  const targetPath = projectPath ?? process.cwd();
+
+  console.log(`Migrating sessions from: ${targetPath}`);
+
+  const result = store.migrateFromProject(targetPath);
+
+  if (result.imported === 0 && result.skipped === 0 && result.errors === 0) {
+    console.log('No sessions.json found or no sessions to migrate.');
+    return 0;
+  }
+
+  console.log('');
+  console.log('Migration results:');
+  console.log(`  Imported: ${result.imported}`);
+  console.log(`  Skipped:  ${result.skipped}`);
+  console.log(`  Errors:   ${result.errors}`);
+
+  if (result.details.length > 0 && result.details.length <= 20) {
+    console.log('');
+    console.log('Details:');
+    for (const detail of result.details) {
+      const statusIcon = detail.status === 'imported' ? '+' : detail.status === 'skipped' ? '-' : '!';
+      const reason = detail.reason ? ` (${detail.reason})` : '';
+      console.log(`  ${statusIcon} ${detail.name}${reason}`);
+    }
+  }
+
+  return result.errors > 0 ? 1 : 0;
+}
+
 // ============================================================================
 // Main
 // ============================================================================
@@ -334,7 +511,7 @@ function main(): number {
     return 0;
   }
 
-  const command = args[0];
+  const command = args[0] as string;
 
   switch (command) {
     case 'help':
@@ -406,6 +583,12 @@ function main(): number {
 
     case 'cleanup':
       return cmdCleanup(args[1] ? Number.parseInt(args[1], 10) : undefined);
+
+    case 'machines':
+      return cmdMachines(args.slice(1));
+
+    case 'migrate':
+      return cmdMigrate(args[1]);
 
     default:
       // Auto-detect mode: input is either a name or session ID

@@ -252,17 +252,110 @@ const skills = manager.getByType('skill');
 const hooks = manager.getByType('hook');
 ```
 
-## CLI Commands
+## CLI Tools
+
+### Transcript Viewer CLI
+
+View and filter Claude Code session transcripts:
+
+```bash
+# Basic viewing
+bun run transcript <file|session> --human     # Human-readable format
+bun run transcript <file|session> --json      # Raw JSON output
+bun run transcript <file|session> --minimal   # Text content only
+
+# Filtering
+bun run transcript <file> --assistant         # Only assistant responses
+bun run transcript <file> --user-prompts      # Only user messages
+bun run transcript <file> --tools             # Only tool use/results
+bun run transcript <file> --thinking          # Only thinking blocks
+bun run transcript <file> --text-only         # AI text only (no tools/thinking)
+bun run transcript <file> --last 50           # Last 50 entries
+bun run transcript <file> --type user,assistant  # Specific types
+
+# Session filtering
+bun run transcript <file> --session abc123              # Filter by session ID
+bun run transcript <file> --session abc123,def456       # Multiple sessions
+bun run transcript <file> --session-name my-project     # Filter by sesh name
+
+# Time filtering
+bun run transcript <file> --from-time "1h ago"          # Last hour
+bun run transcript <file> --from-time 2024-01-15T10:00:00Z  # ISO timestamp
+
+# Live modes
+bun run transcript <file> --tail              # Stream new entries (colored 1-liners)
+bun run transcript <file> --watch             # Show last entry, auto-refresh
+
+# Export
+bun run transcript <file> --json --output results.json  # Export to file
+```
+
+### Transcript Viewer TUI
+
+Interactive terminal UI for browsing transcripts:
+
+```bash
+bun run transcript-tui <file|session>         # Open TUI
+bun run transcript-tui <file> --assistant     # Pre-filtered
+bun run transcript-tui <file> --session abc123  # Filter by session
+```
+
+**Navigation:**
+| Key | Action |
+|-----|--------|
+| `j/k` or `↑/↓` | Navigate lines |
+| `h/l` | Scroll content |
+| `g/G` | First/last line |
+| `Tab` | Switch panes |
+| `f` | Toggle fullscreen |
+| `s` | Toggle scroll mode (fullscreen) |
+
+**View Modes:**
+| Key | Mode |
+|-----|------|
+| `1` | Raw JSON |
+| `2` | Human-readable |
+| `3` | Minimal |
+| `4` | Context (thread) |
+| `5` | Markdown |
+
+**Features:**
+| Key | Feature |
+|-----|---------|
+| `c` | Copy content to clipboard |
+| `y` | Copy recall reference |
+| `b` | Toggle bookmark |
+| `[/]` | Jump between bookmarks |
+| `u` | Usage graph overlay |
+| `m` | Toggle mouse support |
+| `?` | Help overlay |
+| `/` | Search |
+
+### Session Manager (sesh)
+
+Manage session names for easy resumption:
+
+```bash
+bun run sesh list                    # List all named sessions
+bun run sesh my-project              # Get session ID for name
+bun run sesh rename old-name new     # Rename a session
+bun run sesh info my-project         # Show session details
+
+# Resume by name
+claude --resume $(bun run sesh my-project)
+```
+
+### Development Commands
 
 ```bash
 bun install          # Install dependencies
-bun test             # Run tests (274 tests)
+bun test             # Run tests
 bun run dev          # Development with watch mode
 bun run build        # Build for distribution
 bun run lint         # Check code with Biome
 bun run typecheck    # TypeScript type checking
 
-# Documentation
+# Documentation tracking
 bun run docs         # Show docs CLI help
 bun run docs:fetch   # Fetch all documentation
 bun run docs:check   # Check for changes
@@ -309,6 +402,11 @@ skills/                # Distributable skills (30 total)
 ├── monorepo-patterns/       # Monorepo workflows
 └── ci-cd-integration/       # CI/CD pipelines
 
+bin/                   # CLI tools
+├── sesh.ts            # Session name manager
+├── transcript.ts      # Transcript viewer CLI
+└── transcript-tui.ts  # Transcript viewer TUI
+
 src/
 ├── index.ts           # Main SDK entry point
 ├── types/             # TypeScript interfaces
@@ -316,9 +414,10 @@ src/
 ├── marketplace/       # Plugin marketplace
 ├── plugins/           # Plugin management
 ├── docs/              # Documentation tracker
-└── transcripts/       # Transcript search module
+├── hooks/             # Hooks SDK and session naming
+└── transcripts/       # Transcript parsing, viewing, search
 
-tests/                 # Test suites (274 tests)
+tests/                 # Test suites
 ```
 
 ## License

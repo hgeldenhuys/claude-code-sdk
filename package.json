@@ -7,7 +7,9 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "sesh": "./bin/sesh.ts"
+    "sesh": "./bin/sesh.ts",
+    "transcript": "./bin/transcript.ts",
+    "transcript-tui": "./bin/transcript-tui.ts"
   },
   "exports": {
     ".": {
@@ -45,7 +47,10 @@
     "docs": "bun src/cli/docs.ts",
     "docs:check": "bun src/cli/docs.ts check",
     "docs:fetch": "bun src/cli/docs.ts fetch",
-    "docs:status": "bun src/cli/docs.ts status"
+    "docs:status": "bun src/cli/docs.ts status",
+    "transcript": "bun bin/transcript.ts",
+    "transcript-tui": "bun bin/transcript-tui.ts",
+    "sesh": "bun bin/sesh.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
@@ -72,6 +77,11 @@
   "license": "MIT",
   "dependencies": {
     "@inquirer/prompts": "^8.1.0",
-    "claude-hooks-sdk": "^0.8.6"
+    "@types/blessed": "^0.1.27",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "claude-hooks-sdk": "^0.8.6",
+    "marked": "^17.0.1",
+    "marked-terminal": "^7.3.0"
   }
 }

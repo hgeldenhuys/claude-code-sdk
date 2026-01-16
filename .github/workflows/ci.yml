@@ -47,10 +47,18 @@ jobs:
       - name: Build SDK
         run: bun run build
 
-      - name: Verify CLI is executable
+      - name: Verify CLIs are executable
         run: |
-          chmod +x bin/sesh.ts
+          chmod +x bin/sesh.ts bin/transcript.ts bin/transcript-tui.ts
+
+          # Test sesh CLI
           bun bin/sesh.ts --version
+
+          # Test transcript CLI
+          bun bin/transcript.ts --help
+
+          # Test transcript-tui CLI
+          bun bin/transcript-tui.ts --help
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

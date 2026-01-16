@@ -9,13 +9,21 @@
  * - Multiple session IDs can map to one name (history)
  * - Reverse index for O(1) lookups both directions
  * - Last hook event to fire "wins" the name (enables fork/snapshot pattern)
+ *
+ * v3.0 changes:
+ * - Centralized storage at ~/.claude/global-sessions.json
+ * - Machine namespacing for multi-machine support
+ * - Directory index for efficient project-based queries
  */
 
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { SessionSource } from '../types';
+import { getMachineId, registerCurrentMachine } from './machine';
 import { NameGenerator, generateUniqueName } from './namer';
 import type {
+  GlobalSessionDatabase,
+  MigrationResult,
   NamedSession,
   SessionDatabase,
   SessionInfo,
@@ -29,25 +37,33 @@ import type {
 // Constants
 // ============================================================================
 
-const DEFAULT_STORAGE_PATH = '.claude/sessions.json';
-const DATABASE_VERSION = '2.0';
+const DEFAULT_STORAGE_PATH = 'global-sessions.json';
+const DATABASE_VERSION = '3.0';
+const LEGACY_DATABASE_VERSION = '2.0';
 
 // ============================================================================
 // Session Store
 // ============================================================================
 
 export class SessionStore {
-  private db: SessionDatabase;
+  private db: GlobalSessionDatabase;
   private storagePath: string;
   private nameGenerator: NameGenerator;
   private maxAge: number | null;
   private dirty = false;
+  private machineId: string;
 
   constructor(config: SessionStoreConfig = {}) {
     this.storagePath = config.storagePath ?? this.resolveStoragePath();
     this.nameGenerator = new NameGenerator();
     this.maxAge = config.maxAge ?? null;
+    this.machineId = getMachineId();
     this.db = this.load();
+
+    // Register current machine
+    registerCurrentMachine(this.db);
+    this.dirty = true;
+    this.save();
 
     // Apply manual names if provided
     if (config.manualNames) {
@@ -64,7 +80,7 @@ export class SessionStore {
   /**
    * Track a session - the main entry point for hook integration.
    *
-   * Call this on ANY hook event to keep the name→ID mapping current.
+   * Call this on ANY hook event to keep the name->ID mapping current.
    * The last hook event to fire "wins" the name.
    */
   track(
@@ -72,11 +88,12 @@ export class SessionStore {
     options: {
       source?: SessionSource;
       transcriptPath?: string;
+      transcriptId?: string;
       cwd?: string;
       name?: string; // Force a specific name
     } = {}
   ): TrackingResult {
-    const { source = 'startup', transcriptPath, cwd, name: forcedName } = options;
+    const { source = 'startup', transcriptPath, transcriptId, cwd, name: forcedName } = options;
     const now = new Date().toISOString();
 
     // Check if this session ID already has a name
@@ -87,7 +104,10 @@ export class SessionStore {
       if (session) {
         session.lastAccessed = now;
         session.currentSessionId = sessionId;
-        if (cwd) session.cwd = cwd;
+        if (cwd) {
+          session.cwd = cwd;
+          this.updateDirectoryIndex(existingName, cwd);
+        }
         this.dirty = true;
         this.save();
 
@@ -127,6 +147,7 @@ export class SessionStore {
       timestamp: now,
       source,
       transcriptPath,
+      transcriptId,
     };
 
     const existingNamedSession = this.db.names[name];
@@ -140,9 +161,12 @@ export class SessionStore {
       existingNamedSession.currentSessionId = sessionId;
       existingNamedSession.lastAccessed = now;
       existingNamedSession.history.push(record);
-      if (cwd) existingNamedSession.cwd = cwd;
+      if (cwd) {
+        existingNamedSession.cwd = cwd;
+        this.updateDirectoryIndex(name, cwd);
+      }
     } else {
-      // New name
+      // New name - include machineId
       this.db.names[name] = {
         name,
         currentSessionId: sessionId,
@@ -151,7 +175,13 @@ export class SessionStore {
         lastAccessed: now,
         manual: !!forcedName,
         cwd,
+        machineId: this.machineId,
       };
+
+      // Add to directory index
+      if (cwd) {
+        this.updateDirectoryIndex(name, cwd);
+      }
     }
 
     // Update reverse index
@@ -175,6 +205,20 @@ export class SessionStore {
       sessionIdChanged,
       previousSessionId,
     };
+  }
+
+  /**
+   * Update the directory index for a session
+   */
+  private updateDirectoryIndex(name: string, cwd: string): void {
+    if (!this.db.directoryIndex[cwd]) {
+      this.db.directoryIndex[cwd] = [];
+    }
+
+    // Add if not already in the list
+    if (!this.db.directoryIndex[cwd].includes(name)) {
+      this.db.directoryIndex[cwd].push(name);
+    }
   }
 
   /**
@@ -209,6 +253,7 @@ export class SessionStore {
       historyCount: session.history.length,
       cwd: session.cwd,
       description: session.description,
+      machineId: session.machineId,
     };
   }
 
@@ -307,6 +352,7 @@ export class SessionStore {
         historyCount: session.history.length,
         cwd: session.cwd,
         description: session.description,
+        machineId: session.machineId,
       } as SessionInfo;
     });
 
@@ -437,6 +483,244 @@ export class SessionStore {
   }
 
   // ==========================================================================
+  // Query Methods (v3.0)
+  // ==========================================================================
+
+  /**
+   * List sessions by directory path
+   *
+   * @param cwd - The directory path to filter by
+   * @returns Array of SessionInfo for sessions in that directory
+   */
+  listByDirectory(cwd: string): SessionInfo[] {
+    const names = this.db.directoryIndex[cwd];
+    if (!names || names.length === 0) {
+      return [];
+    }
+
+    const sessions: SessionInfo[] = [];
+    for (const name of names) {
+      const info = this.getByName(name);
+      if (info) {
+        sessions.push(info);
+      }
+    }
+
+    // Sort by lastAccessed, most recent first
+    sessions.sort((a, b) => b.lastAccessed.localeCompare(a.lastAccessed));
+
+    return sessions;
+  }
+
+  /**
+   * List sessions by machine ID
+   *
+   * @param machineId - The machine ID to filter by. If undefined, uses current machine.
+   * @returns Array of SessionInfo for sessions on that machine
+   */
+  listByMachine(machineId?: string): SessionInfo[] {
+    const targetMachineId = machineId ?? this.machineId;
+
+    const sessions: SessionInfo[] = [];
+    for (const session of Object.values(this.db.names)) {
+      if (session.machineId === targetMachineId) {
+        const latestRecord = session.history[session.history.length - 1];
+        sessions.push({
+          name: session.name,
+          sessionId: session.currentSessionId,
+          created: session.created,
+          lastAccessed: session.lastAccessed,
+          source: latestRecord?.source ?? 'startup',
+          manual: session.manual,
+          historyCount: session.history.length,
+          cwd: session.cwd,
+          description: session.description,
+          machineId: session.machineId,
+        });
+      }
+    }
+
+    // Sort by lastAccessed, most recent first
+    sessions.sort((a, b) => b.lastAccessed.localeCompare(a.lastAccessed));
+
+    return sessions;
+  }
+
+  /**
+   * Get the current machine ID
+   */
+  getMachineId(): string {
+    return this.machineId;
+  }
+
+  /**
+   * Get the global database (for advanced queries)
+   */
+  getDatabase(): GlobalSessionDatabase {
+    return this.db;
+  }
+
+  // ==========================================================================
+  // Migration Methods (v3.0)
+  // ==========================================================================
+
+  /**
+   * Migrate sessions from a project's local .claude/sessions.json file
+   *
+   * @param projectPath - Path to the project directory containing .claude/sessions.json
+   * @returns MigrationResult with stats about imported/skipped/error counts
+   */
+  migrateFromProject(projectPath: string): MigrationResult {
+    const result: MigrationResult = {
+      imported: 0,
+      skipped: 0,
+      errors: 0,
+      details: [],
+    };
+
+    const sessionFilePath = join(projectPath, '.claude', 'sessions.json');
+
+    if (!existsSync(sessionFilePath)) {
+      return result;
+    }
+
+    try {
+      const content = readFileSync(sessionFilePath, 'utf-8');
+      const data = JSON.parse(content);
+
+      // Check version
+      if (!data || typeof data !== 'object') {
+        return result;
+      }
+
+      const oldDb = data as {
+        version?: string;
+        sessions?: Record<
+          string,
+          { name: string; created?: string; source?: string; manual?: boolean }
+        >;
+        names?: Record<string, NamedSession>;
+        sessionIndex?: Record<string, string>;
+      };
+
+      // Handle v1.0 format
+      if (oldDb.sessions) {
+        for (const [sessionId, info] of Object.entries(oldDb.sessions)) {
+          try {
+            // Check if name already exists
+            if (this.db.names[info.name]) {
+              result.skipped++;
+              result.details.push({
+                name: info.name,
+                status: 'skipped',
+                reason: 'Name already exists in global database',
+              });
+              continue;
+            }
+
+            const now = new Date().toISOString();
+            const record: SessionRecord = {
+              sessionId,
+              timestamp: info.created ?? now,
+              source: (info.source as SessionSource) ?? 'startup',
+            };
+
+            this.db.names[info.name] = {
+              name: info.name,
+              currentSessionId: sessionId,
+              history: [record],
+              created: info.created ?? now,
+              lastAccessed: now,
+              manual: info.manual ?? false,
+              cwd: projectPath,
+              machineId: this.machineId,
+            };
+
+            this.db.sessionIndex[sessionId] = info.name;
+            this.updateDirectoryIndex(info.name, projectPath);
+
+            result.imported++;
+            result.details.push({
+              name: info.name,
+              status: 'imported',
+            });
+          } catch (err) {
+            result.errors++;
+            result.details.push({
+              name: info.name,
+              status: 'error',
+              reason: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+      }
+
+      // Handle v2.0 format
+      if (oldDb.version === LEGACY_DATABASE_VERSION && oldDb.names) {
+        for (const [name, session] of Object.entries(oldDb.names)) {
+          try {
+            // Check if name already exists
+            if (this.db.names[name]) {
+              result.skipped++;
+              result.details.push({
+                name,
+                status: 'skipped',
+                reason: 'Name already exists in global database',
+              });
+              continue;
+            }
+
+            // Import the session with current machine ID
+            this.db.names[name] = {
+              ...session,
+              cwd: session.cwd ?? projectPath,
+              machineId: this.machineId,
+            };
+
+            // Update session index
+            this.db.sessionIndex[session.currentSessionId] = name;
+            for (const record of session.history) {
+              this.db.sessionIndex[record.sessionId] = name;
+            }
+
+            // Update directory index
+            const cwd = session.cwd ?? projectPath;
+            this.updateDirectoryIndex(name, cwd);
+
+            result.imported++;
+            result.details.push({
+              name,
+              status: 'imported',
+            });
+          } catch (err) {
+            result.errors++;
+            result.details.push({
+              name,
+              status: 'error',
+              reason: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+      }
+
+      if (result.imported > 0) {
+        this.dirty = true;
+        this.save();
+      }
+    } catch (err) {
+      // File read/parse error - return empty result
+      result.errors++;
+      result.details.push({
+        name: '<file>',
+        status: 'error',
+        reason: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    return result;
+  }
+
+  // ==========================================================================
   // Private Helpers
   // ==========================================================================
 
@@ -454,22 +738,16 @@ export class SessionStore {
     }
   }
 
+  /**
+   * Resolve storage path - always use centralized global storage
+   */
   private resolveStoragePath(): string {
-    // Try to find .claude directory
-    const cwd = process.cwd();
-    const localPath = join(cwd, DEFAULT_STORAGE_PATH);
-
-    // Check if .claude exists in cwd
-    if (existsSync(join(cwd, '.claude'))) {
-      return localPath;
-    }
-
-    // Fallback to home directory
-    const home = process.env.HOME ?? process.env.USERPROFILE ?? cwd;
-    return join(home, DEFAULT_STORAGE_PATH);
+    // Always use centralized storage at ~/.claude/global-sessions.json
+    const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
+    return join(home, '.claude', DEFAULT_STORAGE_PATH);
   }
 
-  private load(): SessionDatabase {
+  private load(): GlobalSessionDatabase {
     if (!existsSync(this.storagePath)) {
       return this.createEmptyDatabase();
     }
@@ -483,48 +761,94 @@ export class SessionStore {
         return this.migrate(data);
       }
 
-      return data as SessionDatabase;
+      return data as GlobalSessionDatabase;
     } catch {
       // Corrupted file - start fresh
       return this.createEmptyDatabase();
     }
   }
 
-  private createEmptyDatabase(): SessionDatabase {
+  private createEmptyDatabase(): GlobalSessionDatabase {
     return {
-      version: DATABASE_VERSION,
+      version: DATABASE_VERSION as '3.0',
+      machines: {},
+      currentMachineId: this.machineId,
       names: {},
       sessionIndex: {},
+      directoryIndex: {},
     };
   }
 
-  private migrate(oldData: unknown): SessionDatabase {
-    // Handle migration from v1.0 format
+  private migrate(oldData: unknown): GlobalSessionDatabase {
     const db = this.createEmptyDatabase();
 
-    if (typeof oldData === 'object' && oldData !== null) {
-      const old = oldData as {
-        sessions?: Record<
-          string,
-          { name: string; created?: string; source?: string; manual?: boolean }
-        >;
-      };
-      if (old.sessions) {
-        for (const [sessionId, info] of Object.entries(old.sessions)) {
-          this.track.call(
-            {
-              db,
-              dirty: false,
-              save: () => {},
-              nameGenerator: this.nameGenerator,
-            } as unknown as SessionStore,
-            sessionId,
-            {
-              name: info.name,
-              source: (info.source as SessionSource) ?? 'startup',
-            }
-          );
+    if (typeof oldData !== 'object' || oldData === null) {
+      return db;
+    }
+
+    const old = oldData as {
+      version?: string;
+      sessions?: Record<
+        string,
+        { name: string; created?: string; source?: string; manual?: boolean }
+      >;
+      names?: Record<string, NamedSession>;
+      sessionIndex?: Record<string, string>;
+      latestByDirectory?: Record<string, string>;
+    };
+
+    // Handle v1.0 format (old sessions map)
+    if (old.sessions) {
+      for (const [sessionId, info] of Object.entries(old.sessions)) {
+        const now = new Date().toISOString();
+        const name = info.name;
+        const record: SessionRecord = {
+          sessionId,
+          timestamp: info.created ?? now,
+          source: (info.source as SessionSource) ?? 'startup',
+        };
+
+        db.names[name] = {
+          name,
+          currentSessionId: sessionId,
+          history: [record],
+          created: info.created ?? now,
+          lastAccessed: now,
+          manual: info.manual ?? false,
+          machineId: this.machineId,
+        };
+
+        db.sessionIndex[sessionId] = name;
+      }
+    }
+
+    // Handle v2.0 format (names-centric without machine namespacing)
+    if (old.version === LEGACY_DATABASE_VERSION && old.names) {
+      for (const [name, session] of Object.entries(old.names)) {
+        // Add machineId to existing sessions
+        db.names[name] = {
+          ...session,
+          machineId: session.machineId ?? this.machineId,
+        };
+
+        // Build directory index
+        if (session.cwd) {
+          const cwd = session.cwd;
+          if (!db.directoryIndex[cwd]) {
+            db.directoryIndex[cwd] = [];
+          }
+          db.directoryIndex[cwd]!.push(name);
         }
+      }
+
+      // Copy session index
+      if (old.sessionIndex) {
+        db.sessionIndex = { ...old.sessionIndex };
+      }
+
+      // Copy latestByDirectory
+      if (old.latestByDirectory) {
+        db.latestByDirectory = { ...old.latestByDirectory };
       }
     }
 
