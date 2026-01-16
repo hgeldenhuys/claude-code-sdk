@@ -254,6 +254,7 @@ export class SessionStore {
       cwd: session.cwd,
       description: session.description,
       machineId: session.machineId,
+      transcriptPath: latestRecord?.transcriptPath,
     };
   }
 
@@ -536,6 +537,7 @@ export class SessionStore {
           cwd: session.cwd,
           description: session.description,
           machineId: session.machineId,
+          transcriptPath: latestRecord?.transcriptPath,
         });
       }
     }

@@ -169,6 +169,8 @@ export interface SessionInfo {
   description?: string;
   /** Machine ID that owns this session (v3.0) */
   machineId?: string;
+  /** Path to the transcript file */
+  transcriptPath?: string;
 }
 
 export interface SessionListFilter {

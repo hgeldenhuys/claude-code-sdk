@@ -78,6 +78,7 @@ Usage:
   sesh describe <name> <text> Set session description
   sesh delete <name-or-id>    Delete a session
   sesh history <name>         Show session ID history
+  sesh transcript <name>      Get transcript file path for a session
   sesh machines               List registered machines
   sesh machines alias <name>  Set alias for current machine
   sesh migrate [path]         Migrate sessions from project's .claude/sessions.json
@@ -332,6 +333,7 @@ function cmdInfo(sessionIdOrName: string): number {
   console.log(`History:      ${info.historyCount} session(s)`);
   if (info.cwd) console.log(`Directory:    ${info.cwd}`);
   if (info.description) console.log(`Description:  ${info.description}`);
+  if (info.transcriptPath) console.log(`Transcript:   ${info.transcriptPath}`);
 
   return 0;
 }
@@ -392,6 +394,25 @@ function cmdHistory(name: string): number {
     console.log(`  ${i + 1}. ${record.sessionId.slice(0, 8)}... (${record.source}) - ${date}`);
   }
 
+  return 0;
+}
+
+function cmdTranscript(sessionIdOrName: string): number {
+  const store = getSessionStore();
+  const info = store.getByName(sessionIdOrName) ?? store.getBySessionId(sessionIdOrName);
+
+  if (!info) {
+    printError(`session not found: ${sessionIdOrName}`);
+    return 1;
+  }
+
+  if (!info.transcriptPath) {
+    printError(`no transcript path recorded for: ${info.name}`);
+    return 1;
+  }
+
+  // Output just the path for easy shell usage: cat $(sesh transcript my-session)
+  console.log(info.transcriptPath);
   return 0;
 }
 
@@ -580,6 +601,13 @@ function main(): number {
         return 1;
       }
       return cmdHistory(args[1]);
+
+    case 'transcript':
+      if (!args[1]) {
+        printError('usage: sesh transcript <name-or-id>');
+        return 1;
+      }
+      return cmdTranscript(args[1]);
 
     case 'cleanup':
       return cmdCleanup(args[1] ? Number.parseInt(args[1], 10) : undefined);

@@ -247,6 +247,12 @@ sesh list
 
 # Rename
 sesh rename brave-elephant my-project
+
+# Get transcript file path
+sesh transcript my-project
+
+# View transcript
+cat $(sesh transcript my-project)
 ```
 
 ## Examples

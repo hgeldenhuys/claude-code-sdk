@@ -2,9 +2,15 @@
 
 Standalone command-line tools that ship with claude-code-sdk.
 
-## sesh - Session Name Manager
+## sesh - Session Name Manager (v3.0)
 
 Human-friendly names for Claude Code sessions. Converts between session IDs and memorable names for easy session resumption.
+
+**v3.0 Features:**
+- Centralized storage at `~/.claude/global-sessions.json`
+- Machine namespacing for multi-machine support
+- Transcript path tracking
+- Migration from per-project sessions
 
 ### Installation
 
@@ -40,6 +46,13 @@ sesh jolly-squid
 # Convert ID → name
 sesh be59ef1a-4085-4f98-84ce-e9cbcb9500cc
 # Output: jolly-squid
+
+# Get transcript file path
+sesh transcript my-project
+# Output: /Users/you/.claude/projects/.../abc123.jsonl
+
+# View a session's transcript
+cat $(sesh transcript my-project)
 ```
 
 ### Commands
@@ -50,18 +63,25 @@ sesh be59ef1a-4085-4f98-84ce-e9cbcb9500cc
 | `sesh id <name>` | Get session ID for a name |
 | `sesh name <id>` | Get name for a session ID |
 | `sesh list [options]` | List all sessions |
-| `sesh info <name-or-id>` | Show session details |
+| `sesh info <name-or-id>` | Show session details (incl. transcript path) |
 | `sesh rename <old> <new>` | Rename a session |
 | `sesh describe <name> <text>` | Set session description |
 | `sesh delete <name-or-id>` | Delete a session |
 | `sesh history <name>` | Show session ID history |
+| `sesh transcript <name-or-id>` | Get transcript file path |
+| `sesh machines` | List registered machines |
+| `sesh machines alias <name>` | Set alias for current machine |
+| `sesh migrate [path]` | Import from project's sessions.json |
 | `sesh help` | Show help |
 | `sesh version` | Show version |
 
 ### List Options
 
 ```bash
-sesh list                      # List all sessions
+sesh list                      # List current machine's sessions
+sesh list --all-machines       # List sessions from all machines
+sesh list --project /path      # Filter by project directory
+sesh list --machine <id>       # Filter by machine ID
 sesh list --limit 10           # Limit results
 sesh list --pattern "feat-*"   # Filter by name pattern
 sesh list --json               # Output as JSON
@@ -84,11 +104,25 @@ sesh rename brave-elephant my-cool-project
 # Add description for context
 sesh describe my-cool-project "Implementing OAuth2 flow"
 
-# View session details
+# View session details (includes transcript path)
 sesh info my-cool-project
 
 # See all session IDs that used this name (after compacts)
 sesh history my-cool-project
+
+# Get the transcript file
+sesh transcript my-cool-project
+
+# Pipe transcript to another tool
+cat $(sesh transcript my-cool-project) | jq '.type'
+
+# Manage machines (for multi-machine sync)
+sesh machines                       # List all machines
+sesh machines alias my-laptop       # Set friendly name for this machine
+
+# Migrate from old per-project storage
+sesh migrate /path/to/project       # Import that project's sessions
+sesh migrate                        # Import current project's sessions
 
 # Script: get all session names
 for name in $(sesh list --names); do
@@ -108,23 +142,45 @@ This makes it hard to resume work by name. `sesh` solves this by:
 
 1. **Tracking sessions**: A hook records every session ID with a human-friendly name
 2. **Name persistence**: Names survive across compact/clear operations
-3. **History**: All session IDs that used a name are recorded
-4. **Bidirectional lookup**: Convert name→ID or ID→name instantly
+3. **Transcript tracking**: Records transcript file path for each session
+4. **Machine namespacing**: Sessions are tagged with machine ID for multi-machine support
+5. **History**: All session IDs that used a name are recorded
+6. **Bidirectional lookup**: Convert name→ID or ID→name instantly
 
-### Storage
+### Storage (v3.0)
 
-Sessions are stored in `.claude/sessions.json` (project) or `~/.claude/sessions.json` (global).
+Sessions are stored centrally at `~/.claude/global-sessions.json`:
 
 ```json
 {
-  "version": "2.0",
+  "version": "3.0",
+  "machines": {
+    "abc123-...": {
+      "id": "abc123-...",
+      "alias": "macbook-pro",
+      "hostname": "myhost.local",
+      "registeredAt": "2024-01-14T...",
+      "lastSeen": "2024-01-14T..."
+    }
+  },
+  "currentMachineId": "abc123-...",
   "names": {
     "jolly-squid": {
       "name": "jolly-squid",
       "currentSessionId": "be59ef1a-...",
+      "machineId": "abc123-...",
+      "cwd": "/path/to/project",
       "history": [
-        { "sessionId": "old-id-...", "source": "startup" },
-        { "sessionId": "be59ef1a-...", "source": "compact" }
+        {
+          "sessionId": "old-id-...",
+          "source": "startup",
+          "transcriptPath": "/Users/you/.claude/projects/.../old-id.jsonl"
+        },
+        {
+          "sessionId": "be59ef1a-...",
+          "source": "compact",
+          "transcriptPath": "/Users/you/.claude/projects/.../be59ef1a.jsonl"
+        }
       ],
       "created": "2024-01-14T...",
       "lastAccessed": "2024-01-14T..."
@@ -132,25 +188,44 @@ Sessions are stored in `.claude/sessions.json` (project) or `~/.claude/sessions.
   },
   "sessionIndex": {
     "be59ef1a-...": "jolly-squid"
+  },
+  "directoryIndex": {
+    "/path/to/project": ["jolly-squid"]
   }
 }
 ```
+
+Machine ID is stored at `~/.claude/machine-id`.
 
 ### Integration with Hooks
 
-For automatic session tracking, add this hook to `.claude/settings.json`:
+For automatic session tracking, the session-start hook should be configured. The hook passes transcript_path to the session store:
 
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "command": "bun /path/to/claude-code-sdk/examples/hooks/session-namer-hook.ts"
-    }]
-  }
-}
+```typescript
+// hooks/session-start.ts
+result = store.track(data.session_id, {
+  source: data.source,
+  cwd: data.cwd,
+  transcriptPath: data.transcript_path,  // Track transcript location
+});
 ```
 
-This injects the session name into Claude's context automatically.
+### Migration from v2.0
+
+If you have sessions stored in per-project `.claude/sessions.json` files, migrate them:
+
+```bash
+# Migrate current project
+sesh migrate
+
+# Migrate specific project
+sesh migrate /path/to/project
+
+# Migrate multiple projects
+for dir in ~/projects/*/; do
+  sesh migrate "$dir"
+done
+```
 
 ### See Also
 

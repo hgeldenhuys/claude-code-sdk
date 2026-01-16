@@ -35,6 +35,7 @@ if (!result) {
   result = store.track(data.session_id, {
     source: data.source,
     cwd: data.cwd,
+    transcriptPath: data.transcript_path,
   });
 }
 
