@@ -23,6 +23,7 @@
 import blessed from 'blessed';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
+import { watch, type FSWatcher } from 'node:fs';
 import { parseTranscriptFile, getConversationThread } from '../src/transcripts/parser';
 import { findTranscriptFiles, getSessionInfo } from '../src/transcripts/indexer';
 import {
@@ -86,6 +87,10 @@ interface AppState {
   mouseEnabled: boolean; // Toggle mouse support
   showHelp: boolean; // Toggle help overlay
   sessionFilter: string[]; // Session IDs to filter by
+  // Live mode
+  liveMode: boolean; // Watch file for changes
+  fileWatcher: FSWatcher | null; // File watcher instance
+  filterOpts: FilterOptions; // Store filter options for reapplying
 }
 
 let state: AppState = {
@@ -111,6 +116,10 @@ let state: AppState = {
   mouseEnabled: false,
   showHelp: false,
   sessionFilter: [],
+  // Live mode
+  liveMode: false,
+  fileWatcher: null,
+  filterOpts: {},
 };
 
 // ============================================================================
@@ -359,6 +368,7 @@ function generateUsageGraph(width: number, height: number): string {
 function generateHelpContent(): string {
   const modeStr = state.fullscreen ? (state.scrollMode ? 'SCROLL' : 'NAV') : 'SPLIT';
   const mouseStr = state.mouseEnabled ? 'ON' : 'OFF';
+  const liveStr = state.liveMode ? 'ON' : 'OFF';
   const bookmarkCount = state.bookmarks.size;
   const sessionFilterStr = state.sessionFilter.length > 0
     ? state.sessionFilter.join(', ').slice(0, 30) + (state.sessionFilter.join(', ').length > 30 ? '...' : '')
@@ -367,7 +377,7 @@ function generateHelpContent(): string {
   return `{bold}{center}Transcript TUI Help{/center}{/bold}
 
 {bold}Current Status:{/bold}
-  Mode: {cyan-fg}${modeStr}{/cyan-fg}  |  View: {cyan-fg}${state.viewMode}{/cyan-fg}  |  Mouse: {cyan-fg}${mouseStr}{/cyan-fg}
+  Mode: {cyan-fg}${modeStr}{/cyan-fg}  |  View: {cyan-fg}${state.viewMode}{/cyan-fg}  |  Mouse: {cyan-fg}${mouseStr}{/cyan-fg}  |  Live: {cyan-fg}${liveStr}{/cyan-fg}
   Filter: {cyan-fg}${state.activeFilter}{/cyan-fg}  |  Bookmarks: {cyan-fg}${bookmarkCount}{/cyan-fg}
   Session Filter: {cyan-fg}${sessionFilterStr}{/cyan-fg}
   Line: {cyan-fg}${state.currentIndex + 1}/${state.lines.length}{/cyan-fg}
@@ -402,7 +412,9 @@ function generateHelpContent(): string {
   {green-fg}s{/green-fg}               Toggle scroll mode (fullscreen only)
   {green-fg}y{/green-fg}               Copy recall reference
   {green-fg}c{/green-fg}               Copy current line content to clipboard
+  {green-fg}u{/green-fg}               Toggle token usage graph overlay
   {green-fg}m{/green-fg}               Toggle mouse support
+  {green-fg}L{/green-fg}               Toggle live mode (watch for new entries)
   {green-fg}?{/green-fg}               Toggle this help overlay
 
 {bold}Quit:{/bold}
@@ -1151,6 +1163,60 @@ async function createTUI(): Promise<void> {
     screen.render();
   });
 
+  // Live mode toggle with 'L' key
+  screen.key('L', () => {
+    state.liveMode = !state.liveMode;
+
+    if (state.liveMode && !state.fileWatcher) {
+      // Start watching
+      let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+      const debounceMs = 100;
+
+      state.fileWatcher = watch(state.filePath, async (eventType) => {
+        if (eventType !== 'change') return;
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(async () => {
+          try {
+            const previousLineCount = state.allLines.length;
+            const newAllLines = await parseTranscriptFile(state.filePath);
+            if (newAllLines.length > previousLineCount) {
+              const newLinesCount = newAllLines.length - previousLineCount;
+              state.allLines = newAllLines;
+              const filteredLines = filterLines(newAllLines, state.filterOpts);
+              const previousFilteredCount = state.lines.length;
+              state.lines = filteredLines;
+              const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
+              if (wasAtEnd && filteredLines.length > previousFilteredCount) {
+                state.currentIndex = filteredLines.length - 1;
+              }
+              headerBox.setContent(
+                `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} (+${newLinesCount}) | View: [${state.viewMode}]`
+              );
+              listBox.setItems(getListItems());
+              listBox.select(state.currentIndex);
+              renderCurrentLine();
+              screen.render();
+            }
+          } catch {
+            // Ignore errors
+          }
+        }, debounceMs);
+      });
+    } else if (!state.liveMode && state.fileWatcher) {
+      // Stop watching
+      state.fileWatcher.close();
+      state.fileWatcher = null;
+    }
+
+    // Update header
+    const liveIndicator = state.liveMode ? '{green-fg}[LIVE]{/green-fg} ' : '';
+    headerBox.setContent(
+      `${liveIndicator}{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
+    );
+    showToast(`Live mode ${state.liveMode ? 'enabled' : 'disabled'}`);
+    screen.render();
+  });
+
   // Help overlay with '?' key
   screen.key('?', () => {
     state.showHelp = !state.showHelp;
@@ -1173,6 +1239,11 @@ async function createTUI(): Promise<void> {
 
   // Quit
   screen.key(['q', 'C-c'], () => {
+    // Clean up file watcher
+    if (state.fileWatcher) {
+      state.fileWatcher.close();
+      state.fileWatcher = null;
+    }
     process.exit(0);
   });
 
@@ -1187,6 +1258,61 @@ async function createTUI(): Promise<void> {
 
   // Focus list by default
   listBox.focus();
+
+  // Set up live mode file watching
+  if (state.liveMode) {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const debounceMs = 100;
+
+    state.fileWatcher = watch(state.filePath, async (eventType) => {
+      if (eventType !== 'change') return;
+
+      // Debounce rapid changes
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        try {
+          const previousLineCount = state.allLines.length;
+          const newAllLines = await parseTranscriptFile(state.filePath);
+
+          // Only update if we have new lines
+          if (newAllLines.length > previousLineCount) {
+            const newLinesCount = newAllLines.length - previousLineCount;
+            state.allLines = newAllLines;
+
+            // Reapply filters
+            const filteredLines = filterLines(newAllLines, state.filterOpts);
+            const previousFilteredCount = state.lines.length;
+            state.lines = filteredLines;
+
+            // Auto-scroll to end if we were at the end
+            const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
+            if (wasAtEnd && filteredLines.length > previousFilteredCount) {
+              state.currentIndex = filteredLines.length - 1;
+            }
+
+            // Update header to show live indicator
+            const liveIndicator = '{green-fg}[LIVE]{/green-fg} ';
+            headerBox.setContent(
+              `${liveIndicator}{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} (+${newLinesCount}) | View: [${state.viewMode}]`
+            );
+
+            // Refresh list and content
+            listBox.setItems(getListItems());
+            listBox.select(state.currentIndex);
+            renderCurrentLine();
+            screen.render();
+          }
+        } catch {
+          // Ignore errors during file reload
+        }
+      }, debounceMs);
+    });
+
+    // Show live mode indicator in header
+    headerBox.setContent(
+      `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
+    );
+  }
 
   screen.render();
 }
@@ -1214,6 +1340,7 @@ Filter Options:
   --last <n>              Only last N entries
   --session, -s <ids>     Filter by session ID(s) (comma-separated)
   --session-name <name>   Filter by session name (uses sesh lookup)
+  --live, -w              Watch file for new entries in real-time
 
 Navigation:
   j/k, Up/Down     Navigate lines
@@ -1247,6 +1374,7 @@ Features:
   c                Copy current line content to clipboard
   u                Toggle token usage graph overlay
   m                Toggle mouse support
+  L                Toggle live mode (watch for new entries)
   ?                Show help overlay
   q, Ctrl+C        Quit
 
@@ -1315,6 +1443,8 @@ Examples:
           return 1;
         }
       }
+    } else if (arg === '--live' || arg === '-w') {
+      state.liveMode = true;
     } else if (!arg.startsWith('-')) {
       input = arg;
     }
@@ -1354,6 +1484,7 @@ Examples:
     state.sessionId = (metadata.sessionId as string) || '';
     state.activeFilter = filterLabel;
     state.textOnly = filterOpts.textOnly || false;
+    state.filterOpts = filterOpts; // Store for live mode refiltering
 
     // Start TUI
     await createTUI();
