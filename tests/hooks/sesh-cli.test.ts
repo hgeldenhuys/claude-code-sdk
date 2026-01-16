@@ -13,13 +13,14 @@ const TEST_DIR = '/tmp/claude-sdk-sesh-test';
 const SESH_PATH = join(import.meta.dir, '../../bin/sesh.ts');
 
 // Helper to run sesh CLI and get output
+// Uses HOME=TEST_DIR so sesh uses TEST_DIR/.claude/global-sessions.json
 async function runSesh(
   args: string[],
   env?: Record<string, string>
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   const proc = spawn(['bun', SESH_PATH, ...args], {
     cwd: TEST_DIR,
-    env: { ...process.env, ...env },
+    env: { ...process.env, HOME: TEST_DIR, ...env },
     stdout: 'pipe',
     stderr: 'pipe',
   });
@@ -31,20 +32,34 @@ async function runSesh(
   return { stdout: stdout.trim(), stderr: stderr.trim(), exitCode };
 }
 
-// Helper to create test session data
+// Test machine ID for consistent testing (must be valid UUID v4 format)
+const TEST_MACHINE_ID = '00000000-0000-4000-a000-000000000000';
+
+// Helper to create test session data in global-sessions.json (v3.0 format)
 function createTestSessions() {
-  const sessionsPath = join(TEST_DIR, '.claude/sessions.json');
+  const sessionsPath = join(TEST_DIR, '.claude/global-sessions.json');
   const data = {
-    version: '2.0',
+    version: '3.0',
+    machines: {
+      [TEST_MACHINE_ID]: {
+        id: TEST_MACHINE_ID,
+        hostname: 'test-host',
+        registeredAt: '2024-01-14T09:00:00.000Z',
+        lastSeen: '2024-01-14T12:00:00.000Z',
+      },
+    },
+    currentMachineId: TEST_MACHINE_ID,
     names: {
       'test-project': {
         name: 'test-project',
         currentSessionId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        machineId: TEST_MACHINE_ID,
         history: [
           {
             sessionId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
             timestamp: '2024-01-14T10:00:00.000Z',
             source: 'startup',
+            machineId: TEST_MACHINE_ID,
           },
         ],
         created: '2024-01-14T10:00:00.000Z',
@@ -55,11 +70,13 @@ function createTestSessions() {
       'another-session': {
         name: 'another-session',
         currentSessionId: '11111111-2222-3333-4444-555555555555',
+        machineId: TEST_MACHINE_ID,
         history: [
           {
             sessionId: '11111111-2222-3333-4444-555555555555',
             timestamp: '2024-01-14T11:00:00.000Z',
             source: 'resume',
+            machineId: TEST_MACHINE_ID,
           },
         ],
         created: '2024-01-14T11:00:00.000Z',
@@ -71,10 +88,20 @@ function createTestSessions() {
       'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee': 'test-project',
       '11111111-2222-3333-4444-555555555555': 'another-session',
     },
+    directoryIndex: {
+      [TEST_DIR]: ['test-project'],
+    },
+    latestByDirectory: {
+      [TEST_DIR]: 'test-project',
+    },
   };
 
   mkdirSync(join(TEST_DIR, '.claude'), { recursive: true });
   writeFileSync(sessionsPath, JSON.stringify(data, null, 2));
+
+  // Also create the machine-id file so sesh uses the same machine ID
+  const machineIdPath = join(TEST_DIR, '.claude/machine-id');
+  writeFileSync(machineIdPath, `${TEST_MACHINE_ID}\n`);
 }
 
 describe('sesh CLI', () => {
