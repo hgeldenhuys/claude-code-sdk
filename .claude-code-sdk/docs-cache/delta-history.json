@@ -1478,6 +1478,216 @@
         "summary": "+2/-2 lines"
       },
       "reviewed": false
+    },
+    {
+      "id": "delta-1768523606194-34tf80q",
+      "url": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md",
+      "title": "Changelog",
+      "detectedAt": "2026-01-16T00:33:26.192Z",
+      "previousVersion": 7,
+      "newVersion": 8,
+      "previousHash": "430672fd53873382fa1262d19b51b43a78c3ae06ec11e7437c3c60a2e1bcb71c",
+      "newHash": "e20d294a5585ec2f90c7d05f10a1de1bdf365f62375b26a979695738af6154ed",
+      "diffSummary": {
+        "linesAdded": 1,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [],
+        "summary": "+1/-0 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768523608025-pnh2vdh",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/claude-code/sdk-overview",
+      "title": "Untitled",
+      "detectedAt": "2026-01-16T00:33:28.024Z",
+      "previousVersion": 11,
+      "newVersion": 12,
+      "previousHash": "f1d096e3550b407abacf487ffba3ceebf327d7a90a282fc44fd0344c4b6741d3",
+      "newHash": "6c89af255421d4c49622122cd406f9c0ddb619dcf8264ea6754b541ab160f8bb",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 2,
+        "linesModified": 2,
+        "changedSections": [],
+        "summary": "+2/-2 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575663380-73v78r6",
+      "url": "https://code.claude.com/docs/en/hooks.md",
+      "title": "Hooks reference",
+      "detectedAt": "2026-01-16T15:01:03.377Z",
+      "previousVersion": 6,
+      "newVersion": 7,
+      "previousHash": "b5cab260614f400bb37ee06d9a61c74df41ab9855e764d297fb536bf8d069088",
+      "newHash": "26284344113f769b110115c1531bfc6a5625b579c51fd645a7016c193121941b",
+      "diffSummary": {
+        "linesAdded": 4,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [],
+        "summary": "+4/-0 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575664011-7e1ce3p",
+      "url": "https://code.claude.com/docs/en/skills.md",
+      "title": "Agent Skills",
+      "detectedAt": "2026-01-16T15:01:04.010Z",
+      "previousVersion": 5,
+      "newVersion": 6,
+      "previousHash": "5ea9beecc22af4cd3138510398cb4c0923933da9eb7697654126be623539b42c",
+      "newHash": "f1b7577f6fc33b5e6c2fc853dce36c784dde2c6ff0a5044212b6842d11ca3ab8",
+      "diffSummary": {
+        "linesAdded": 13,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [
+          "#### Automatic discovery from nested directories",
+          "#### Available string substitutions"
+        ],
+        "summary": "+13/-0 lines, 2 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575667616-7frrfvf",
+      "url": "https://code.claude.com/docs/en/mcp.md",
+      "title": "Connect Claude Code to tools via MCP",
+      "detectedAt": "2026-01-16T15:01:07.614Z",
+      "previousVersion": 5,
+      "newVersion": 6,
+      "previousHash": "85d2edb1635818ecf8eb0f55d318b303c13fdb82e4e829e9d5473bde3c796eb0",
+      "newHash": "df428cfcc67fe3eb6a503025069b5ef67e9291d049ba8af42596ed0302e63aea",
+      "diffSummary": {
+        "linesAdded": 31,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [
+          "## Scale with MCP Tool Search",
+          "### How it works",
+          "### For MCP server authors",
+          "### Configure tool search",
+          "# Use a custom 5% threshold",
+          "# Disable tool search entirely"
+        ],
+        "summary": "+31/-0 lines, 6 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575667899-o78icv6",
+      "url": "https://code.claude.com/docs/en/settings.md",
+      "title": "Claude Code settings",
+      "detectedAt": "2026-01-16T15:01:07.898Z",
+      "previousVersion": 10,
+      "newVersion": 11,
+      "previousHash": "27c2ef6c139816f28b8fcd69152315fa1e3d8709663739ca2d6255bf06d14754",
+      "newHash": "709e84c701906570258efe325aabb22a02fc1c7976ccc82d74f6e020ebfd6b77",
+      "diffSummary": {
+        "linesAdded": 68,
+        "linesRemoved": 64,
+        "linesModified": 64,
+        "changedSections": [],
+        "summary": "+68/-64 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575669740-3gvsnit",
+      "url": "https://code.claude.com/docs/en/statusline.md",
+      "title": "Status line configuration",
+      "detectedAt": "2026-01-16T15:01:09.739Z",
+      "previousVersion": 2,
+      "newVersion": 3,
+      "previousHash": "4e2e31e7321b1299c645592026beb17a7441458b9fc32b66a2d811830ba50658",
+      "newHash": "135cc18b87007811dca084180ce944f1d6f27c7e04513167fcb8a9d1c9d5586a",
+      "diffSummary": {
+        "linesAdded": 9,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+9/-1 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575670002-4p1cyrw",
+      "url": "https://code.claude.com/docs/en/cli-reference.md",
+      "title": "CLI reference",
+      "detectedAt": "2026-01-16T15:01:10.001Z",
+      "previousVersion": 5,
+      "newVersion": 6,
+      "previousHash": "52599ccd2f718989ed1530b7fa62497352c84cf48f37233e7c8e976d71c96e2e",
+      "newHash": "993d68bb70ffbb0039d43baa1ff3d4d742ca7878d08038b2dce761a84de53bbd",
+      "diffSummary": {
+        "linesAdded": 56,
+        "linesRemoved": 51,
+        "linesModified": 51,
+        "changedSections": [],
+        "summary": "+56/-51 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575670406-w8jzmxy",
+      "url": "https://code.claude.com/docs/en/slash-commands.md",
+      "title": "Slash commands",
+      "detectedAt": "2026-01-16T15:01:10.405Z",
+      "previousVersion": 5,
+      "newVersion": 6,
+      "previousHash": "fc691e72037b0db756d9c83bf4aa1475133e746b5bd0340a2fd7bc23463c3ef9",
+      "newHash": "8efaff3de9abbb5233b776a90c3591d827eb33a00e5e594a01acd30278228cae",
+      "diffSummary": {
+        "linesAdded": 47,
+        "linesRemoved": 47,
+        "linesModified": 47,
+        "changedSections": [],
+        "summary": "+47/-47 lines"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575673185-e7qhfeb",
+      "url": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md",
+      "title": "Changelog",
+      "detectedAt": "2026-01-16T15:01:13.184Z",
+      "previousVersion": 8,
+      "newVersion": 9,
+      "previousHash": "e20d294a5585ec2f90c7d05f10a1de1bdf365f62375b26a979695738af6154ed",
+      "newHash": "41277ab79b451aeccdc122ef48733aca330b7d6e18f0d6640b6a2f1bf65f2415",
+      "diffSummary": {
+        "linesAdded": 10,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "changedSections": [
+          "## 2.1.9"
+        ],
+        "summary": "+10/-0 lines, 1 new sections"
+      },
+      "reviewed": false
+    },
+    {
+      "id": "delta-1768575675259-zhze90u",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/claude-code/sdk-overview",
+      "title": "Untitled",
+      "detectedAt": "2026-01-16T15:01:15.259Z",
+      "previousVersion": 12,
+      "newVersion": 13,
+      "previousHash": "6c89af255421d4c49622122cd406f9c0ddb619dcf8264ea6754b541ab160f8bb",
+      "newHash": "77e63b082fde56accde4bd270760072b83be53a58c12155972f2dbf22a5a49e4",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 2,
+        "linesModified": 2,
+        "changedSections": [],
+        "summary": "+2/-2 lines"
+      },
+      "reviewed": false
     }
   ]
 }

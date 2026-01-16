@@ -2,14 +2,31 @@
 
 This document tracks recent Claude Code features and changes. Updated when docs sync detects changes.
 
-**Current Version:** 2.1.7
-**Last Synced:** 2026-01-14
+**Current Version:** 2.1.9
+**Last Synced:** 2026-01-16
+
+---
+
+> **Note: "Ultrathink" Keywords No Longer Required**
+>
+> As of version 2.0.67, **thinking mode is enabled by default for Opus 4.5**. You no longer need to use keywords like "think", "think harder", or "ultrathink" to activate extended thinking - it's already on. These keywords now serve to emphasize or request additional thinking budget rather than enabling the feature.
 
 ---
 
 ## Recent Highlights
 
-### Version 2.1.7 (Latest)
+### Version 2.1.9 (Latest)
+
+**New Features:**
+- **`${CLAUDE_SESSION_ID}` Substitution** - String substitution in skills to access current session ID
+- **Nested Skill Discovery** - Skills from nested `.claude/skills/` directories auto-discovered when working in subdirectories
+- **MCP Tool Search** - New `mcpToolSearchThreshold` setting for tuning when tool search activates
+
+**Bug Fixes:**
+- Fixed ultrathink keyword highlighting being applied to wrong characters when user prompt wraps
+- Fixed collapsed "Reading X files…" indicator switching to past tense when thinking blocks appear
+
+### Version 2.1.7
 
 **New Features:**
 - **`showTurnDuration` Setting** - Hide turn duration messages ("Cooked for 1m 6s")
@@ -180,6 +197,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
+| 2.1.9 | `${CLAUDE_SESSION_ID}` | String substitution in skills to access current session ID |
 | 2.1.6 | Nested Skills Discovery | Auto-discover skills from nested `.claude/skills` directories |
 | 2.1.3 | Merged Commands/Skills | Slash commands and skills unified, simplified mental model |
 | 2.1.0 | Skill Tool | Programmatically invoke skills/commands (replaces SlashCommand) |
@@ -350,7 +368,7 @@ This document tracks recent Claude Code features and changes. Updated when docs 
 
 | Version | Feature | Description |
 |---------|---------|-------------|
-| 2.0.67 | Thinking Default | Thinking mode enabled by default for Opus 4.5 |
+| 2.0.67 | Thinking Default | Thinking mode enabled by default for Opus 4.5 - "ultrathink" keywords no longer needed |
 | 2.0.58 | Opus 4.5 for Pro | Pro users get access to Opus 4.5 |
 | 2.0.51 | Opus 4.5 Released | New Claude Opus 4.5 model |
 | 2.0.21 | Haiku 4.5 | Haiku 4.5 as model option for Pro users |
