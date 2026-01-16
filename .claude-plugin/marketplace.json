@@ -9,10 +9,10 @@
   "plugins": [
     {
       "name": "session-naming",
-      "description": "Human-friendly session names for Claude Code. Assigns memorable names like 'brave-elephant' to sessions, persists across /compact and /clear.",
+      "description": "Human-friendly session names for Claude Code. Assigns memorable names like 'brave-elephant' to sessions, persists across /compact and /clear. v2.0: centralized storage, transcript tracking, machine namespacing, sesh CLI with transcript/machines/migrate commands.",
       "source": "./",
-      "version": "1.0.0",
-      "keywords": ["sessions", "naming", "productivity", "hooks"]
+      "version": "2.0.0",
+      "keywords": ["sessions", "naming", "productivity", "hooks", "transcripts", "multi-machine", "sesh"]
     }
   ]
 }

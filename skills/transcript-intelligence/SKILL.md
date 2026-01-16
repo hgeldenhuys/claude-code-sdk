@@ -15,8 +15,45 @@ Search, analyze, and extract knowledge from Claude Code session transcripts - yo
 | Transcript Location | `~/.claude/projects/<project-hash>/<session-id>.jsonl` |
 | Format | JSONL (one JSON object per line) |
 | Line Types | `user`, `assistant`, `system`, `summary`, `file-history-snapshot` |
-| Key Tools | `rg` (ripgrep), `jq`, `Grep`, `Read` |
-| Integration | Works with `/recall` command |
+| Key Tools | `rg` (ripgrep), `jq`, `Grep`, `Read`, `sesh` |
+| Integration | Works with `/recall` command and `sesh` CLI |
+
+## Using sesh for Easy Access
+
+The `sesh` CLI provides human-friendly access to transcripts by session name:
+
+```bash
+# Get transcript path by session name
+sesh transcript my-session
+# Output: /Users/you/.claude/projects/.../abc123.jsonl
+
+# View transcript directly
+cat $(sesh transcript my-session)
+
+# Search within a named session
+rg "keyword" $(sesh transcript my-session)
+
+# Pipe to jq for structured queries
+cat $(sesh transcript my-session) | jq 'select(.type == "user")'
+
+# Get session info (includes transcript path)
+sesh info my-session
+
+# List sessions for current project
+sesh list --project .
+
+# List recent sessions
+sesh list --limit 10
+```
+
+### Benefits Over Manual Path Navigation
+
+| Manual Approach | With sesh |
+|----------------|-----------|
+| `ls ~/.claude/projects/` to find hash | `sesh list` to see all sessions |
+| Remember session UUIDs | Use memorable names like "auth-feature" |
+| Navigate nested directories | `sesh transcript <name>` returns path |
+| Search across unknown paths | `sesh list --project /path` filters by project |
 
 ## Transcript Location
 
@@ -35,6 +72,19 @@ Transcripts are stored in project-specific directories:
 
 ### Finding Your Project's Transcripts
 
+**Using sesh (recommended):**
+```bash
+# List sessions for current project
+sesh list --project .
+
+# Get transcript path by name
+sesh transcript my-session
+
+# View session details including transcript
+sesh info my-session
+```
+
+**Manual approach:**
 ```bash
 # List all Claude project directories
 ls -la ~/.claude/projects/
@@ -149,11 +199,14 @@ cat transcript.jsonl | jq -r 'select(.type == "assistant") | .message.content[] 
 When context is compacted or cleared, search transcripts to restore important information:
 
 ```bash
-# Find what was discussed before compaction
-rg -C 3 "important|critical|remember|note" <transcript>.jsonl
+# Using sesh (recommended) - search by session name
+rg -C 3 "important|critical|remember|note" $(sesh transcript my-session)
 
-# Find file modifications
-rg "Write|Edit" <transcript>.jsonl | jq '.message.content[] | select(.type == "tool_use")'
+# Find file modifications in named session
+cat $(sesh transcript my-session) | jq '.message.content[] | select(.type == "tool_use" and (.name == "Write" or .name == "Edit"))'
+
+# Manual approach with raw path
+rg -C 3 "important|critical|remember|note" <transcript>.jsonl
 ```
 
 ### 2. Finding Past Solutions
@@ -225,10 +278,30 @@ When invoked via `/recall`:
 
 ### Prerequisites
 - [ ] Know the topic or keyword to search
-- [ ] Have access to `~/.claude/projects/`
+- [ ] Have `sesh` CLI available (or access to `~/.claude/projects/`)
 - [ ] Know approximate timeframe (optional)
 
-### Steps
+### Steps (Using sesh - Recommended)
+
+1. **List available sessions**
+   - [ ] List project sessions: `sesh list --project .`
+   - [ ] Or list all recent: `sesh list --limit 20`
+
+2. **Search by session name**
+   - [ ] Search named session: `rg -i "<keyword>" $(sesh transcript my-session)`
+   - [ ] Or get path first: `sesh transcript my-session`
+
+3. **Get context around matches**
+   - [ ] `rg -C 5 "<keyword>" $(sesh transcript my-session)`
+
+4. **Extract structured data**
+   - [ ] `cat $(sesh transcript my-session) | jq 'select(.type == "user")'`
+
+5. **Summarize findings**
+   - [ ] Compile key decisions/solutions
+   - [ ] Note related discussions
+
+### Steps (Manual - Without sesh)
 
 1. **Identify project directory**
    - [ ] List projects: `ls ~/.claude/projects/`
@@ -292,6 +365,9 @@ cat transcript.jsonl | jq -r '.gitBranch // empty' | sort -u
 | jq errors | Ensure each line is valid JSON (some may be malformed) |
 | Slow searches | Use file-level filtering first (`rg -l`), then content search |
 | Can't find project | Look at recent modification times, or search all projects |
+| sesh returns "no transcript path" | Session was created before transcript tracking was enabled |
+| sesh session not found | Check `sesh list` to see available session names |
+| Need to search older sessions | Use `sesh list --all-machines` to see sessions from all machines |
 
 ## Security Notes
 
