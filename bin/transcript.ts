@@ -265,9 +265,39 @@ interface ViewArgs {
 }
 
 async function cmdView(args: ViewArgs): Promise<number> {
-  const filePath = await resolveTranscriptPath(args.file);
+  let filePath: string | null = null;
+
+  // If we have a session name but no file, resolve the transcript from session name
+  if (!args.file && args.sessionNameLookup) {
+    try {
+      const { getSessionStore } = await import('../src/hooks/sessions');
+      const store = getSessionStore();
+      const session = store.getByName(args.sessionNameLookup);
+      if (session?.transcriptPath) {
+        filePath = session.transcriptPath;
+      } else {
+        // Try to find by session ID lookup
+        const sessionId = store.getSessionId(args.sessionNameLookup);
+        if (sessionId) {
+          // Search for transcript with this session ID
+          const files = await findTranscriptFiles(PROJECTS_DIR);
+          for (const fp of files) {
+            if (fp.includes(sessionId)) {
+              filePath = fp;
+              break;
+            }
+          }
+        }
+      }
+    } catch {
+      // Session store not available
+    }
+  } else if (args.file) {
+    filePath = await resolveTranscriptPath(args.file);
+  }
+
   if (!filePath) {
-    printError(`transcript not found: ${args.file}`);
+    printError(`transcript not found: ${args.sessionNameLookup || args.file}`);
     return 1;
   }
 
@@ -818,8 +848,8 @@ function parseArgs(args: string[]): {
     }
   }
 
-  // Default command is view if we have a positional arg
-  if (!command && positional.length > 0) {
+  // Default command is view if we have a positional arg or session-name
+  if (!command && (positional.length > 0 || flags.sessionNameLookup)) {
     command = 'view';
   }
 
@@ -843,12 +873,12 @@ async function main(): Promise<number> {
       return 0;
 
     case 'view':
-      if (positional.length === 0) {
+      if (positional.length === 0 && !flags.sessionNameLookup) {
         printError('usage: transcript <file|session> [options]');
         return 1;
       }
       return cmdView({
-        file: positional[0]!,
+        file: positional[0] || '',  // May be empty if using --session-name
         types: flags.types as string | undefined,
         last: flags.last as number | undefined,
         first: flags.first as number | undefined,
