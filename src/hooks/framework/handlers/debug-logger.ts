@@ -9,6 +9,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { buildFrameworkEnv } from '../command-executor';
 import type { DebugLoggerOptions } from '../config/types';
 import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
@@ -25,6 +26,8 @@ interface DebugLogEntry {
   turnSequence?: number;
   cwd: string;
   payload: unknown;
+  /** Framework env vars that custom handlers receive */
+  frameworkEnv?: Record<string, string | undefined>;
   handlerResults?: Record<string, unknown>;
 }
 
@@ -40,6 +43,7 @@ export function createDebugLoggerHandler(options: DebugLoggerOptions = {}): Hand
     outputPath,
     includePayload = true,
     includeHandlerResults = true,
+    includeFrameworkEnv = true,
     prettyPrint = true,
     events,
   } = options;
@@ -85,6 +89,11 @@ export function createDebugLoggerHandler(options: DebugLoggerOptions = {}): Hand
         cwd: ctx.cwd,
         payload: includePayload ? ctx.event : '[payload hidden]',
       };
+
+      // Include framework env vars (what custom handlers receive)
+      if (includeFrameworkEnv) {
+        entry.frameworkEnv = buildFrameworkEnv(ctx);
+      }
 
       // Include results from other handlers
       if (includeHandlerResults && ctx.results.size > 0) {

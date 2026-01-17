@@ -103,6 +103,8 @@ export interface DebugLoggerOptions {
   includePayload?: boolean;
   /** Include results from other handlers (default: true) */
   includeHandlerResults?: boolean;
+  /** Include framework env vars that custom handlers receive (default: true) */
+  includeFrameworkEnv?: boolean;
   /** Pretty print JSON output (default: true) */
   prettyPrint?: boolean;
   /** Event types to log (default: all) */

@@ -150,10 +150,11 @@ builtins:
     enabled: false  # Disabled by default
     options:
       output_path: ~/.claude/logs/debug.log  # or omit for stderr
-      include_payload: true      # Full event payload
-      include_handler_results: true  # Results from other handlers
-      pretty_print: true         # Pretty-printed JSON
-      events:                    # Filter to specific events (optional)
+      include_payload: true         # Full event payload
+      include_handler_results: true # Results from other handlers
+      include_framework_env: true   # Env vars custom handlers receive
+      pretty_print: true            # Pretty-printed JSON
+      events:                       # Filter to specific events (optional)
         - PreToolUse
         - PostToolUse
 ```
@@ -175,6 +176,14 @@ builtins:
     "session_id": "abc123",
     "tool_name": "Bash",
     "tool_input": { "command": "ls -la" }
+  },
+  "frameworkEnv": {
+    "CLAUDE_SESSION_ID": "abc123",
+    "CLAUDE_SESSION_NAME": "jolly-elephant",
+    "CLAUDE_TURN_ID": "abc123:3",
+    "CLAUDE_TURN_SEQUENCE": "3",
+    "CLAUDE_EVENT_TYPE": "PreToolUse",
+    "CLAUDE_CWD": "/path/to/project"
   },
   "handlerResults": {
     "session-naming": { "success": true, "data": { "sessionName": "jolly-elephant" } },
