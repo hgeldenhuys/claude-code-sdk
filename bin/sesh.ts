@@ -801,9 +801,15 @@ function cmdAgentsList(args: string[]): number {
   }
 
   switch (format) {
-    case 'json':
-      console.log(JSON.stringify(agents, null, 2));
+    case 'json': {
+      const store = getSessionStore();
+      const agentsWithSessionName = agents.map((a) => ({
+        ...a,
+        sessionName: store.getName(a.sessionId) ?? null,
+      }));
+      console.log(JSON.stringify(agentsWithSessionName, null, 2));
       break;
+    }
     case 'names':
       for (const a of agents) {
         console.log(a.slug);
