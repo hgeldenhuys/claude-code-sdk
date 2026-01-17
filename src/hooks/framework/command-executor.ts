@@ -135,10 +135,10 @@ export async function executeCommand(
     let stderr = '';
     let timedOut = false;
 
-    // Set timeout
+    // Set timeout - use SIGKILL for forceful termination
     const timeout = setTimeout(() => {
       timedOut = true;
-      child.kill('SIGTERM');
+      child.kill('SIGKILL');
     }, timeoutMs);
 
     // Collect stdout

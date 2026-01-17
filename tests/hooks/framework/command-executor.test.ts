@@ -274,18 +274,22 @@ describe('executeCommand', () => {
     expect(result.exitCode).toBe(1);
   });
 
-  test('handles command timeout', async () => {
-    const ctx = createMockContext();
-    const result = await executeCommand({
-      command: 'sleep 10',
-      event: { session_id: 'test' } as HookEvent,
-      context: ctx,
-      timeoutMs: 100,
-    });
+  test(
+    'handles command timeout',
+    async () => {
+      const ctx = createMockContext();
+      const result = await executeCommand({
+        command: 'sleep 10',
+        event: { session_id: 'test' } as HookEvent,
+        context: ctx,
+        timeoutMs: 200,
+      });
 
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('timed out');
-  });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('timed out');
+    },
+    { timeout: 10000 }
+  );
 
   test('handles non-existent command', async () => {
     const ctx = createMockContext();
@@ -327,15 +331,19 @@ describe('createCommandHandler', () => {
     expect(result.reason).toBe('Not allowed');
   });
 
-  test('creates handler with custom timeout', async () => {
-    const handler = createCommandHandler('sleep 10', 100);
-    const ctx = createMockContext();
+  test(
+    'creates handler with custom timeout',
+    async () => {
+      const handler = createCommandHandler('sleep 10', 200);
+      const ctx = createMockContext();
 
-    const result = await handler(ctx);
+      const result = await handler(ctx);
 
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('timed out');
-  });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('timed out');
+    },
+    { timeout: 10000 }
+  );
 });
 
 // ============================================================================
