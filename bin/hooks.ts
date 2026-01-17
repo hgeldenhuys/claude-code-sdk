@@ -42,6 +42,7 @@ interface CLIArgs {
   listHandlers: boolean;
   validateOnly: boolean;
   force: boolean;
+  fix: boolean;
 }
 
 function parseArgs(): CLIArgs {
@@ -53,6 +54,7 @@ function parseArgs(): CLIArgs {
     listHandlers: false,
     validateOnly: false,
     force: false,
+    fix: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -62,6 +64,10 @@ function parseArgs(): CLIArgs {
     // Check for subcommands first
     if (arg === 'init') {
       result.command = 'init';
+    } else if (arg === 'doctor') {
+      result.command = 'doctor';
+    } else if (arg === '--fix') {
+      result.fix = true;
     } else if (arg === '--config' || arg === '-c') {
       result.configPath = args[++i];
     } else if (arg === '--debug' || arg === '-d') {
@@ -97,6 +103,7 @@ USAGE:
 
 COMMANDS:
   init                  Initialize hook framework in current project
+  doctor                Diagnose hook framework configuration issues
   (default)             Run hook framework (reads from stdin)
 
 OPTIONS:
@@ -105,6 +112,7 @@ OPTIONS:
   -l, --list-handlers   List available built-in handlers
   --validate            Validate config file and exit
   -f, --force           Overwrite existing files (for init)
+  --fix                 Auto-fix issues found by doctor
   -v, --version         Show version
   -h, --help            Show this help
 
@@ -114,8 +122,19 @@ INIT COMMAND:
   - Updates .claude/settings.json to route all events through framework
 
   Example:
-    bun run bin/hooks.ts init
-    bun run bin/hooks.ts init --force  # Overwrite existing files
+    bun run hooks init
+    bun run hooks init --force  # Overwrite existing files
+
+DOCTOR COMMAND:
+  Diagnoses hook framework configuration:
+  - Checks hooks.yaml exists and is valid
+  - Verifies .claude/settings.json routes events to framework
+  - Validates built-in handler configuration
+  - Checks custom handler commands exist
+
+  Example:
+    bun run hooks doctor
+    bun run hooks doctor --fix  # Auto-fix issues
 
 DESCRIPTION:
   Runs the hook framework with the specified YAML configuration.
@@ -342,6 +361,295 @@ Test with:
 }
 
 // ============================================================================
+// Doctor Command
+// ============================================================================
+
+interface DiagnosticResult {
+  name: string;
+  status: 'pass' | 'warn' | 'fail';
+  message: string;
+  fix?: () => Promise<void>;
+}
+
+async function runDoctor(fix: boolean): Promise<void> {
+  const fs = await import('fs');
+  const path = await import('path');
+
+  const cwd = process.cwd();
+  const results: DiagnosticResult[] = [];
+
+  console.log('Hook Framework Doctor\n');
+  console.log('Checking configuration...\n');
+
+  // 1. Check hooks.yaml exists
+  const hooksYamlPaths = [
+    path.join(cwd, 'hooks.yaml'),
+    path.join(cwd, 'hooks.yml'),
+    path.join(cwd, '.claude', 'hooks.yaml'),
+    path.join(cwd, '.claude', 'hooks.yml'),
+  ];
+
+  let foundConfig: string | null = null;
+  for (const p of hooksYamlPaths) {
+    if (fs.existsSync(p)) {
+      foundConfig = p;
+      break;
+    }
+  }
+
+  if (foundConfig) {
+    results.push({
+      name: 'hooks.yaml',
+      status: 'pass',
+      message: `Found: ${path.relative(cwd, foundConfig)}`,
+    });
+
+    // 2. Validate YAML syntax
+    try {
+      const yaml = await import('yaml');
+      const content = fs.readFileSync(foundConfig, 'utf-8');
+      const config = yaml.parse(content);
+
+      if (config.version !== 1) {
+        results.push({
+          name: 'Config version',
+          status: 'warn',
+          message: `Expected version: 1, got: ${config.version}`,
+        });
+      } else {
+        results.push({
+          name: 'Config version',
+          status: 'pass',
+          message: 'Version 1',
+        });
+      }
+
+      // 3. Check builtins
+      const builtins = config.builtins || {};
+      const enabledBuiltins: string[] = [];
+      for (const [name, cfg] of Object.entries(builtins)) {
+        if ((cfg as { enabled?: boolean }).enabled) {
+          enabledBuiltins.push(name);
+        }
+      }
+
+      if (enabledBuiltins.length > 0) {
+        results.push({
+          name: 'Built-in handlers',
+          status: 'pass',
+          message: `Enabled: ${enabledBuiltins.join(', ')}`,
+        });
+      } else {
+        results.push({
+          name: 'Built-in handlers',
+          status: 'warn',
+          message: 'No built-in handlers enabled',
+        });
+      }
+
+      // 4. Check custom handlers
+      const handlers = config.handlers || {};
+      const handlerNames = Object.keys(handlers);
+      if (handlerNames.length > 0) {
+        for (const [name, cfg] of Object.entries(handlers)) {
+          const handler = cfg as { command?: string; enabled?: boolean };
+          if (handler.enabled === false) continue;
+
+          if (handler.command) {
+            // Check if command exists (basic check)
+            const cmdParts = handler.command.split(' ');
+            const cmdPath = cmdParts[0]?.replace(/^\$\{.*\}\//, '').replace(/^"?\$CLAUDE_PROJECT_DIR"?\//, '');
+
+            if (cmdPath && !cmdPath.startsWith('bun') && !cmdPath.startsWith('node')) {
+              const fullPath = path.join(cwd, cmdPath);
+              if (fs.existsSync(fullPath)) {
+                results.push({
+                  name: `Handler: ${name}`,
+                  status: 'pass',
+                  message: `Command exists: ${cmdPath}`,
+                });
+              } else {
+                results.push({
+                  name: `Handler: ${name}`,
+                  status: 'warn',
+                  message: `Command not found: ${cmdPath}`,
+                });
+              }
+            } else {
+              results.push({
+                name: `Handler: ${name}`,
+                status: 'pass',
+                message: 'Command configured',
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      results.push({
+        name: 'Config syntax',
+        status: 'fail',
+        message: `Invalid YAML: ${error instanceof Error ? error.message : error}`,
+      });
+    }
+  } else {
+    results.push({
+      name: 'hooks.yaml',
+      status: 'fail',
+      message: 'Not found. Run `bun run hooks init` to create.',
+      fix: async () => {
+        fs.writeFileSync(path.join(cwd, 'hooks.yaml'), DEFAULT_HOOKS_YAML);
+      },
+    });
+  }
+
+  // 5. Check .claude/settings.json
+  const settingsPath = path.join(cwd, '.claude', 'settings.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const content = fs.readFileSync(settingsPath, 'utf-8');
+      const settings = JSON.parse(content);
+
+      if (settings.hooks) {
+        const events = Object.keys(settings.hooks);
+        const expectedEvents = ['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop'];
+        const missingEvents = expectedEvents.filter((e) => !events.includes(e));
+
+        if (missingEvents.length === 0) {
+          results.push({
+            name: 'settings.json hooks',
+            status: 'pass',
+            message: `${events.length} events configured`,
+          });
+        } else {
+          results.push({
+            name: 'settings.json hooks',
+            status: 'warn',
+            message: `Missing events: ${missingEvents.join(', ')}`,
+            fix: async () => {
+              const newSettings = generateSettingsJson();
+              settings.hooks = (newSettings as { hooks: unknown }).hooks;
+              fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+            },
+          });
+        }
+
+        // Check if hooks point to framework
+        let usesFramework = false;
+        for (const [, eventHooks] of Object.entries(settings.hooks)) {
+          const hookArray = eventHooks as Array<{ hooks?: Array<{ command?: string }> }>;
+          for (const h of hookArray) {
+            for (const hook of h.hooks || []) {
+              if (hook.command?.includes('hooks.ts') || hook.command?.includes('hook-framework')) {
+                usesFramework = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (usesFramework) {
+          results.push({
+            name: 'Framework integration',
+            status: 'pass',
+            message: 'Hooks route through framework',
+          });
+        } else {
+          results.push({
+            name: 'Framework integration',
+            status: 'warn',
+            message: 'Hooks may not use framework. Run `bun run hooks init --force`',
+          });
+        }
+      } else {
+        results.push({
+          name: 'settings.json hooks',
+          status: 'fail',
+          message: 'No hooks configured. Run `bun run hooks init`',
+          fix: async () => {
+            const newSettings = generateSettingsJson();
+            settings.hooks = (newSettings as { hooks: unknown }).hooks;
+            fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+          },
+        });
+      }
+    } catch (error) {
+      results.push({
+        name: 'settings.json',
+        status: 'fail',
+        message: `Invalid JSON: ${error instanceof Error ? error.message : error}`,
+      });
+    }
+  } else {
+    results.push({
+      name: 'settings.json',
+      status: 'fail',
+      message: 'Not found. Run `bun run hooks init` to create.',
+      fix: async () => {
+        const claudeDir = path.join(cwd, '.claude');
+        if (!fs.existsSync(claudeDir)) {
+          fs.mkdirSync(claudeDir, { recursive: true });
+        }
+        const newSettings = generateSettingsJson();
+        fs.writeFileSync(settingsPath, JSON.stringify(newSettings, null, 2));
+      },
+    });
+  }
+
+  // 6. Check environment
+  if (process.env.CLAUDE_PROJECT_DIR) {
+    results.push({
+      name: 'CLAUDE_PROJECT_DIR',
+      status: 'pass',
+      message: process.env.CLAUDE_PROJECT_DIR,
+    });
+  } else {
+    results.push({
+      name: 'CLAUDE_PROJECT_DIR',
+      status: 'warn',
+      message: 'Not set (only available during hook execution)',
+    });
+  }
+
+  // Print results
+  console.log('Results:\n');
+
+  let hasFailures = false;
+  let hasFixable = false;
+
+  for (const r of results) {
+    const icon = r.status === 'pass' ? '✓' : r.status === 'warn' ? '⚠' : '✗';
+    const color = r.status === 'pass' ? '\x1b[32m' : r.status === 'warn' ? '\x1b[33m' : '\x1b[31m';
+    console.log(`  ${color}${icon}\x1b[0m ${r.name}: ${r.message}`);
+
+    if (r.status === 'fail') hasFailures = true;
+    if (r.fix) hasFixable = true;
+  }
+
+  console.log('');
+
+  // Apply fixes if requested
+  if (fix && hasFixable) {
+    console.log('Applying fixes...\n');
+    for (const r of results) {
+      if (r.fix && (r.status === 'fail' || r.status === 'warn')) {
+        try {
+          await r.fix();
+          console.log(`  ✓ Fixed: ${r.name}`);
+        } catch (error) {
+          console.log(`  ✗ Failed to fix: ${r.name} - ${error}`);
+        }
+      }
+    }
+    console.log('\nRun `bun run hooks doctor` again to verify.');
+  } else if (hasFailures && !fix) {
+    console.log('Run `bun run hooks doctor --fix` to auto-fix issues.');
+  } else if (!hasFailures) {
+    console.log('All checks passed! Hook framework is properly configured.');
+  }
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -367,6 +675,12 @@ async function main(): Promise<void> {
   // Handle init command
   if (args.command === 'init') {
     await runInit(args.force);
+    process.exit(0);
+  }
+
+  // Handle doctor command
+  if (args.command === 'doctor') {
+    await runDoctor(args.fix);
     process.exit(0);
   }
 

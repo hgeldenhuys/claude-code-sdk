@@ -64,6 +64,8 @@
   "files": [
     "dist",
     "bin",
+    "plugins",
+    "docs",
     "README.md"
   ],
   "keywords": [

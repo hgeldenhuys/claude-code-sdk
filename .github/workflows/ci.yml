@@ -47,9 +47,30 @@ jobs:
       - name: Build SDK
         run: bun run build
 
+      - name: Build CLIs for Node.js
+        run: |
+          # Build each CLI to JavaScript for Node.js compatibility
+          mkdir -p dist/bin
+
+          # Build hooks CLI
+          bun build bin/hooks.ts --outfile dist/bin/hooks.js --target node
+
+          # Build sesh CLI
+          bun build bin/sesh.ts --outfile dist/bin/sesh.js --target node
+
+          # Build transcript CLI
+          bun build bin/transcript.ts --outfile dist/bin/transcript.js --target node
+
+          # Build transcript-tui CLI
+          bun build bin/transcript-tui.ts --outfile dist/bin/transcript-tui.js --target node
+
       - name: Verify CLIs are executable
         run: |
-          chmod +x bin/sesh.ts bin/transcript.ts bin/transcript-tui.ts
+          chmod +x bin/sesh.ts bin/transcript.ts bin/transcript-tui.ts bin/hooks.ts
+
+          # Test hooks CLI
+          bun bin/hooks.ts --help
+          bun bin/hooks.ts --list-handlers
 
           # Test sesh CLI
           bun bin/sesh.ts --version
@@ -59,6 +80,12 @@ jobs:
 
           # Test transcript-tui CLI
           bun bin/transcript-tui.ts --help
+
+      - name: Verify Node.js CLIs work
+        run: |
+          # Test that built CLIs work with Node.js
+          node dist/bin/hooks.js --help
+          node dist/bin/hooks.js --list-handlers
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
