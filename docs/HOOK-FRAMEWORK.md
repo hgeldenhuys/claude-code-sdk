@@ -140,6 +140,49 @@ builtins:
       format: text  # or: json
 ```
 
+### debug-logger
+
+Logs full payloads and context for ALL hook events. Useful for debugging hook development.
+
+```yaml
+builtins:
+  debug-logger:
+    enabled: false  # Disabled by default
+    options:
+      output_path: ~/.claude/logs/debug.log  # or omit for stderr
+      include_payload: true      # Full event payload
+      include_handler_results: true  # Results from other handlers
+      pretty_print: true         # Pretty-printed JSON
+      events:                    # Filter to specific events (optional)
+        - PreToolUse
+        - PostToolUse
+```
+
+**Output Example:**
+```
+============================================================
+[DEBUG] PreToolUse @ 2024-01-17T19:45:00.000Z
+============================================================
+{
+  "timestamp": "2024-01-17T19:45:00.000Z",
+  "eventType": "PreToolUse",
+  "sessionId": "abc123",
+  "sessionName": "jolly-elephant",
+  "turnId": "abc123:3",
+  "turnSequence": 3,
+  "cwd": "/path/to/project",
+  "payload": {
+    "session_id": "abc123",
+    "tool_name": "Bash",
+    "tool_input": { "command": "ls -la" }
+  },
+  "handlerResults": {
+    "session-naming": { "success": true, "data": { "sessionName": "jolly-elephant" } },
+    "turn-tracker": { "success": true, "data": { "turnId": "abc123:3", "sequence": 3 } }
+  }
+}
+```
+
 ## Custom Handlers
 
 Add your own handlers in `hooks.yaml`:

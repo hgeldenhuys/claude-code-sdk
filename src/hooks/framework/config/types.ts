@@ -20,7 +20,8 @@ export type BuiltinHandlerType =
   | 'dangerous-command-guard'
   | 'context-injection'
   | 'tool-logger'
-  | 'turn-tracker';
+  | 'turn-tracker'
+  | 'debug-logger';
 
 /**
  * Options for session-naming handler
@@ -93,6 +94,22 @@ export interface TurnTrackerOptions {
 }
 
 /**
+ * Options for debug-logger handler
+ */
+export interface DebugLoggerOptions {
+  /** Output path for log file (default: stderr) */
+  outputPath?: string;
+  /** Include full event payload (default: true) */
+  includePayload?: boolean;
+  /** Include results from other handlers (default: true) */
+  includeHandlerResults?: boolean;
+  /** Pretty print JSON output (default: true) */
+  prettyPrint?: boolean;
+  /** Event types to log (default: all) */
+  events?: string[];
+}
+
+/**
  * Map of built-in handler types to their options
  */
 export interface BuiltinHandlerOptions {
@@ -101,6 +118,7 @@ export interface BuiltinHandlerOptions {
   'context-injection': ContextInjectionOptions;
   'tool-logger': ToolLoggerOptions;
   'turn-tracker': TurnTrackerOptions;
+  'debug-logger': DebugLoggerOptions;
 }
 
 // ============================================================================
@@ -138,6 +156,7 @@ export interface BuiltinsConfig {
   'context-injection'?: HandlerConfig<'context-injection'>;
   'tool-logger'?: HandlerConfig<'tool-logger'>;
   'turn-tracker'?: HandlerConfig<'turn-tracker'>;
+  'debug-logger'?: HandlerConfig<'debug-logger'>;
 }
 
 /**

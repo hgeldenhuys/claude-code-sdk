@@ -15,6 +15,7 @@ import type { HandlerDefinition } from '../types';
 
 import { createContextInjectionHandler } from './context-injection';
 import { createDangerousCommandGuardHandler } from './dangerous-command-guard';
+import { createDebugLoggerHandler } from './debug-logger';
 // Handler factories
 import { createSessionNamingHandler } from './session-naming';
 import { createToolLoggerHandler } from './tool-logger';
@@ -99,6 +100,23 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
     ],
     defaultPriority: 5,
     factory: createTurnTrackerHandler as HandlerFactory,
+  },
+  'debug-logger': {
+    id: 'debug-logger',
+    name: 'Debug Logger',
+    description: 'Logs full payloads and context for all events (debugging)',
+    defaultEvents: [
+      'SessionStart',
+      'UserPromptSubmit',
+      'PreToolUse',
+      'PostToolUse',
+      'Stop',
+      'SubagentStop',
+      'SessionEnd',
+      'PreCompact',
+    ],
+    defaultPriority: 999, // Run very late
+    factory: createDebugLoggerHandler as HandlerFactory,
   },
 };
 
@@ -239,6 +257,9 @@ export {
   DEFAULT_TURNS_DIR,
 } from './turn-tracker';
 export type { TurnState, TurnTrackerOptions } from './turn-tracker';
+
+// Debug Logger
+export { createDebugLoggerHandler, createDebugEntry } from './debug-logger';
 
 // Types for external factory usage
 export type { BuiltinHandlerFactory, BuiltinHandlerMeta } from './turn-tracker';
