@@ -21,7 +21,8 @@ export type BuiltinHandlerType =
   | 'context-injection'
   | 'tool-logger'
   | 'turn-tracker'
-  | 'debug-logger';
+  | 'debug-logger'
+  | 'metrics';
 
 /**
  * Options for session-naming handler
@@ -112,6 +113,22 @@ export interface DebugLoggerOptions {
 }
 
 /**
+ * Options for metrics handler
+ */
+export interface MetricsOptions {
+  /** Log timing to stderr (default: true) */
+  logToStderr?: boolean;
+  /** Path to log file for detailed metrics (optional) */
+  logFile?: string;
+  /** Include detailed breakdown (memory, pid, etc.) */
+  detailed?: boolean;
+  /** Threshold in ms to warn about slow execution (default: 100) */
+  warnThresholdMs?: number;
+  /** Collect aggregate stats to ~/.claude/hook-metrics.json (default: true) */
+  collectStats?: boolean;
+}
+
+/**
  * Map of built-in handler types to their options
  */
 export interface BuiltinHandlerOptions {
@@ -121,6 +138,7 @@ export interface BuiltinHandlerOptions {
   'tool-logger': ToolLoggerOptions;
   'turn-tracker': TurnTrackerOptions;
   'debug-logger': DebugLoggerOptions;
+  'metrics': MetricsOptions;
 }
 
 // ============================================================================
@@ -159,6 +177,7 @@ export interface BuiltinsConfig {
   'tool-logger'?: HandlerConfig<'tool-logger'>;
   'turn-tracker'?: HandlerConfig<'turn-tracker'>;
   'debug-logger'?: HandlerConfig<'debug-logger'>;
+  'metrics'?: HandlerConfig<'metrics'>;
 }
 
 /**

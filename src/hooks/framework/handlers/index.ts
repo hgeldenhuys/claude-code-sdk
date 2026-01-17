@@ -16,6 +16,7 @@ import type { HandlerDefinition } from '../types';
 import { createContextInjectionHandler } from './context-injection';
 import { createDangerousCommandGuardHandler } from './dangerous-command-guard';
 import { createDebugLoggerHandler } from './debug-logger';
+import { createMetricsHandler } from './metrics';
 // Handler factories
 import { createSessionNamingHandler } from './session-naming';
 import { createToolLoggerHandler } from './tool-logger';
@@ -117,6 +118,23 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
     ],
     defaultPriority: 999, // Run very late
     factory: createDebugLoggerHandler as HandlerFactory,
+  },
+  'metrics': {
+    id: 'metrics',
+    name: 'Metrics',
+    description: 'Records timing metrics for hook execution performance analysis',
+    defaultEvents: [
+      'SessionStart',
+      'UserPromptSubmit',
+      'PreToolUse',
+      'PostToolUse',
+      'Stop',
+      'SubagentStop',
+      'SessionEnd',
+      'PreCompact',
+    ],
+    defaultPriority: 1, // Run first to capture full timing
+    factory: createMetricsHandler as HandlerFactory,
   },
 };
 
@@ -260,6 +278,18 @@ export type { TurnState, TurnTrackerOptions } from './turn-tracker';
 
 // Debug Logger
 export { createDebugLoggerHandler, createDebugEntry } from './debug-logger';
+
+// Metrics
+export {
+  createMetricsHandler,
+  printStats as printMetricsStats,
+  resetStats as resetMetricsStats,
+  getProcessAge,
+  getStartupBreakdown,
+  formatDuration,
+  now as metricsNow,
+} from './metrics';
+export type { MetricsOptions, TimingMetric, AggregateStats } from './metrics';
 
 // Types for external factory usage
 export type { BuiltinHandlerFactory, BuiltinHandlerMeta } from './turn-tracker';

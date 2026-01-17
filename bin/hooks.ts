@@ -66,6 +66,8 @@ function parseArgs(): CLIArgs {
       result.command = 'init';
     } else if (arg === 'doctor') {
       result.command = 'doctor';
+    } else if (arg === 'inspect') {
+      result.command = 'inspect';
     } else if (arg === '--fix') {
       result.fix = true;
     } else if (arg === '--config' || arg === '-c') {
@@ -104,6 +106,7 @@ USAGE:
 COMMANDS:
   init                  Initialize hook framework in current project
   doctor                Diagnose hook framework configuration issues
+  inspect               Inspect all configured hooks across all sources
   (default)             Run hook framework (reads from stdin)
 
 OPTIONS:
@@ -135,6 +138,21 @@ DOCTOR COMMAND:
   Example:
     bun run hooks doctor
     bun run hooks doctor --fix  # Auto-fix issues
+
+INSPECT COMMAND:
+  Inspects all configured hooks across all sources:
+  - Global hooks (~/.claude/settings.json)
+  - Project hooks (.claude/settings.json, .claude/settings.local.json)
+  - Plugin hooks (.claude-plugin/hooks.json, plugins/*/hooks.json)
+
+  Shows:
+  - Which hooks fire on each event type
+  - Source of each hook (global, project, plugin)
+  - Command executed for each hook
+  - Count of hooks per event
+
+  Example:
+    bun run hooks inspect
 
 DESCRIPTION:
   Runs the hook framework with the specified YAML configuration.
@@ -650,6 +668,253 @@ async function runDoctor(fix: boolean): Promise<void> {
 }
 
 // ============================================================================
+// Inspect Command
+// ============================================================================
+
+interface HookSource {
+  source: 'global' | 'project' | 'project-local' | 'plugin';
+  file: string;
+  command: string;
+  matcher?: string;
+  type?: string;
+}
+
+interface HooksByEvent {
+  [event: string]: HookSource[];
+}
+
+async function runInspect(): Promise<void> {
+  const fs = await import('fs');
+  const path = await import('path');
+  const os = await import('os');
+
+  const cwd = process.cwd();
+  const homeDir = os.homedir();
+  const hooksByEvent: HooksByEvent = {};
+
+  console.log('Hook Configuration Inspector\n');
+  console.log('Scanning all hook sources...\n');
+
+  // Helper to extract hooks from settings.json format
+  function extractHooksFromSettings(
+    content: string,
+    source: HookSource['source'],
+    filePath: string
+  ): void {
+    try {
+      const settings = JSON.parse(content);
+      if (!settings.hooks) return;
+
+      for (const [event, eventHooks] of Object.entries(settings.hooks)) {
+        if (!hooksByEvent[event]) hooksByEvent[event] = [];
+
+        const hookArray = eventHooks as Array<{
+          matcher?: string;
+          hooks?: Array<{ type?: string; command?: string }>;
+        }>;
+
+        for (const hookGroup of hookArray) {
+          const matcher = hookGroup.matcher || '*';
+          for (const hook of hookGroup.hooks || []) {
+            if (hook.command) {
+              hooksByEvent[event].push({
+                source,
+                file: filePath,
+                command: hook.command,
+                matcher,
+                type: hook.type || 'command',
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`  Warning: Could not parse ${filePath}: ${error}`);
+    }
+  }
+
+  // Helper to extract hooks from hooks.json format (plugins)
+  function extractHooksFromPluginFormat(
+    content: string,
+    filePath: string
+  ): void {
+    try {
+      const config = JSON.parse(content);
+      if (!config.hooks) return;
+
+      for (const [event, eventHooks] of Object.entries(config.hooks)) {
+        if (!hooksByEvent[event]) hooksByEvent[event] = [];
+
+        const hookArray = eventHooks as Array<{
+          matcher?: string;
+          hooks?: Array<{ type?: string; command?: string }>;
+        }>;
+
+        for (const hookGroup of hookArray) {
+          const matcher = hookGroup.matcher || '*';
+          for (const hook of hookGroup.hooks || []) {
+            if (hook.command) {
+              hooksByEvent[event].push({
+                source: 'plugin',
+                file: filePath,
+                command: hook.command,
+                matcher,
+                type: hook.type || 'command',
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`  Warning: Could not parse ${filePath}: ${error}`);
+    }
+  }
+
+  // 1. Global settings (~/.claude/settings.json)
+  const globalSettingsPath = path.join(homeDir, '.claude', 'settings.json');
+  if (fs.existsSync(globalSettingsPath)) {
+    console.log(`  ✓ Global: ${globalSettingsPath}`);
+    const content = fs.readFileSync(globalSettingsPath, 'utf-8');
+    extractHooksFromSettings(content, 'global', globalSettingsPath);
+  } else {
+    console.log(`  - Global: Not found`);
+  }
+
+  // 2. Project settings (.claude/settings.json)
+  const projectSettingsPath = path.join(cwd, '.claude', 'settings.json');
+  if (fs.existsSync(projectSettingsPath)) {
+    console.log(`  ✓ Project: ${projectSettingsPath}`);
+    const content = fs.readFileSync(projectSettingsPath, 'utf-8');
+    extractHooksFromSettings(content, 'project', projectSettingsPath);
+  } else {
+    console.log(`  - Project settings: Not found`);
+  }
+
+  // 3. Project local settings (.claude/settings.local.json)
+  const projectLocalSettingsPath = path.join(cwd, '.claude', 'settings.local.json');
+  if (fs.existsSync(projectLocalSettingsPath)) {
+    console.log(`  ✓ Project local: ${projectLocalSettingsPath}`);
+    const content = fs.readFileSync(projectLocalSettingsPath, 'utf-8');
+    extractHooksFromSettings(content, 'project-local', projectLocalSettingsPath);
+  } else {
+    console.log(`  - Project local: Not found`);
+  }
+
+  // 4. Plugin hooks (.claude-plugin/hooks.json)
+  const pluginHooksPath = path.join(cwd, '.claude-plugin', 'hooks.json');
+  if (fs.existsSync(pluginHooksPath)) {
+    console.log(`  ✓ Plugin: ${pluginHooksPath}`);
+    const content = fs.readFileSync(pluginHooksPath, 'utf-8');
+    extractHooksFromPluginFormat(content, pluginHooksPath);
+  }
+
+  // 5. Plugin hooks in plugins directory (plugins/*/hooks.json, plugins/*/.claude-plugin/hooks.json)
+  const pluginPatterns = [
+    'plugins/*/hooks.json',
+    'plugins/*/.claude-plugin/hooks.json',
+    'plugins/*/hooks/hooks.json',
+  ];
+
+  for (const pattern of pluginPatterns) {
+    const globResult = new Bun.Glob(pattern);
+    for await (const match of globResult.scan({ cwd, absolute: true })) {
+      console.log(`  ✓ Plugin: ${path.relative(cwd, match)}`);
+      const content = fs.readFileSync(match, 'utf-8');
+      extractHooksFromPluginFormat(content, match);
+    }
+  }
+
+  // 6. Check node_modules for plugins with hooks
+  const nodeModulesGlob = new Bun.Glob('node_modules/*/.claude-plugin/hooks.json');
+  for await (const match of nodeModulesGlob.scan({ cwd, absolute: true })) {
+    console.log(`  ✓ Node module: ${path.relative(cwd, match)}`);
+    const content = fs.readFileSync(match, 'utf-8');
+    extractHooksFromPluginFormat(content, match);
+  }
+
+  // Print results
+  console.log('\n' + '='.repeat(80));
+  console.log('HOOKS BY EVENT');
+  console.log('='.repeat(80) + '\n');
+
+  const eventOrder = [
+    'SessionStart',
+    'UserPromptSubmit',
+    'PreToolUse',
+    'PostToolUse',
+    'Stop',
+    'SubagentStop',
+    'PreCompact',
+    'SessionEnd',
+    'Notification',
+  ];
+
+  // Sort events: known events first in order, then any others
+  const allEvents = Object.keys(hooksByEvent);
+  const sortedEvents = [
+    ...eventOrder.filter(e => allEvents.includes(e)),
+    ...allEvents.filter(e => !eventOrder.includes(e)).sort(),
+  ];
+
+  let totalHooks = 0;
+
+  for (const event of sortedEvents) {
+    const hooks = hooksByEvent[event];
+    if (!hooks || hooks.length === 0) continue;
+
+    totalHooks += hooks.length;
+
+    const color = hooks.length > 2 ? '\x1b[33m' : '\x1b[32m'; // Yellow if >2, green otherwise
+    console.log(`${color}${event}\x1b[0m (${hooks.length} hook${hooks.length > 1 ? 's' : ''}):`);
+
+    for (const hook of hooks) {
+      const sourceColor =
+        hook.source === 'global' ? '\x1b[36m' :
+        hook.source === 'project' ? '\x1b[35m' :
+        hook.source === 'project-local' ? '\x1b[34m' :
+        '\x1b[33m';
+
+      const shortFile = hook.file.replace(homeDir, '~').replace(cwd, '.');
+      const shortCommand = hook.command.length > 60
+        ? hook.command.substring(0, 57) + '...'
+        : hook.command;
+
+      console.log(`  ${sourceColor}[${hook.source}]\x1b[0m ${shortCommand}`);
+      console.log(`    └─ ${shortFile} (matcher: ${hook.matcher})`);
+    }
+    console.log('');
+  }
+
+  // Summary
+  console.log('='.repeat(80));
+  console.log('SUMMARY');
+  console.log('='.repeat(80) + '\n');
+
+  console.log(`Total hooks: ${totalHooks}`);
+  console.log(`Events with hooks: ${sortedEvents.length}`);
+
+  // Count by source
+  const bySource: Record<string, number> = {};
+  for (const hooks of Object.values(hooksByEvent)) {
+    for (const hook of hooks) {
+      bySource[hook.source] = (bySource[hook.source] || 0) + 1;
+    }
+  }
+
+  console.log('\nBy source:');
+  for (const [source, count] of Object.entries(bySource)) {
+    console.log(`  ${source}: ${count}`);
+  }
+
+  // Warn about potential slowness
+  const sessionStartHooks = hooksByEvent['SessionStart']?.length || 0;
+  if (sessionStartHooks > 2) {
+    console.log(`\n\x1b[33m⚠ Warning: ${sessionStartHooks} hooks on SessionStart may cause slow startup.\x1b[0m`);
+    console.log('  Consider consolidating hooks or using the hook framework.');
+  }
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -681,6 +946,12 @@ async function main(): Promise<void> {
   // Handle doctor command
   if (args.command === 'doctor') {
     await runDoctor(args.fix);
+    process.exit(0);
+  }
+
+  // Handle inspect command
+  if (args.command === 'inspect') {
+    await runInspect();
     process.exit(0);
   }
 

@@ -69,13 +69,23 @@ function generateUUID(): string {
 // Machine ID Management
 // ============================================================================
 
+// Cache machine ID at module level to avoid repeated file reads
+let cachedMachineId: string | null = null;
+
 /**
  * Get the machine ID, creating one if it doesn't exist
  *
  * The machine ID is a UUID stored at ~/.claude/machine-id.
  * It persists across sessions and identifies this specific machine.
+ *
+ * Performance: This function caches the machine ID in memory after the first read.
  */
 export function getMachineId(): string {
+  // Return cached value if available
+  if (cachedMachineId) {
+    return cachedMachineId;
+  }
+
   const machineIdPath = getMachineIdPath();
 
   // Try to read existing machine ID
@@ -83,6 +93,7 @@ export function getMachineId(): string {
     try {
       const id = readFileSync(machineIdPath, 'utf-8').trim();
       if (id && isValidUUID(id)) {
+        cachedMachineId = id;
         return id;
       }
     } catch {
@@ -100,6 +111,7 @@ export function getMachineId(): string {
   }
 
   writeFileSync(machineIdPath, `${newId}\n`);
+  cachedMachineId = newId;
   return newId;
 }
 

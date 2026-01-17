@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { findTranscriptFiles } from './indexer';
 import type { TranscriptLine, SearchResult } from './types';
 
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
 
 export interface DbStats {
@@ -136,18 +136,23 @@ export function initSchema(db: Database): void {
     END
   `);
 
-  // Sessions table for quick lookups
+  // Sessions table for quick lookups and delta tracking
+  // Uses file_path as primary key since we track byte offsets per file
   db.run(`
     CREATE TABLE IF NOT EXISTS sessions (
-      session_id TEXT PRIMARY KEY,
+      file_path TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
       slug TEXT,
-      file_path TEXT NOT NULL,
       line_count INTEGER NOT NULL,
+      byte_offset INTEGER NOT NULL DEFAULT 0,
       first_timestamp TEXT,
       last_timestamp TEXT,
       indexed_at TEXT NOT NULL
     )
   `);
+
+  // Index on session_id for session-based queries
+  db.run('CREATE INDEX IF NOT EXISTS idx_sessions_session_id ON sessions(session_id)');
 
   // Set version
   db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)', ['version', String(DB_VERSION)]);
@@ -205,32 +210,81 @@ function extractTextFromParsed(parsed: Record<string, unknown>): string {
   return parts.join('\n');
 }
 
+export interface IndexFileResult {
+  linesIndexed: number;
+  byteOffset: number;
+  sessionId: string;
+}
+
 /**
- * Index a single transcript file
+ * Index a single transcript file (full or delta)
+ * @param db - Database instance
+ * @param filePath - Path to the transcript file
+ * @param fromByteOffset - Start reading from this byte offset (0 for full index)
+ * @param startLineNumber - Line number to start from (1 for full index)
+ * @param onProgress - Progress callback
  */
 export function indexTranscriptFile(
   db: Database,
   filePath: string,
+  fromByteOffset: number = 0,
+  startLineNumber: number = 1,
   onProgress?: (current: number, total: number) => void
-): number {
-  // Read file synchronously
+): IndexFileResult {
+  // Get file size first
+  const file = Bun.file(filePath);
+  const fileSize = file.size;
+
+  // If we're already at or past the file size, nothing new to index
+  if (fromByteOffset >= fileSize) {
+    return { linesIndexed: 0, byteOffset: fromByteOffset, sessionId: '' };
+  }
+
+  // Read only new bytes using Bun.file().slice()
   let text: string;
   try {
-    text = readFileSync(filePath, 'utf-8');
+    if (fromByteOffset > 0) {
+      // Read only from offset to end
+      const slice = file.slice(fromByteOffset);
+      text = new TextDecoder().decode(Bun.readableStreamToArrayBuffer(slice.stream()));
+    } else {
+      // Read entire file
+      text = readFileSync(filePath, 'utf-8');
+    }
   } catch {
-    return 0;
+    return { linesIndexed: 0, byteOffset: fromByteOffset, sessionId: '' };
   }
 
   if (!text.trim()) {
-    return 0;
+    return { linesIndexed: 0, byteOffset: fileSize, sessionId: '' };
   }
 
-  const rawLines = text.trim().split('\n');
+  // Handle partial line at start (if reading from offset, first "line" may be incomplete)
+  let rawLines = text.split('\n');
+  let bytesSkipped = 0;
+
+  if (fromByteOffset > 0 && rawLines.length > 0) {
+    // First chunk might be a partial line from the previous read
+    // Check if it starts with '{' (valid JSON start)
+    const firstLine = rawLines[0] || '';
+    if (!firstLine.startsWith('{')) {
+      // Skip this partial line
+      bytesSkipped = Buffer.byteLength(firstLine + '\n', 'utf-8');
+      rawLines = rawLines.slice(1);
+    }
+  }
+
+  // Remove empty last line if exists
+  if (rawLines.length > 0 && !rawLines[rawLines.length - 1]?.trim()) {
+    rawLines.pop();
+  }
+
   let indexedCount = 0;
   let sessionId = '';
   let slug: string | null = null;
   let firstTimestamp: string | null = null;
   let lastTimestamp: string | null = null;
+  let lineNumber = startLineNumber;
 
   const insertLine = db.prepare(`
     INSERT OR REPLACE INTO lines
@@ -258,9 +312,9 @@ export function indexTranscriptFile(
 
         insertLine.run(
           sessionId,
-          parsed.uuid || `line-${i}`,
+          parsed.uuid || `line-${lineNumber}`,
           parsed.parentUuid || null,
-          i + 1,
+          lineNumber,
           type,
           parsed.subtype || null,
           timestamp,
@@ -274,12 +328,14 @@ export function indexTranscriptFile(
         );
 
         indexedCount++;
+        lineNumber++;
 
         if (onProgress && i % 1000 === 0) {
           onProgress(i, rawLines.length);
         }
       } catch {
         // Skip malformed lines
+        lineNumber++;
         continue;
       }
     }
@@ -287,19 +343,38 @@ export function indexTranscriptFile(
 
   transaction();
 
-  // Update sessions table
-  if (sessionId) {
+  const newByteOffset = fileSize;
+
+  // Update sessions table with new byte offset (keyed by file_path)
+  // Record even files without sessionId to track byte offsets for delta updates
+  if (fromByteOffset === 0) {
+    // Full index - insert/replace (file_path is primary key)
     db.run(`
-      INSERT OR REPLACE INTO sessions (session_id, slug, file_path, line_count, first_timestamp, last_timestamp, indexed_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [sessionId, slug, filePath, indexedCount, firstTimestamp, lastTimestamp, new Date().toISOString()]);
+      INSERT OR REPLACE INTO sessions (file_path, session_id, slug, line_count, byte_offset, first_timestamp, last_timestamp, indexed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [filePath, sessionId || 'unknown', slug, lineNumber - 1, newByteOffset, firstTimestamp, lastTimestamp, new Date().toISOString()]);
+  } else {
+    // Delta update - update existing
+    db.run(`
+      UPDATE sessions SET line_count = ?, byte_offset = ?, last_timestamp = ?, indexed_at = ?
+      WHERE file_path = ?
+    `, [lineNumber - 1, newByteOffset, lastTimestamp, new Date().toISOString(), filePath]);
   }
 
-  return indexedCount;
+  return { linesIndexed: indexedCount, byteOffset: newByteOffset, sessionId };
 }
 
 /**
- * Index all transcript files
+ * Get the current index state for a file
+ */
+export function getFileIndexState(db: Database, filePath: string): { byteOffset: number; lineCount: number } | null {
+  const row = db.query('SELECT byte_offset, line_count FROM sessions WHERE file_path = ?').get(filePath) as { byte_offset: number; line_count: number } | null;
+  if (!row) return null;
+  return { byteOffset: row.byte_offset, lineCount: row.line_count };
+}
+
+/**
+ * Index all transcript files (full rebuild)
  */
 export async function indexAllTranscripts(
   db: Database,
@@ -315,12 +390,12 @@ export async function indexAllTranscripts(
   for (let i = 0; i < files.length; i++) {
     const file = files[i]!;
     try {
-      const linesIndexed = indexTranscriptFile(db, file);
+      const result = indexTranscriptFile(db, file, 0, 1);
       totalFiles++;
-      totalLines += linesIndexed;
+      totalLines += result.linesIndexed;
 
       if (onProgress) {
-        onProgress(file, i + 1, files.length, linesIndexed);
+        onProgress(file, i + 1, files.length, result.linesIndexed);
       }
     } catch (err) {
       // Log and continue
@@ -333,6 +408,142 @@ export async function indexAllTranscripts(
     ['last_indexed', new Date().toISOString()]);
 
   return { filesIndexed: totalFiles, linesIndexed: totalLines };
+}
+
+/**
+ * Update index with only new content (delta update)
+ * Only reads bytes that haven't been indexed yet
+ */
+export async function updateIndex(
+  db: Database,
+  projectsDir?: string,
+  onProgress?: (file: string, current: number, total: number, newLines: number, skipped: boolean) => void
+): Promise<{ filesChecked: number; filesUpdated: number; newLines: number }> {
+  const dir = projectsDir || join(process.env.HOME || '~', '.claude', 'projects');
+  const files = await findTranscriptFiles(dir);
+
+  let filesChecked = 0;
+  let filesUpdated = 0;
+  let totalNewLines = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]!;
+    filesChecked++;
+
+    try {
+      // Get current index state for this file
+      const state = getFileIndexState(db, file);
+
+      // Get current file size
+      const fileSize = Bun.file(file).size;
+
+      // Skip if file hasn't grown
+      if (state && state.byteOffset >= fileSize) {
+        if (onProgress) {
+          onProgress(file, i + 1, files.length, 0, true);
+        }
+        continue;
+      }
+
+      // Index new content only
+      const fromOffset = state?.byteOffset || 0;
+      const startLine = state ? state.lineCount + 1 : 1;
+      const result = indexTranscriptFile(db, file, fromOffset, startLine);
+
+      if (result.linesIndexed > 0) {
+        filesUpdated++;
+        totalNewLines += result.linesIndexed;
+      }
+
+      if (onProgress) {
+        onProgress(file, i + 1, files.length, result.linesIndexed, false);
+      }
+    } catch (err) {
+      console.error(`Error updating ${file}:`, err);
+    }
+  }
+
+  // Update last indexed timestamp
+  db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
+    ['last_indexed', new Date().toISOString()]);
+
+  return { filesChecked, filesUpdated, newLines: totalNewLines };
+}
+
+/**
+ * Watch for transcript changes and update index in real-time
+ */
+export function watchTranscripts(
+  db: Database,
+  projectsDir?: string,
+  onUpdate?: (file: string, newLines: number) => void
+): () => void {
+  const { watch } = require('node:fs');
+  const dir = projectsDir || join(process.env.HOME || '~', '.claude', 'projects');
+
+  // Track file states to detect changes
+  const fileStates = new Map<string, number>();
+
+  // Initialize with current state
+  findTranscriptFiles(dir).then(files => {
+    for (const file of files) {
+      const state = getFileIndexState(db, file);
+      if (state) {
+        fileStates.set(file, state.byteOffset);
+      }
+    }
+  });
+
+  // Debounce map for rapid changes
+  const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  const watcher = watch(dir, { recursive: true }, (eventType: string, filename: string | null) => {
+    if (!filename || !filename.endsWith('.jsonl')) return;
+
+    const filePath = join(dir, filename);
+
+    // Debounce rapid changes
+    const existingTimer = debounceTimers.get(filePath);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    debounceTimers.set(filePath, setTimeout(() => {
+      debounceTimers.delete(filePath);
+
+      try {
+        const file = Bun.file(filePath);
+        if (!existsSync(filePath)) return;
+
+        const currentSize = file.size;
+        const lastOffset = fileStates.get(filePath) || 0;
+
+        // Only process if file has grown
+        if (currentSize > lastOffset) {
+          const state = getFileIndexState(db, filePath);
+          const fromOffset = state?.byteOffset || 0;
+          const startLine = state ? state.lineCount + 1 : 1;
+
+          const result = indexTranscriptFile(db, filePath, fromOffset, startLine);
+
+          if (result.linesIndexed > 0) {
+            fileStates.set(filePath, result.byteOffset);
+            if (onUpdate) {
+              onUpdate(filePath, result.linesIndexed);
+            }
+          }
+        }
+      } catch {
+        // Ignore errors during watch
+      }
+    }, 100));
+  });
+
+  // Return cleanup function
+  return () => {
+    watcher.close();
+    for (const timer of debounceTimers.values()) {
+      clearTimeout(timer);
+    }
+  };
 }
 
 /**
@@ -456,11 +667,28 @@ export function isDatabaseReady(dbPath: string = DEFAULT_DB_PATH): boolean {
 
 /**
  * Clear and rebuild the entire index
+ * Also drops and recreates the sessions table to ensure schema is current
  */
 export function rebuildIndex(db: Database): void {
   db.run('DELETE FROM lines');
   db.run('DELETE FROM lines_fts');
-  db.run('DELETE FROM sessions');
+
+  // Drop and recreate sessions table to ensure correct schema
+  db.run('DROP TABLE IF EXISTS sessions');
+  db.run(`
+    CREATE TABLE sessions (
+      file_path TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      slug TEXT,
+      line_count INTEGER NOT NULL,
+      byte_offset INTEGER NOT NULL DEFAULT 0,
+      first_timestamp TEXT,
+      last_timestamp TEXT,
+      indexed_at TEXT NOT NULL
+    )
+  `);
+  db.run('CREATE INDEX IF NOT EXISTS idx_sessions_session_id ON sessions(session_id)');
+
   db.run("DELETE FROM metadata WHERE key = 'last_indexed'");
 }
 

@@ -109,10 +109,13 @@ export function resolveConfig(config: YamlConfig): ResolvedConfig {
   // Process built-in handlers
   if (config.builtins) {
     const builtinDefaults: Record<string, { priority: number; events: string[] }> = {
+      'metrics': { priority: 1, events: ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop', 'SessionEnd', 'PreCompact'] },
+      'turn-tracker': { priority: 5, events: ['SessionStart', 'Stop', 'SubagentStop', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse'] },
       'session-naming': { priority: 10, events: ['SessionStart'] },
       'dangerous-command-guard': { priority: 20, events: ['PreToolUse'] },
       'context-injection': { priority: 30, events: ['SessionStart', 'PreCompact'] },
       'tool-logger': { priority: 100, events: ['PostToolUse'] },
+      'debug-logger': { priority: 999, events: ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop', 'SessionEnd', 'PreCompact'] },
     };
 
     for (const [name, handlerConfig] of Object.entries(config.builtins)) {
@@ -122,11 +125,7 @@ export function resolveConfig(config: YamlConfig): ResolvedConfig {
 
       handlers.push({
         id: name,
-        type: name as
-          | 'session-naming'
-          | 'dangerous-command-guard'
-          | 'context-injection'
-          | 'tool-logger',
+        type: name as import('./types').BuiltinHandlerType,
         enabled: handlerConfig.enabled ?? true,
         priority: handlerConfig.priority ?? defaults.priority,
         events: (handlerConfig.events ?? defaults.events) as import('../framework').HookEventType[],

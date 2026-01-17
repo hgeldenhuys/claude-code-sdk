@@ -140,6 +140,13 @@ export interface SessionStoreConfig {
   maxAge?: number;
   /** Pre-defined manual names: sessionId -> name */
   manualNames?: Record<string, string>;
+  /**
+   * Skip machine registration on load (performance optimization).
+   * Use this in read-only scenarios or when you know the machine is already registered.
+   * Avoids a disk write on every SessionStore creation.
+   * @default false
+   */
+  skipMachineRegistration?: boolean;
 }
 
 export interface NameGeneratorConfig {

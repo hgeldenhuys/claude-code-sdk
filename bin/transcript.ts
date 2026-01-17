@@ -19,7 +19,8 @@
  */
 
 import { join } from 'node:path';
-import { watch } from 'node:fs';
+import { watch, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
 import { parseTranscriptFile } from '../src/transcripts/parser';
 import type { TranscriptLine } from '../src/transcripts/types';
 import {
@@ -36,6 +37,8 @@ import {
   getDbStats,
   isDatabaseReady,
   searchDb,
+  updateIndex,
+  watchTranscripts,
   DEFAULT_DB_PATH,
 } from '../src/transcripts/db';
 import {
@@ -57,6 +60,9 @@ import {
 
 const VERSION = '1.0.0';
 const PROJECTS_DIR = join(process.env.HOME || '~', '.claude', 'projects');
+const DAEMON_DIR = join(process.env.HOME || '~', '.claude-code-sdk');
+const PID_FILE = join(DAEMON_DIR, 'transcript-daemon.pid');
+const LOG_FILE = join(DAEMON_DIR, 'transcript-daemon.log');
 
 // Valid line types for filtering
 const VALID_TYPES: ExtendedLineType[] = [
@@ -139,9 +145,17 @@ List Options:
 
 Index Commands:
   transcript index build    Build SQLite index from all transcripts
+  transcript index update   Update index with only new content (fast delta)
+  transcript index watch    Watch for changes and update index in real-time
   transcript index status   Show index status and statistics
   transcript index rebuild  Clear and rebuild entire index
   --use-index              Force search to use SQLite index (auto-detected)
+
+Daemon Commands:
+  transcript index daemon start   Start background indexer daemon
+  transcript index daemon stop    Stop the background daemon
+  transcript index daemon status  Show daemon status
+  transcript index daemon logs    Show daemon logs
 
 Examples:
   # View last 10 user prompts from a session
@@ -726,6 +740,172 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// ============================================================================
+// Daemon Functions
+// ============================================================================
+
+function getDaemonPid(): number | null {
+  try {
+    if (existsSync(PID_FILE)) {
+      const pid = parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      if (!isNaN(pid) && pid > 0) {
+        // Check if process is actually running
+        try {
+          process.kill(pid, 0); // Signal 0 just checks if process exists
+          return pid;
+        } catch {
+          // Process doesn't exist, clean up stale PID file
+          unlinkSync(PID_FILE);
+          return null;
+        }
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+  return null;
+}
+
+function writeDaemonPid(pid: number): void {
+  writeFileSync(PID_FILE, String(pid));
+}
+
+function removeDaemonPid(): void {
+  try {
+    if (existsSync(PID_FILE)) {
+      unlinkSync(PID_FILE);
+    }
+  } catch {
+    // Ignore
+  }
+}
+
+function appendLog(message: string): void {
+  const timestamp = new Date().toISOString();
+  const logLine = `[${timestamp}] ${message}\n`;
+  try {
+    const fd = Bun.file(LOG_FILE);
+    const existing = existsSync(LOG_FILE) ? readFileSync(LOG_FILE, 'utf-8') : '';
+    writeFileSync(LOG_FILE, existing + logLine);
+  } catch {
+    // Ignore logging errors
+  }
+}
+
+async function startDaemon(): Promise<number> {
+  const existingPid = getDaemonPid();
+  if (existingPid) {
+    console.log(`Daemon already running (PID: ${existingPid})`);
+    return 0;
+  }
+
+  if (!isDatabaseReady()) {
+    console.log('No existing index found. Run "transcript index build" first.');
+    return 1;
+  }
+
+  // Spawn detached child process
+  const child = spawn('bun', [process.argv[1]!, 'index', 'daemon', '--run'], {
+    detached: true,
+    stdio: ['ignore', 'ignore', 'ignore'],
+    env: { ...process.env, TRANSCRIPT_DAEMON: '1' },
+  });
+
+  child.unref();
+
+  if (child.pid) {
+    writeDaemonPid(child.pid);
+    console.log(`Daemon started (PID: ${child.pid})`);
+    console.log(`Logs: ${LOG_FILE}`);
+    return 0;
+  } else {
+    console.log('Failed to start daemon');
+    return 1;
+  }
+}
+
+async function stopDaemon(): Promise<number> {
+  const pid = getDaemonPid();
+  if (!pid) {
+    console.log('Daemon is not running');
+    return 0;
+  }
+
+  try {
+    process.kill(pid, 'SIGTERM');
+    removeDaemonPid();
+    console.log(`Daemon stopped (PID: ${pid})`);
+    return 0;
+  } catch (err) {
+    console.log(`Failed to stop daemon: ${err}`);
+    return 1;
+  }
+}
+
+function showDaemonStatus(): number {
+  const pid = getDaemonPid();
+  if (pid) {
+    console.log(`Daemon is running (PID: ${pid})`);
+    console.log(`PID file: ${PID_FILE}`);
+    console.log(`Log file: ${LOG_FILE}`);
+  } else {
+    console.log('Daemon is not running');
+  }
+  return 0;
+}
+
+function showDaemonLogs(lines: number = 50): number {
+  if (!existsSync(LOG_FILE)) {
+    console.log('No logs found');
+    return 0;
+  }
+
+  try {
+    const content = readFileSync(LOG_FILE, 'utf-8');
+    const allLines = content.trim().split('\n');
+    const lastLines = allLines.slice(-lines);
+    console.log(lastLines.join('\n'));
+  } catch (err) {
+    console.log(`Failed to read logs: ${err}`);
+    return 1;
+  }
+  return 0;
+}
+
+async function runDaemonProcess(): Promise<number> {
+  // This runs in the background as the actual daemon
+  appendLog('Daemon started');
+
+  const db = getDatabase();
+  initSchema(db);
+
+  // Do an initial update
+  const result = await updateIndex(db);
+  appendLog(`Initial update: ${result.filesUpdated} files, +${result.newLines} lines`);
+
+  // Start watching
+  const cleanup = watchTranscripts(db, undefined, (file, newLines) => {
+    const fileName = file.split('/').pop() || file;
+    appendLog(`${fileName}: +${newLines} lines indexed`);
+  });
+
+  // Handle shutdown signals
+  const shutdown = () => {
+    appendLog('Daemon stopping...');
+    cleanup();
+    db.close();
+    removeDaemonPid();
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+
+  // Keep alive
+  await new Promise(() => {});
+  return 0;
+}
+
 async function cmdIndex(args: IndexArgs): Promise<number> {
   const { subcommand } = args;
 
@@ -797,12 +977,106 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         return 0;
       }
 
+      case 'update': {
+        if (!isDatabaseReady()) {
+          console.log('No existing index found. Run "transcript index build" first.');
+          return 1;
+        }
+
+        console.log('Updating index with new content...\n');
+
+        const db = getDatabase();
+        initSchema(db);
+
+        const startTime = Date.now();
+        let skippedCount = 0;
+        const result = await updateIndex(db, undefined, (file, current, total, newLines, skipped) => {
+          if (skipped) {
+            skippedCount++;
+          } else if (newLines > 0) {
+            const fileName = file.split('/').pop() || file;
+            const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
+            console.log(`  ${shortName}: +${newLines} lines`);
+          }
+        });
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`\nChecked ${result.filesChecked} files in ${elapsed}s`);
+        console.log(`  Updated: ${result.filesUpdated} files, +${result.newLines.toLocaleString()} new lines`);
+        console.log(`  Skipped: ${skippedCount} files (no changes)`);
+        db.close();
+        return 0;
+      }
+
+      case 'watch': {
+        if (!isDatabaseReady()) {
+          console.log('No existing index found. Run "transcript index build" first.');
+          return 1;
+        }
+
+        console.log('Watching for transcript changes (Ctrl+C to stop)...\n');
+
+        const db = getDatabase();
+        initSchema(db);
+
+        const cleanup = watchTranscripts(db, undefined, (file, newLines) => {
+          const fileName = file.split('/').pop() || file;
+          const shortName = fileName.length > 50 ? fileName.slice(0, 47) + '...' : fileName;
+          const time = new Date().toLocaleTimeString();
+          console.log(`[${time}] ${shortName}: +${newLines} lines indexed`);
+        });
+
+        // Handle Ctrl+C
+        process.on('SIGINT', () => {
+          console.log('\nStopping watch...');
+          cleanup();
+          db.close();
+          process.exit(0);
+        });
+
+        // Keep process alive
+        await new Promise(() => {});
+        return 0;
+      }
+
+      case 'daemon': {
+        // daemon subcommand requires a second argument
+        const daemonArg = process.argv[4] || '';
+
+        if (daemonArg === '--run') {
+          // Actually run the daemon process (called by start)
+          return runDaemonProcess();
+        }
+
+        switch (daemonArg) {
+          case 'start':
+            return startDaemon();
+          case 'stop':
+            return stopDaemon();
+          case 'status':
+            return showDaemonStatus();
+          case 'logs':
+            return showDaemonLogs();
+          default:
+            console.log('Usage: transcript index daemon <command>');
+            console.log('\nCommands:');
+            console.log('  start   Start the background indexer daemon');
+            console.log('  stop    Stop the daemon');
+            console.log('  status  Show daemon status');
+            console.log('  logs    Show recent daemon logs');
+            return 0;
+        }
+      }
+
       default:
-        console.log('Usage: transcript index <build|status|rebuild>');
+        console.log('Usage: transcript index <command>');
         console.log('\nCommands:');
         console.log('  build    Build SQLite index from all transcript files');
+        console.log('  update   Update index with only new content (fast delta)');
+        console.log('  watch    Watch for changes and update in real-time');
         console.log('  status   Show index status and statistics');
         console.log('  rebuild  Clear and rebuild entire index');
+        console.log('  daemon   Manage background indexer daemon');
         return 0;
     }
   } catch (error) {

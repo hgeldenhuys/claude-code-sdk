@@ -28,6 +28,8 @@ const VALID_BUILTIN_HANDLERS: BuiltinHandlerType[] = [
   'context-injection',
   'tool-logger',
   'turn-tracker',
+  'debug-logger',
+  'metrics',
 ];
 
 const VALID_ERROR_STRATEGIES: ErrorStrategy[] = ['continue', 'stop', 'retry'];
@@ -428,6 +430,12 @@ function validateBuiltinOptions(
     case 'turn-tracker':
       validateTurnTrackerOptions(options, `${path}.options`, errors, warnings);
       break;
+    case 'debug-logger':
+      validateDebugLoggerOptions(options, `${path}.options`, errors, warnings);
+      break;
+    case 'metrics':
+      validateMetricsOptions(options, `${path}.options`, errors, warnings);
+      break;
   }
 }
 
@@ -664,6 +672,128 @@ function validateTurnTrackerOptions(
       message: 'inject_context must be a boolean',
       expected: 'boolean',
       actual: typeof options.inject_context,
+    });
+  }
+}
+
+function validateDebugLoggerOptions(
+  options: Record<string, unknown>,
+  path: string,
+  errors: ValidationError[],
+  warnings: ValidationError[]
+): void {
+  if (options.outputPath !== undefined && typeof options.outputPath !== 'string') {
+    errors.push({
+      path: `${path}.outputPath`,
+      message: 'outputPath must be a string',
+      expected: 'string',
+      actual: typeof options.outputPath,
+    });
+  }
+
+  if (options.includePayload !== undefined && typeof options.includePayload !== 'boolean') {
+    errors.push({
+      path: `${path}.includePayload`,
+      message: 'includePayload must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.includePayload,
+    });
+  }
+
+  if (options.includeHandlerResults !== undefined && typeof options.includeHandlerResults !== 'boolean') {
+    errors.push({
+      path: `${path}.includeHandlerResults`,
+      message: 'includeHandlerResults must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.includeHandlerResults,
+    });
+  }
+
+  if (options.includeFrameworkEnv !== undefined && typeof options.includeFrameworkEnv !== 'boolean') {
+    errors.push({
+      path: `${path}.includeFrameworkEnv`,
+      message: 'includeFrameworkEnv must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.includeFrameworkEnv,
+    });
+  }
+
+  if (options.prettyPrint !== undefined && typeof options.prettyPrint !== 'boolean') {
+    errors.push({
+      path: `${path}.prettyPrint`,
+      message: 'prettyPrint must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.prettyPrint,
+    });
+  }
+
+  if (options.events !== undefined && !Array.isArray(options.events)) {
+    errors.push({
+      path: `${path}.events`,
+      message: 'events must be an array',
+      expected: 'array',
+      actual: typeof options.events,
+    });
+  }
+}
+
+function validateMetricsOptions(
+  options: Record<string, unknown>,
+  path: string,
+  errors: ValidationError[],
+  warnings: ValidationError[]
+): void {
+  if (options.logToStderr !== undefined && typeof options.logToStderr !== 'boolean') {
+    errors.push({
+      path: `${path}.logToStderr`,
+      message: 'logToStderr must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.logToStderr,
+    });
+  }
+
+  if (options.logFile !== undefined && typeof options.logFile !== 'string') {
+    errors.push({
+      path: `${path}.logFile`,
+      message: 'logFile must be a string',
+      expected: 'string',
+      actual: typeof options.logFile,
+    });
+  }
+
+  if (options.detailed !== undefined && typeof options.detailed !== 'boolean') {
+    errors.push({
+      path: `${path}.detailed`,
+      message: 'detailed must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.detailed,
+    });
+  }
+
+  if (options.warnThresholdMs !== undefined) {
+    if (typeof options.warnThresholdMs !== 'number') {
+      errors.push({
+        path: `${path}.warnThresholdMs`,
+        message: 'warnThresholdMs must be a number',
+        expected: 'number',
+        actual: typeof options.warnThresholdMs,
+      });
+    } else if (options.warnThresholdMs < 0) {
+      errors.push({
+        path: `${path}.warnThresholdMs`,
+        message: 'warnThresholdMs must be non-negative',
+        expected: '>= 0',
+        actual: options.warnThresholdMs,
+      });
+    }
+  }
+
+  if (options.collectStats !== undefined && typeof options.collectStats !== 'boolean') {
+    errors.push({
+      path: `${path}.collectStats`,
+      message: 'collectStats must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.collectStats,
     });
   }
 }

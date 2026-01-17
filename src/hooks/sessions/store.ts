@@ -52,18 +52,28 @@ export class SessionStore {
   private maxAge: number | null;
   private dirty = false;
   private machineId: string;
+  /** Skip machine registration on load (for performance in read-only scenarios) */
+  private skipMachineRegistration: boolean;
 
   constructor(config: SessionStoreConfig = {}) {
     this.storagePath = config.storagePath ?? this.resolveStoragePath();
     this.nameGenerator = new NameGenerator();
     this.maxAge = config.maxAge ?? null;
+    this.skipMachineRegistration = config.skipMachineRegistration ?? false;
     this.machineId = getMachineId();
     this.db = this.load();
 
-    // Register current machine
-    registerCurrentMachine(this.db);
-    this.dirty = true;
-    this.save();
+    // Only register machine if not skipping (performance optimization)
+    // Machine registration writes to disk which is slow
+    if (!this.skipMachineRegistration) {
+      const wasRegistered = this.db.machines[this.machineId] !== undefined;
+      registerCurrentMachine(this.db);
+      // Only mark dirty if this is a new machine registration
+      if (!wasRegistered) {
+        this.dirty = true;
+        this.save();
+      }
+    }
 
     // Apply manual names if provided
     if (config.manualNames) {
