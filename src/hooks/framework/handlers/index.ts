@@ -14,6 +14,7 @@ import { createSessionNamingHandler } from './session-naming';
 import { createDangerousCommandGuardHandler } from './dangerous-command-guard';
 import { createContextInjectionHandler } from './context-injection';
 import { createToolLoggerHandler } from './tool-logger';
+import { createTurnTrackerHandler } from './turn-tracker';
 
 // ============================================================================
 // Registry Types
@@ -77,6 +78,14 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
     defaultEvents: ['PostToolUse'],
     defaultPriority: 100,
     factory: createToolLoggerHandler as HandlerFactory,
+  },
+  'turn-tracker': {
+    id: 'turn-tracker',
+    name: 'Turn Tracker',
+    description: 'Tracks turns within a session based on Stop events',
+    defaultEvents: ['SessionStart', 'Stop', 'SubagentStop', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse'],
+    defaultPriority: 5,
+    factory: createTurnTrackerHandler as HandlerFactory,
   },
 };
 
@@ -191,3 +200,17 @@ export {
   createLogEntry,
   formatLogEntry,
 } from './tool-logger';
+
+// Turn Tracker
+export {
+  createTurnTrackerHandler,
+  loadTurnState,
+  saveTurnState,
+  getCurrentTurnId,
+  getSubagentTurnId,
+  DEFAULT_TURNS_DIR,
+} from './turn-tracker';
+export type { TurnState, TurnTrackerOptions } from './turn-tracker';
+
+// Types for external factory usage
+export type { BuiltinHandlerFactory, BuiltinHandlerMeta } from './turn-tracker';

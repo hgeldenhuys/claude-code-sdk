@@ -27,6 +27,7 @@ const VALID_BUILTIN_HANDLERS: BuiltinHandlerType[] = [
   'dangerous-command-guard',
   'context-injection',
   'tool-logger',
+  'turn-tracker',
 ];
 
 const VALID_ERROR_STRATEGIES: ErrorStrategy[] = ['continue', 'stop', 'retry'];
@@ -418,6 +419,9 @@ function validateBuiltinOptions(
     case 'tool-logger':
       validateToolLoggerOptions(options, `${path}.options`, errors, warnings);
       break;
+    case 'turn-tracker':
+      validateTurnTrackerOptions(options, `${path}.options`, errors, warnings);
+      break;
   }
 }
 
@@ -617,6 +621,40 @@ function validateToolLoggerOptions(
       message: `Invalid format: ${options.format}`,
       expected: VALID_LOG_FORMATS.join(' | '),
       actual: options.format,
+    });
+  }
+}
+
+function validateTurnTrackerOptions(
+  options: Record<string, unknown>,
+  path: string,
+  errors: ValidationError[],
+  warnings: ValidationError[]
+): void {
+  if (options.turns_dir !== undefined && typeof options.turns_dir !== 'string') {
+    errors.push({
+      path: `${path}.turns_dir`,
+      message: 'turns_dir must be a string',
+      expected: 'string',
+      actual: typeof options.turns_dir,
+    });
+  }
+
+  if (options.preserve_on_resume !== undefined && typeof options.preserve_on_resume !== 'boolean') {
+    errors.push({
+      path: `${path}.preserve_on_resume`,
+      message: 'preserve_on_resume must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.preserve_on_resume,
+    });
+  }
+
+  if (options.inject_context !== undefined && typeof options.inject_context !== 'boolean') {
+    errors.push({
+      path: `${path}.inject_context`,
+      message: 'inject_context must be a boolean',
+      expected: 'boolean',
+      actual: typeof options.inject_context,
     });
   }
 }

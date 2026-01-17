@@ -19,7 +19,8 @@ export type BuiltinHandlerType =
   | 'session-naming'
   | 'dangerous-command-guard'
   | 'context-injection'
-  | 'tool-logger';
+  | 'tool-logger'
+  | 'turn-tracker';
 
 /**
  * Options for session-naming handler
@@ -80,6 +81,18 @@ export interface ToolLoggerOptions {
 }
 
 /**
+ * Options for turn-tracker handler
+ */
+export interface TurnTrackerOptions {
+  /** Directory to store turn state files (default: ~/.claude/turns) */
+  turnsDir?: string;
+  /** Preserve turn state when resuming a session (default: true) */
+  preserveOnResume?: boolean;
+  /** Inject turn context on SessionStart (default: false) */
+  injectContext?: boolean;
+}
+
+/**
  * Map of built-in handler types to their options
  */
 export interface BuiltinHandlerOptions {
@@ -87,6 +100,7 @@ export interface BuiltinHandlerOptions {
   'dangerous-command-guard': DangerousCommandGuardOptions;
   'context-injection': ContextInjectionOptions;
   'tool-logger': ToolLoggerOptions;
+  'turn-tracker': TurnTrackerOptions;
 }
 
 // ============================================================================
@@ -121,6 +135,7 @@ export interface BuiltinsConfig {
   'dangerous-command-guard'?: HandlerConfig<'dangerous-command-guard'>;
   'context-injection'?: HandlerConfig<'context-injection'>;
   'tool-logger'?: HandlerConfig<'tool-logger'>;
+  'turn-tracker'?: HandlerConfig<'turn-tracker'>;
 }
 
 /**

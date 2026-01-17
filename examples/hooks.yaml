@@ -172,6 +172,31 @@ builtins:
       # Log format: text, json
       format: text
 
+  # ---------------------------------------------------------------------------
+  # Turn Tracker Handler
+  # ---------------------------------------------------------------------------
+  # Tracks turns within a session based on Stop events.
+  # A turn is the period between Stop events (Turn 1 is implicit on start).
+  #
+  # Turn ID format: {session_id}:{sequence}
+  # Subagent ID format: {session_id}:{sequence}:s:{subagent_seq}
+  #
+  # Events: SessionStart, Stop, SubagentStop, UserPromptSubmit, PreToolUse, PostToolUse
+  # Priority: 5 (runs early to establish turn context)
+  turn-tracker:
+    enabled: false    # Disabled by default - enable for turn tracking
+    options:
+      # Directory to store turn state files
+      # turns_dir: "~/.claude/turns"
+
+      # Preserve turn state when resuming a session (default: true)
+      # Set to false to restart turn count on resume
+      preserve_on_resume: true
+
+      # Inject turn context on SessionStart (default: false)
+      # When true, adds <turn-context> block with current turn ID
+      inject_context: false
+
 # =============================================================================
 # Custom Handlers (Advanced)
 # =============================================================================
