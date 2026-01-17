@@ -384,6 +384,42 @@ if [[ "$FILE" == *.ts ]] || [[ "$FILE" == *.tsx ]]; then
 fi
 ```
 
+### Hook Framework (YAML Alternative)
+
+For complex hook setups, use the YAML-based Hook Framework from `claude-code-sdk`:
+
+```yaml
+# hooks/hooks.yaml
+version: 1
+
+builtins:
+  session-naming:
+    enabled: true
+  turn-tracker:
+    enabled: true
+  tool-logger:
+    enabled: true
+    options:
+      outputPath: ${CLAUDE_PLUGIN_ROOT}/logs/tools.log
+
+handlers:
+  format-on-save:
+    events: [PostToolUse]
+    matcher: "Write|Edit"
+    command: ${CLAUDE_PLUGIN_ROOT}/scripts/format.sh
+```
+
+The framework provides:
+
+| Feature | Description |
+|---------|-------------|
+| Built-in handlers | session-naming, turn-tracker, dangerous-command-guard, tool-logger |
+| Environment variables | `CLAUDE_SESSION_NAME`, `CLAUDE_TURN_ID`, `CLAUDE_TURN_SEQUENCE` |
+| Result sharing | Handlers can access results from other handlers |
+| YAML config | Cleaner configuration than JSON |
+
+See [creating-hooks skill](../creating-hooks/SKILL.md) for complete framework documentation.
+
 ## MCP Servers
 
 Model Context Protocol servers providing external tools.

@@ -1,0 +1,137 @@
+# Claude Code SDK - Hook Framework Configuration
+# ==============================================
+#
+# This project uses the Hook Framework with both built-in handlers
+# and custom command handlers for project-specific functionality.
+
+version: 1
+
+settings:
+  debug: false
+  parallel_execution: true
+  default_timeout_ms: 30000
+  default_error_strategy: continue
+
+# =============================================================================
+# Built-in Handlers
+# =============================================================================
+
+builtins:
+  # Human-friendly session names (e.g., "brave-elephant")
+  session-naming:
+    enabled: true
+    options:
+      format: adjective-animal
+
+  # Track turns between Stop events
+  turn-tracker:
+    enabled: true
+    options:
+      preserve_on_resume: true
+      inject_context: false
+
+  # Block dangerous Bash commands
+  dangerous-command-guard:
+    enabled: true
+    options:
+      strict: false
+      blocked_patterns:
+        - "rm -rf /"
+        - "rm -rf ~"
+
+  # Context injection (disabled - using custom hooks)
+  context-injection:
+    enabled: false
+
+  # Tool logging (disabled by default, enable for debugging)
+  tool-logger:
+    enabled: false
+    options:
+      log_level: info
+      include_input: true
+      include_output: false
+      format: text
+
+# =============================================================================
+# Custom Handlers
+# =============================================================================
+# Project-specific hooks that integrate with notify-service, weave, and loom
+
+handlers:
+  # ---------------------------------------------------------------------------
+  # Notification Hook
+  # ---------------------------------------------------------------------------
+  # Posts events to notify-service for Discord/TTS notifications
+  notification-hook:
+    enabled: true
+    priority: 50
+    events:
+      - SessionStart
+      - UserPromptSubmit
+      - PostToolUse
+      - Stop
+      - SessionEnd
+    command: bun "${CLAUDE_PROJECT_DIR}/hooks/notification-hook.ts"
+
+  # ---------------------------------------------------------------------------
+  # Conversation Logger
+  # ---------------------------------------------------------------------------
+  # Logs all conversations to unified JSONL file
+  conversation-logger:
+    enabled: true
+    priority: 60
+    events:
+      - SessionStart
+      - UserPromptSubmit
+      - Stop
+      - SessionEnd
+    command: bun "${CLAUDE_PROJECT_DIR}/.agent/hooks/conversation-logger.ts"
+
+  # ---------------------------------------------------------------------------
+  # Weave Analytics
+  # ---------------------------------------------------------------------------
+  # Tracks patterns for Weave knowledge system
+  weave-analytics:
+    enabled: true
+    priority: 70
+    events:
+      - SessionStart
+      - UserPromptSubmit
+      - PreToolUse
+      - PostToolUse
+      - Stop
+    command: bun "${CLAUDE_PROJECT_DIR}/.agent/hooks/weave-analytics.ts"
+
+  # ---------------------------------------------------------------------------
+  # Loom Metrics
+  # ---------------------------------------------------------------------------
+  # Tracks story execution metrics
+  loom-metrics:
+    enabled: true
+    priority: 80
+    events:
+      - SessionEnd
+      - PostToolUse
+    command: bun "${CLAUDE_PROJECT_DIR}/.agent/hooks/loom-metrics.ts"
+
+  # ---------------------------------------------------------------------------
+  # Stage Manager Enforcement
+  # ---------------------------------------------------------------------------
+  # Enforces stage manager workflow rules
+  stage-manager-enforcement:
+    enabled: true
+    priority: 25
+    events:
+      - PreToolUse
+    command: bun "${CLAUDE_PROJECT_DIR}/.agent/hooks/stage-manager-enforcement.ts"
+
+  # ---------------------------------------------------------------------------
+  # Stop Handler
+  # ---------------------------------------------------------------------------
+  # Additional stop processing
+  stop-handler:
+    enabled: true
+    priority: 90
+    events:
+      - Stop
+    command: bun "${CLAUDE_PROJECT_DIR}/.agent/hooks/Stop.ts"

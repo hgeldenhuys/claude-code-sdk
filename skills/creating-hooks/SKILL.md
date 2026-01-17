@@ -389,6 +389,143 @@ Log file access, validate read permissions, or inject context based on files rea
 }
 ```
 
+## Hook Framework (YAML Configuration)
+
+For projects with multiple hooks, the Hook Framework provides a YAML-based configuration with built-in handlers and environment variable injection.
+
+### Installation
+
+```bash
+bun add claude-code-sdk
+```
+
+### YAML Configuration
+
+Create `hooks.yaml` in your project root:
+
+```yaml
+version: 1
+
+settings:
+  debug: false
+  parallelExecution: true
+  defaultTimeoutMs: 30000
+
+builtins:
+  # Human-friendly session names (e.g., "brave-elephant")
+  session-naming:
+    enabled: true
+    options:
+      format: adjective-animal
+
+  # Track turns between Stop events
+  turn-tracker:
+    enabled: true
+
+  # Block dangerous Bash commands
+  dangerous-command-guard:
+    enabled: true
+    options:
+      blockedPatterns:
+        - "rm -rf /"
+        - "rm -rf ~"
+
+  # Inject session context
+  context-injection:
+    enabled: true
+    options:
+      template: "Session: ${sessionName} | Turn: ${turnId}"
+
+  # Log tool usage
+  tool-logger:
+    enabled: true
+    options:
+      outputPath: ~/.claude/logs/tools.log
+
+handlers:
+  # Custom command handlers
+  my-validator:
+    events: [PreToolUse]
+    matcher: "Bash"
+    command: ./scripts/validate-command.sh
+    timeoutMs: 5000
+```
+
+### Built-in Handlers
+
+| Handler | Description | Default Events |
+|---------|-------------|----------------|
+| `session-naming` | Assigns human-friendly names | SessionStart |
+| `turn-tracker` | Tracks turns between Stop events | SessionStart, Stop, SubagentStop |
+| `dangerous-command-guard` | Blocks dangerous Bash commands | PreToolUse |
+| `context-injection` | Injects session/turn context | SessionStart, PreCompact |
+| `tool-logger` | Logs tool usage with context | PostToolUse |
+
+### Environment Variables for Custom Handlers
+
+Custom command handlers receive these environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `CLAUDE_SESSION_ID` | Current session ID |
+| `CLAUDE_SESSION_NAME` | Human-friendly session name |
+| `CLAUDE_TURN_ID` | Turn identifier (session:sequence) |
+| `CLAUDE_TURN_SEQUENCE` | Current turn number |
+| `CLAUDE_EVENT_TYPE` | Hook event type |
+| `CLAUDE_CWD` | Current working directory |
+| `CLAUDE_PROJECT_DIR` | Project root path |
+
+### TypeScript Framework
+
+```typescript
+import { createFramework, handler, blockResult } from 'claude-code-sdk/hooks/framework';
+
+const framework = createFramework({ debug: true });
+
+// Block dangerous commands
+framework.onPreToolUse(
+  handler()
+    .id('danger-guard')
+    .forTools('Bash')
+    .handle(ctx => {
+      const input = ctx.event.tool_input as { command?: string };
+      if (input.command?.includes('rm -rf /')) {
+        return blockResult('Dangerous command blocked');
+      }
+      return { success: true };
+    })
+);
+
+// Access turn/session context
+framework.onPostToolUse(
+  handler()
+    .id('context-logger')
+    .handle(ctx => {
+      const turnId = ctx.results.get('turn-tracker')?.data?.turnId;
+      const sessionName = ctx.results.get('session-naming')?.data?.sessionName;
+      console.error(`[${sessionName}] Turn ${turnId}: ${ctx.event.tool_name}`);
+      return { success: true };
+    })
+);
+
+await framework.run();
+```
+
+### Using with settings.json
+
+Point your settings.json to the framework entry point:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "bun run hooks-framework" }] }],
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "bun run hooks-framework" }] }],
+    "SessionStart": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "bun run hooks-framework" }] }],
+    "Stop": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "bun run hooks-framework" }] }]
+  }
+}
+```
+
 ## Debugging
 
 | Issue | Solution |
@@ -398,6 +535,7 @@ Log file access, validate read permissions, or inject context based on files rea
 | Command not found | Use absolute paths or `$CLAUDE_PROJECT_DIR` |
 | Script not executing | Check permissions (`chmod +x`) |
 | Exit code ignored | Only 0, 2, and other are recognized |
+| Framework not loading | Check `hooks.yaml` syntax, run with `debug: true` |
 
 Run with debug mode:
 ```bash
