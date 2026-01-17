@@ -11,6 +11,11 @@
  * - Project-based session filtering
  * - Migration from per-project sessions.json
  *
+ * v3.1 features:
+ * - Subagent tracking and discovery
+ * - Model, message count, tool usage metrics
+ * - Task summary extraction
+ *
  * Usage:
  *   sesh <name-or-id>           Auto-detect and convert
  *   sesh id <name>              Get session ID for a name
@@ -18,6 +23,8 @@
  *   sesh list [options]         List all sessions
  *   sesh info <name-or-id>      Show session details
  *   sesh rename <old> <new>     Rename a session
+ *   sesh agents                  List subagents with metadata
+ *   sesh agents describe <name>  Show detailed subagent info
  *   sesh machines               List registered machines
  *   sesh machines alias <name>  Set alias for current machine
  *   sesh migrate [path]         Migrate sessions from project path
@@ -40,12 +47,35 @@ import {
   setMachineAlias,
   listMachines,
 } from '../src/hooks/sessions/machine';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
+
+// ============================================================================
+// Subagent Types
+// ============================================================================
+
+interface SubagentInfo {
+  agentId: string;
+  slug: string; // Human-friendly name
+  sessionId: string; // Parent session ID
+  model?: string;
+  version?: string;
+  cwd?: string;
+  gitBranch?: string;
+  firstTimestamp?: string;
+  lastTimestamp?: string;
+  messageCount: number;
+  toolCount: number;
+  taskSummary?: string; // First 100 chars of first user prompt
+  transcriptPath: string;
+}
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const VERSION = '3.0.0';
+const VERSION = '3.1.0';
 
 // UUID v4 pattern (used by Claude Code)
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -56,6 +86,190 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 function isUUID(input: string): boolean {
   return UUID_PATTERN.test(input);
+}
+
+// ============================================================================
+// Subagent Helpers
+// ============================================================================
+
+function getClaudeProjectsDir(): string {
+  return path.join(os.homedir(), '.claude', 'projects');
+}
+
+function discoverSubagents(sessionFilter?: string): SubagentInfo[] {
+  const projectsDir = getClaudeProjectsDir();
+  const subagents: SubagentInfo[] = [];
+
+  if (!fs.existsSync(projectsDir)) {
+    return subagents;
+  }
+
+  // Iterate through all project directories
+  const projectDirs = fs.readdirSync(projectsDir, { withFileTypes: true });
+
+  for (const projectDir of projectDirs) {
+    if (!projectDir.isDirectory()) continue;
+
+    const projectPath = path.join(projectsDir, projectDir.name);
+
+    // Check each session directory for subagents
+    const sessionDirs = fs.readdirSync(projectPath, { withFileTypes: true });
+
+    for (const sessionDir of sessionDirs) {
+      if (!sessionDir.isDirectory()) continue;
+
+      // Check if this matches sessionFilter
+      if (sessionFilter && sessionDir.name !== sessionFilter) continue;
+
+      const subagentsPath = path.join(projectPath, sessionDir.name, 'subagents');
+
+      if (!fs.existsSync(subagentsPath)) continue;
+
+      // Find all agent-*.jsonl files
+      const agentFiles = fs.readdirSync(subagentsPath).filter((f) => f.startsWith('agent-') && f.endsWith('.jsonl'));
+
+      for (const agentFile of agentFiles) {
+        const transcriptPath = path.join(subagentsPath, agentFile);
+        const agentInfo = parseSubagentTranscript(transcriptPath, sessionDir.name);
+        if (agentInfo) {
+          subagents.push(agentInfo);
+        }
+      }
+    }
+  }
+
+  // Sort by lastTimestamp descending
+  subagents.sort((a, b) => {
+    const dateA = a.lastTimestamp ? new Date(a.lastTimestamp).getTime() : 0;
+    const dateB = b.lastTimestamp ? new Date(b.lastTimestamp).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  return subagents;
+}
+
+function parseSubagentTranscript(transcriptPath: string, sessionId: string): SubagentInfo | null {
+  try {
+    const content = fs.readFileSync(transcriptPath, 'utf-8');
+    const lines = content.trim().split('\n');
+
+    if (lines.length === 0) return null;
+
+    let agentId = '';
+    let slug = '';
+    let model: string | undefined;
+    let version: string | undefined;
+    let cwd: string | undefined;
+    let gitBranch: string | undefined;
+    let firstTimestamp: string | undefined;
+    let lastTimestamp: string | undefined;
+    let messageCount = 0;
+    let toolCount = 0;
+    let taskSummary: string | undefined;
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+
+      try {
+        const entry = JSON.parse(line);
+
+        // Extract metadata from first entry
+        if (!agentId && entry.agentId) {
+          agentId = entry.agentId;
+        }
+        if (!slug && entry.slug) {
+          slug = entry.slug;
+        }
+        if (!version && entry.version) {
+          version = entry.version;
+        }
+        if (!cwd && entry.cwd) {
+          cwd = entry.cwd;
+        }
+        if (!gitBranch && entry.gitBranch) {
+          gitBranch = entry.gitBranch;
+        }
+
+        // Track timestamps
+        if (entry.timestamp) {
+          if (!firstTimestamp) {
+            firstTimestamp = entry.timestamp;
+          }
+          lastTimestamp = entry.timestamp;
+        }
+
+        // Count messages and extract model
+        if (entry.type === 'user') {
+          messageCount++;
+          // Extract task summary from first user message
+          if (!taskSummary && entry.message?.content) {
+            const content =
+              typeof entry.message.content === 'string'
+                ? entry.message.content
+                : JSON.stringify(entry.message.content);
+            taskSummary = content.slice(0, 100).replace(/\n/g, ' ').trim();
+            if (content.length > 100) taskSummary += '...';
+          }
+        } else if (entry.type === 'assistant') {
+          messageCount++;
+          // Extract model from assistant messages
+          if (!model && entry.message?.model) {
+            model = entry.message.model;
+          }
+          // Count tool uses
+          if (entry.message?.content && Array.isArray(entry.message.content)) {
+            for (const block of entry.message.content) {
+              if (block.type === 'tool_use') {
+                toolCount++;
+              }
+            }
+          }
+        }
+      } catch {
+        // Skip malformed lines
+      }
+    }
+
+    if (!agentId) return null;
+
+    return {
+      agentId,
+      slug: slug || `agent-${agentId}`,
+      sessionId,
+      model,
+      version,
+      cwd,
+      gitBranch,
+      firstTimestamp,
+      lastTimestamp,
+      messageCount,
+      toolCount,
+      taskSummary,
+      transcriptPath,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function findSubagentByNameOrId(nameOrId: string): SubagentInfo | null {
+  const allAgents = discoverSubagents();
+
+  // Try exact slug match first
+  for (const agent of allAgents) {
+    if (agent.slug === nameOrId || agent.agentId === nameOrId) {
+      return agent;
+    }
+  }
+
+  // Try partial slug match
+  for (const agent of allAgents) {
+    if (agent.slug.includes(nameOrId) || agent.agentId.startsWith(nameOrId)) {
+      return agent;
+    }
+  }
+
+  return null;
 }
 
 function printError(message: string): void {
@@ -79,6 +293,7 @@ Usage:
   sesh delete <name-or-id>    Delete a session
   sesh history <name>         Show session ID history
   sesh transcript <name>      Get transcript file path for a session
+  sesh agents [subcommand]    Manage subagents (list, describe, transcript)
   sesh machines               List registered machines
   sesh machines alias <name>  Set alias for current machine
   sesh migrate [path]         Migrate sessions from project's .claude/sessions.json
@@ -94,6 +309,20 @@ List options:
   --json                      Output as JSON
   --names                     Output names only (one per line)
   --ids                       Output session IDs only (one per line)
+
+Agents subcommands:
+  sesh agents                       List all subagents (alias: sesh agents list)
+  sesh agents list [options]        List subagents with model, messages, tools
+  sesh agents describe <name-or-id> Show detailed subagent info
+  sesh agents transcript <name>     Get transcript file path
+  sesh agents <name-or-id>          Shorthand for describe
+
+Agents list options:
+  --session, -s <id>          Filter by parent session ID
+  --limit, -n <count>         Limit results
+  --json                      Output as JSON
+  --names                     Output slugs only (one per line)
+  --ids                       Output agent IDs only (one per line)
 
 Examples:
   # Resume a session by name
@@ -121,6 +350,12 @@ Examples:
   # Manage machines
   sesh machines                       # List all machines
   sesh machines alias my-laptop       # Set alias for this machine
+
+  # Manage subagents
+  sesh agents                         # List all subagents
+  sesh agents list --limit 5          # Recent 5 subagents
+  sesh agents describe floating-puffin # Detailed subagent info
+  sesh agents floating-puffin         # Shorthand for describe
 
   # Migrate from old per-project storage
   sesh migrate /path/to/project       # Migrate project's sessions
@@ -488,6 +723,175 @@ function cmdMachines(args: string[]): number {
   return 0;
 }
 
+function cmdAgents(args: string[]): number {
+  const subCommand = args[0];
+
+  // If first arg is an option, treat as list
+  if (!subCommand || subCommand.startsWith('-')) {
+    return cmdAgentsList(args);
+  }
+
+  switch (subCommand) {
+    case 'list':
+    case 'ls':
+      return cmdAgentsList(args.slice(1));
+    case 'describe':
+    case 'info':
+      if (!args[1]) {
+        printError('usage: sesh agents describe <name-or-id>');
+        return 1;
+      }
+      return cmdAgentsDescribe(args[1]);
+    case 'transcript':
+      if (!args[1]) {
+        printError('usage: sesh agents transcript <name-or-id>');
+        return 1;
+      }
+      return cmdAgentsTranscript(args[1]);
+    default:
+      // Try to treat as name/id for describe
+      return cmdAgentsDescribe(subCommand);
+  }
+}
+
+function cmdAgentsList(args: string[]): number {
+  // Parse options
+  let sessionFilter: string | undefined;
+  let limit: number | undefined;
+  let format: 'table' | 'json' | 'names' | 'ids' = 'table';
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    switch (arg) {
+      case '--session':
+      case '-s':
+        sessionFilter = args[++i];
+        break;
+      case '--limit':
+      case '-n': {
+        const val = args[++i];
+        if (val) limit = Number.parseInt(val, 10);
+        break;
+      }
+      case '--json':
+        format = 'json';
+        break;
+      case '--names':
+        format = 'names';
+        break;
+      case '--ids':
+        format = 'ids';
+        break;
+    }
+  }
+
+  let agents = discoverSubagents(sessionFilter);
+
+  if (limit && agents.length > limit) {
+    agents = agents.slice(0, limit);
+  }
+
+  if (agents.length === 0) {
+    if (format === 'json') {
+      console.log('[]');
+    } else {
+      console.log('No subagents found');
+    }
+    return 0;
+  }
+
+  switch (format) {
+    case 'json':
+      console.log(JSON.stringify(agents, null, 2));
+      break;
+    case 'names':
+      for (const a of agents) {
+        console.log(a.slug);
+      }
+      break;
+    case 'ids':
+      for (const a of agents) {
+        console.log(a.agentId);
+      }
+      break;
+    default: {
+      const store = getSessionStore();
+
+      console.log('SLUG                           SESSION              ID       MODEL            MSGS  TOOLS  LAST ACTIVITY');
+      console.log('-'.repeat(115));
+
+      for (const a of agents) {
+        const slug = a.slug.padEnd(30).slice(0, 30);
+        // Try to get session name from store
+        const sessionName = store.getName(a.sessionId);
+        const sessionDisplay = (sessionName ?? a.sessionId.slice(0, 8)).padEnd(20).slice(0, 20);
+        const agentIdShort = a.agentId.padEnd(8).slice(0, 8);
+        // Shorten model name for display
+        const modelShort = (a.model ?? 'unknown')
+          .replace('claude-', '')
+          .replace('-20251101', '')
+          .replace('-20251001', '')
+          .padEnd(16)
+          .slice(0, 16);
+        const msgs = String(a.messageCount).padStart(4);
+        const tools = String(a.toolCount).padStart(6);
+        const lastActivity = a.lastTimestamp ? formatDate(a.lastTimestamp) : 'unknown';
+        console.log(`${slug} ${sessionDisplay} ${agentIdShort} ${modelShort} ${msgs} ${tools}  ${lastActivity}`);
+      }
+
+      console.log('');
+      console.log(`Total: ${agents.length} subagent(s)`);
+      break;
+    }
+  }
+
+  return 0;
+}
+
+function cmdAgentsDescribe(nameOrId: string): number {
+  const agent = findSubagentByNameOrId(nameOrId);
+
+  if (!agent) {
+    printError(`subagent not found: ${nameOrId}`);
+    return 1;
+  }
+
+  console.log(`Slug:           ${agent.slug}`);
+  console.log(`Agent ID:       ${agent.agentId}`);
+  console.log(`Session ID:     ${agent.sessionId}`);
+  console.log(`Model:          ${agent.model ?? 'unknown'}`);
+  console.log(`Claude Version: ${agent.version ?? 'unknown'}`);
+  console.log(`Messages:       ${agent.messageCount}`);
+  console.log(`Tool Uses:      ${agent.toolCount}`);
+  if (agent.firstTimestamp) console.log(`Started:        ${formatDate(agent.firstTimestamp)}`);
+  if (agent.lastTimestamp) console.log(`Last Activity:  ${formatDate(agent.lastTimestamp)}`);
+  if (agent.cwd) console.log(`Directory:      ${agent.cwd}`);
+  if (agent.gitBranch) console.log(`Git Branch:     ${agent.gitBranch}`);
+  if (agent.taskSummary) console.log(`Task:           ${agent.taskSummary}`);
+  console.log(`Transcript:     ${agent.transcriptPath}`);
+
+  // Show resume command hint
+  console.log('');
+  console.log('To resume this agent (via parent session):');
+  console.log(`  claude --resume ${agent.sessionId}`);
+  console.log(`  [then use Task tool with resume: "${agent.agentId}"]`);
+
+  return 0;
+}
+
+function cmdAgentsTranscript(nameOrId: string): number {
+  const agent = findSubagentByNameOrId(nameOrId);
+
+  if (!agent) {
+    printError(`subagent not found: ${nameOrId}`);
+    return 1;
+  }
+
+  // Output just the path for easy shell usage
+  console.log(agent.transcriptPath);
+  return 0;
+}
+
 function cmdMigrate(projectPath?: string): number {
   const store = getSessionStore();
   const targetPath = projectPath ?? process.cwd();
@@ -617,6 +1021,9 @@ function main(): number {
 
     case 'migrate':
       return cmdMigrate(args[1]);
+
+    case 'agents':
+      return cmdAgents(args.slice(1));
 
     default:
       // Auto-detect mode: input is either a name or session ID

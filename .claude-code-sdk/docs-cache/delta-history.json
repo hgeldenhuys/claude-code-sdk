@@ -507,7 +507,7 @@
         "changedSections": [],
         "summary": "+5/-5 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767761439669-f63qvml",
@@ -525,7 +525,7 @@
         "changedSections": [],
         "summary": "+1/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767761442572-agrv8jo",
@@ -543,7 +543,7 @@
         "changedSections": [],
         "summary": "+1/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767761444126-1npcu5e",
@@ -561,7 +561,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842195603-kde5qki",
@@ -579,7 +579,7 @@
         "changedSections": [],
         "summary": "+1/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842196028-vba54p8",
@@ -597,7 +597,7 @@
         "changedSections": [],
         "summary": "+9/-9 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842196654-3t4hlqa",
@@ -615,7 +615,7 @@
         "changedSections": [],
         "summary": "+1/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842196879-01njrzj",
@@ -635,7 +635,7 @@
         ],
         "summary": "+3/-3 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842197310-q47krvr",
@@ -655,7 +655,7 @@
         ],
         "summary": "+5/-5 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842197534-2zqcm8e",
@@ -673,7 +673,7 @@
         "changedSections": [],
         "summary": "+56/-62 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842197741-eu02krb",
@@ -691,7 +691,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842198159-8p2xdue",
@@ -709,7 +709,7 @@
         "changedSections": [],
         "summary": "+14/-5 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842198778-05n3eyr",
@@ -727,7 +727,7 @@
         "changedSections": [],
         "summary": "+12/-12 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842198985-16ignog",
@@ -745,7 +745,7 @@
         "changedSections": [],
         "summary": "+8/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842200506-458ue00",
@@ -763,7 +763,7 @@
         "changedSections": [],
         "summary": "+10/-10 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842200630-qdlisaj",
@@ -785,7 +785,7 @@
         ],
         "summary": "+112/-0 lines, 3 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767842202024-s102fs9",
@@ -803,7 +803,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905489842-ldwfq24",
@@ -823,7 +823,7 @@
         ],
         "summary": "+30/-3 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905490296-lyiyu3l",
@@ -851,7 +851,7 @@
         ],
         "summary": "+64/-18 lines, 9 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905490531-tpxo2f8",
@@ -872,7 +872,7 @@
         ],
         "summary": "+23/-0 lines, 2 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905491590-pik8mrg",
@@ -892,7 +892,7 @@
         ],
         "summary": "+2/-0 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905491853-fvhjo5y",
@@ -910,7 +910,7 @@
         "changedSections": [],
         "summary": "+7/-3 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905493294-dy2y5y2",
@@ -937,7 +937,7 @@
         ],
         "summary": "+48/-30 lines, 8 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905493484-iksswt0",
@@ -959,7 +959,7 @@
         ],
         "summary": "+78/-32 lines, 3 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1767905498902-7wfzo7x",
@@ -977,7 +977,7 @@
         "changedSections": [],
         "summary": "+1/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164571387-7af19o4",
@@ -1000,7 +1000,7 @@
         ],
         "summary": "+42/-13 lines, 4 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164571875-0thvffi",
@@ -1018,7 +1018,7 @@
         "changedSections": [],
         "summary": "+1/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164572116-7myhjfk",
@@ -1073,7 +1073,7 @@
         ],
         "summary": "+308/-255 lines, 36 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164572603-md06dyp",
@@ -1091,7 +1091,7 @@
         "changedSections": [],
         "summary": "+0/-12 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164572852-u0nllab",
@@ -1111,7 +1111,7 @@
         ],
         "summary": "+9/-0 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164573447-1dmpi8q",
@@ -1129,7 +1129,7 @@
         "changedSections": [],
         "summary": "+1/-0 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164573644-pogy0q0",
@@ -1147,7 +1147,7 @@
         "changedSections": [],
         "summary": "+12/-5 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164574797-0610gtv",
@@ -1165,7 +1165,7 @@
         "changedSections": [],
         "summary": "+1/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164575766-rhan9gk",
@@ -1194,7 +1194,7 @@
         ],
         "summary": "+127/-126 lines, 10 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164576835-4br5l8h",
@@ -1216,7 +1216,7 @@
         ],
         "summary": "+39/-0 lines, 3 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768164578243-d747fy7",
@@ -1234,7 +1234,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768266981238-idar4zo",
@@ -1252,7 +1252,7 @@
         "changedSections": [],
         "summary": "+1/-0 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768266981922-22zpfa3",
@@ -1273,7 +1273,7 @@
         ],
         "summary": "+19/-0 lines, 2 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768266982607-1jgm6pv",
@@ -1291,7 +1291,7 @@
         "changedSections": [],
         "summary": "+1/-0 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768266984254-vziqdkr",
@@ -1309,7 +1309,7 @@
         "changedSections": [],
         "summary": "+5/-3 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768266984463-asyrr80",
@@ -1327,7 +1327,7 @@
         "changedSections": [],
         "summary": "+1/-0 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768266985801-8jq5h14",
@@ -1347,7 +1347,7 @@
         ],
         "summary": "+2/-0 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768266987794-wxatwdh",
@@ -1365,7 +1365,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768316272471-n8e0s6p",
@@ -1385,7 +1385,7 @@
         ],
         "summary": "+26/-0 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768316287433-zli1o4z",
@@ -1403,7 +1403,7 @@
         "changedSections": [],
         "summary": "+1/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768333901786-aw09yj5",
@@ -1421,7 +1421,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768402622472-p90qrer",
@@ -1439,7 +1439,7 @@
         "changedSections": [],
         "summary": "+2/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768402627502-4hv8ruu",
@@ -1459,7 +1459,7 @@
         ],
         "summary": "+16/-0 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768402634497-z5n7mx9",
@@ -1477,7 +1477,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768523606194-34tf80q",
@@ -1495,7 +1495,7 @@
         "changedSections": [],
         "summary": "+1/-0 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768523608025-pnh2vdh",
@@ -1513,7 +1513,7 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575663380-73v78r6",
@@ -1531,7 +1531,7 @@
         "changedSections": [],
         "summary": "+4/-0 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575664011-7e1ce3p",
@@ -1552,7 +1552,7 @@
         ],
         "summary": "+13/-0 lines, 2 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575667616-7frrfvf",
@@ -1577,7 +1577,7 @@
         ],
         "summary": "+31/-0 lines, 6 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575667899-o78icv6",
@@ -1595,7 +1595,7 @@
         "changedSections": [],
         "summary": "+68/-64 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575669740-3gvsnit",
@@ -1613,7 +1613,7 @@
         "changedSections": [],
         "summary": "+9/-1 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575670002-4p1cyrw",
@@ -1631,7 +1631,7 @@
         "changedSections": [],
         "summary": "+56/-51 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575670406-w8jzmxy",
@@ -1649,7 +1649,7 @@
         "changedSections": [],
         "summary": "+47/-47 lines"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575673185-e7qhfeb",
@@ -1669,7 +1669,7 @@
         ],
         "summary": "+10/-0 lines, 1 new sections"
       },
-      "reviewed": false
+      "reviewed": true
     },
     {
       "id": "delta-1768575675259-zhze90u",
@@ -1687,7 +1687,82 @@
         "changedSections": [],
         "summary": "+2/-2 lines"
       },
-      "reviewed": false
+      "reviewed": true
+    },
+    {
+      "id": "delta-1768631176885-mkwss4j",
+      "url": "https://code.claude.com/docs/en/sub-agents.md",
+      "title": "Create custom subagents",
+      "detectedAt": "2026-01-17T06:26:16.884Z",
+      "previousVersion": 6,
+      "newVersion": 7,
+      "previousHash": "3db0bc9f8a388b36d31423523ea108b84c179cc282ba49478bc3038fc123a956",
+      "newHash": "cab882cf51123b40cad5df17f8690658995237eeaab43339f4645684ba5e9289",
+      "diffSummary": {
+        "linesAdded": 1,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [],
+        "summary": "+1/-1 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1768631178163-arf7cco",
+      "url": "https://code.claude.com/docs/en/settings.md",
+      "title": "Claude Code settings",
+      "detectedAt": "2026-01-17T06:26:18.162Z",
+      "previousVersion": 11,
+      "newVersion": 12,
+      "previousHash": "709e84c701906570258efe325aabb22a02fc1c7976ccc82d74f6e020ebfd6b77",
+      "newHash": "cde92472dacba056bab5d9964d1debb0bd7922d637ac9f0a065bd05d97332034",
+      "diffSummary": {
+        "linesAdded": 27,
+        "linesRemoved": 19,
+        "linesModified": 19,
+        "changedSections": [],
+        "summary": "+27/-19 lines"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1768631181465-9n1jeqg",
+      "url": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/CHANGELOG.md",
+      "title": "Changelog",
+      "detectedAt": "2026-01-17T06:26:21.462Z",
+      "previousVersion": 9,
+      "newVersion": 10,
+      "previousHash": "41277ab79b451aeccdc122ef48733aca330b7d6e18f0d6640b6a2f1bf65f2415",
+      "newHash": "8a02f02a1e2810d6ae0a167dd62652ca294a52093cdd00eb70cbf25bd02e80a8",
+      "diffSummary": {
+        "linesAdded": 10,
+        "linesRemoved": 1,
+        "linesModified": 1,
+        "changedSections": [
+          "## 2.1.11",
+          "## 2.1.10"
+        ],
+        "summary": "+10/-1 lines, 2 new sections"
+      },
+      "reviewed": true
+    },
+    {
+      "id": "delta-1768631183329-s0ry0eg",
+      "url": "https://docs.claude.com/en/docs/agents-and-tools/claude-code/sdk-overview",
+      "title": "Untitled",
+      "detectedAt": "2026-01-17T06:26:23.328Z",
+      "previousVersion": 13,
+      "newVersion": 14,
+      "previousHash": "77e63b082fde56accde4bd270760072b83be53a58c12155972f2dbf22a5a49e4",
+      "newHash": "2aa2afa9ee4eabcc54f665c465e84a38c307d09a7567e0399f0817bba33a9d5e",
+      "diffSummary": {
+        "linesAdded": 2,
+        "linesRemoved": 2,
+        "linesModified": 2,
+        "changedSections": [],
+        "summary": "+2/-2 lines"
+      },
+      "reviewed": true
     }
   ]
 }
