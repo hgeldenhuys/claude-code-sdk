@@ -49,7 +49,8 @@ jobs:
 
       - name: Build CLIs for Node.js
         run: |
-          # Build each CLI to JavaScript for Node.js compatibility
+          # Build Node.js-compatible CLIs (hooks, sesh)
+          # Note: transcript CLIs use Bun-specific APIs and are Bun-only
           mkdir -p dist/bin
 
           # Build hooks CLI
@@ -57,12 +58,6 @@ jobs:
 
           # Build sesh CLI
           bun build bin/sesh.ts --outfile dist/bin/sesh.js --target node
-
-          # Build transcript CLI
-          bun build bin/transcript.ts --outfile dist/bin/transcript.js --target node
-
-          # Build transcript-tui CLI
-          bun build bin/transcript-tui.ts --outfile dist/bin/transcript-tui.js --target node
 
       - name: Verify CLIs are executable
         run: |
@@ -86,6 +81,7 @@ jobs:
           # Test that built CLIs work with Node.js
           node dist/bin/hooks.js --help
           node dist/bin/hooks.js --list-handlers
+          node dist/bin/sesh.js --version
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
