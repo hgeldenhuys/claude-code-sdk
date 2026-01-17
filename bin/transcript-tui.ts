@@ -179,6 +179,14 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
   return null;
 }
 
+/**
+ * Escape curly braces for blessed markup
+ * In blessed, {open} = { and {close} = }
+ */
+function escapeBlessedMarkup(text: string): string {
+  return text.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+}
+
 function formatTimestamp(timestamp: string): string {
   try {
     const date = new Date(timestamp);
@@ -471,18 +479,18 @@ function renderCurrentLine(): string {
 
   switch (state.viewMode) {
     case 'raw':
-      // Raw JSON - don't escape, just show as-is (disable tags interpretation)
-      return viewLabel('raw', 'yellow') + formatJson(line, true);
+      // Raw JSON - escape curly braces so blessed doesn't interpret them as tags
+      return viewLabel('raw', 'yellow') + escapeBlessedMarkup(formatJson(line, true));
 
     case 'human': {
-      const content = renderLine(line).fullContent;
+      const content = escapeBlessedMarkup(renderLine(line).fullContent);
       const usage = getCumulativeUsage(line);
       const usageStr = `\n\n{cyan-fg}[Context: ${usage.total.toLocaleString()} tokens (in: ${usage.input.toLocaleString()}, out: ${usage.output.toLocaleString()})]{/cyan-fg}`;
       return viewLabel('human', 'green') + content + usageStr;
     }
 
     case 'minimal':
-      return viewLabel('minimal', 'magenta') + (formatMinimal(line) || '(empty)');
+      return viewLabel('minimal', 'magenta') + escapeBlessedMarkup(formatMinimal(line) || '(empty)');
 
     case 'context': {
       // Show conversation thread (user prompt + response) from full transcript
@@ -491,7 +499,7 @@ function renderCurrentLine(): string {
       const parts: string[] = [];
 
       for (const threadLine of thread) {
-        parts.push(renderLine(threadLine).fullContent);
+        parts.push(escapeBlessedMarkup(renderLine(threadLine).fullContent));
         parts.push('');
       }
 
@@ -529,14 +537,15 @@ function renderCurrentLine(): string {
 
       try {
         const rendered = marked(textContent) as string;
-        return viewLabel('markdown', 'red') + `--- Line ${line.lineNumber} [${line.type}] ---\n\n${rendered}`;
+        // Escape curly braces in rendered markdown (may contain code blocks with JSON)
+        return viewLabel('markdown', 'red') + `--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(rendered)}`;
       } catch {
-        return viewLabel('markdown', 'red') + `--- Line ${line.lineNumber} [${line.type}] ---\n\n${textContent}`;
+        return viewLabel('markdown', 'red') + `--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(textContent)}`;
       }
     }
 
     default:
-      return renderLine(line).fullContent;
+      return escapeBlessedMarkup(renderLine(line).fullContent);
   }
 }
 
