@@ -19,7 +19,7 @@
  * ```
  */
 
-import type { HandlerDefinition, HandlerFn, ConditionFn, ErrorStrategy } from './types';
+import type { ConditionFn, ErrorStrategy, HandlerDefinition, HandlerFn } from './types';
 
 export class HandlerBuilder<TState = Record<string, unknown>> {
   private definition: Partial<HandlerDefinition<TState>> = {
@@ -205,7 +205,10 @@ export function logHandler<TState = Record<string, unknown>>(
  */
 export function validateHandler<TState = Record<string, unknown>>(
   id: string,
-  validateFn: (ctx: import('./types').PipelineContext<TState>) => { valid: boolean; reason?: string }
+  validateFn: (ctx: import('./types').PipelineContext<TState>) => {
+    valid: boolean;
+    reason?: string;
+  }
 ): HandlerDefinition<TState> {
   return handler<TState>()
     .id(id)

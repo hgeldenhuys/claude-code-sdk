@@ -5,14 +5,18 @@
  * Provides factory functions and a lookup map.
  */
 
-import type { HandlerDefinition } from '../types';
-import type { BuiltinHandlerType, BuiltinHandlerOptions, ResolvedHandlerConfig } from '../config/types';
+import type {
+  BuiltinHandlerOptions,
+  BuiltinHandlerType,
+  ResolvedHandlerConfig,
+} from '../config/types';
 import type { HookEventType } from '../framework';
+import type { HandlerDefinition } from '../types';
 
+import { createContextInjectionHandler } from './context-injection';
+import { createDangerousCommandGuardHandler } from './dangerous-command-guard';
 // Handler factories
 import { createSessionNamingHandler } from './session-naming';
-import { createDangerousCommandGuardHandler } from './dangerous-command-guard';
-import { createContextInjectionHandler } from './context-injection';
 import { createToolLoggerHandler } from './tool-logger';
 import { createTurnTrackerHandler } from './turn-tracker';
 
@@ -24,7 +28,9 @@ import { createTurnTrackerHandler } from './turn-tracker';
  * Factory function type for creating handlers
  */
 export type HandlerFactory<T extends BuiltinHandlerType = BuiltinHandlerType> = (
-  options?: T extends keyof BuiltinHandlerOptions ? BuiltinHandlerOptions[T] : Record<string, unknown>
+  options?: T extends keyof BuiltinHandlerOptions
+    ? BuiltinHandlerOptions[T]
+    : Record<string, unknown>
 ) => HandlerDefinition;
 
 /**
@@ -66,7 +72,7 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
   'context-injection': {
     id: 'context-injection',
     name: 'Context Injection',
-    description: 'Injects session context into Claude\'s context',
+    description: "Injects session context into Claude's context",
     defaultEvents: ['SessionStart', 'PreCompact'],
     defaultPriority: 30,
     factory: createContextInjectionHandler as HandlerFactory,
@@ -83,7 +89,14 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
     id: 'turn-tracker',
     name: 'Turn Tracker',
     description: 'Tracks turns within a session based on Stop events',
-    defaultEvents: ['SessionStart', 'Stop', 'SubagentStop', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse'],
+    defaultEvents: [
+      'SessionStart',
+      'Stop',
+      'SubagentStop',
+      'UserPromptSubmit',
+      'PreToolUse',
+      'PostToolUse',
+    ],
     defaultPriority: 5,
     factory: createTurnTrackerHandler as HandlerFactory,
   },
@@ -193,9 +206,7 @@ export function getDefaultPriority(type: BuiltinHandlerType): number {
 // ============================================================================
 
 // Session Naming
-export {
-  createSessionNamingHandler,
-} from './session-naming';
+export { createSessionNamingHandler } from './session-naming';
 
 // Dangerous Command Guard
 export {

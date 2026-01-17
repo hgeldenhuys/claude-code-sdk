@@ -5,14 +5,10 @@
  * This is the main integration point between config and framework.
  */
 
-import { createFramework, type HookFramework, type HookEventType } from '../framework';
-import type { YamlConfig, ResolvedConfig } from './types';
+import { type HookEventType, type HookFramework, createFramework } from '../framework';
+import { createHandlerFromConfig, getDefaultEvents, isBuiltinHandler } from '../handlers';
 import { loadResolvedConfig, resolveConfig } from './loader';
-import {
-  createHandlerFromConfig,
-  isBuiltinHandler,
-  getDefaultEvents,
-} from '../handlers';
+import type { ResolvedConfig, YamlConfig } from './types';
 
 // ============================================================================
 // Factory Functions
@@ -66,11 +62,12 @@ export function createFrameworkFromResolvedConfig(config: ResolvedConfig): HookF
     }
 
     // Register handler for each configured event
-    const events = handlerConfig.events.length > 0
-      ? handlerConfig.events
-      : (isBuiltinHandler(handlerConfig.type)
-        ? getDefaultEvents(handlerConfig.type)
-        : []);
+    const events =
+      handlerConfig.events.length > 0
+        ? handlerConfig.events
+        : isBuiltinHandler(handlerConfig.type)
+          ? getDefaultEvents(handlerConfig.type)
+          : [];
 
     for (const event of events) {
       framework.on(event as HookEventType, {

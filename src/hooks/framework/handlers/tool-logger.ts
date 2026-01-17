@@ -7,9 +7,9 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
-import type { ToolLoggerOptions } from '../config/types';
 import type { PostToolUseInput } from '../../types';
+import type { ToolLoggerOptions } from '../config/types';
+import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
 // ============================================================================
 // Types
@@ -51,9 +51,7 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 /**
  * Create a tool-logger handler with the given options
  */
-export function createToolLoggerHandler(
-  options: ToolLoggerOptions = {}
-): HandlerDefinition {
+export function createToolLoggerHandler(options: ToolLoggerOptions = {}): HandlerDefinition {
   const {
     logLevel = 'info',
     outputPath,
@@ -253,9 +251,7 @@ function formatInputForText(input: Record<string, unknown>): string {
 
   // For Bash commands, show the command
   if (input.command && typeof input.command === 'string') {
-    const cmd = input.command.length > 100
-      ? `${input.command.slice(0, 100)}...`
-      : input.command;
+    const cmd = input.command.length > 100 ? `${input.command.slice(0, 100)}...` : input.command;
     return `command="${cmd}"`;
   }
 
@@ -285,7 +281,7 @@ function formatOutputForText(output: unknown): string {
   }
 
   if (typeof output === 'object' && output !== null) {
-    return `[object]`;
+    return '[object]';
   }
 
   return String(output);

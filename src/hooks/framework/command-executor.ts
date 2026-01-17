@@ -15,7 +15,7 @@
 
 import { spawn } from 'node:child_process';
 import type { HookEvent } from '../types';
-import type { PipelineContext, HandlerResult } from './types';
+import type { HandlerResult, PipelineContext } from './types';
 
 // ============================================================================
 // Types
@@ -107,7 +107,9 @@ export function buildFrameworkEnv(context: PipelineContext): FrameworkEnvVars {
 /**
  * Execute an external command with framework context
  */
-export async function executeCommand(options: CommandExecutionOptions): Promise<CommandExecutionResult> {
+export async function executeCommand(
+  options: CommandExecutionOptions
+): Promise<CommandExecutionResult> {
   const { command, event, context, timeoutMs = 30000, cwd } = options;
 
   const startTime = Date.now();

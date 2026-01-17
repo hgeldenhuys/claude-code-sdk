@@ -7,11 +7,11 @@
  * Uses the existing NameGenerator from src/hooks/sessions/namer.ts.
  */
 
-import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
-import type { SessionNamingOptions } from '../config/types';
-import type { SessionStartInput } from '../../types';
 import { NameGenerator } from '../../sessions/namer';
-import { getSessionStore, listSessions, getSessionName } from '../../sessions/store';
+import { getSessionName, getSessionStore, listSessions } from '../../sessions/store';
+import type { SessionStartInput } from '../../types';
+import type { SessionNamingOptions } from '../config/types';
+import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
 // ============================================================================
 // Types
@@ -33,11 +33,7 @@ interface SessionNamingState {
 export function createSessionNamingHandler(
   options: SessionNamingOptions = {}
 ): HandlerDefinition<SessionNamingState> {
-  const {
-    format = 'adjective-animal',
-    separator = '-',
-    includeTimestamp = false,
-  } = options;
+  const { format = 'adjective-animal', separator = '-', includeTimestamp = false } = options;
 
   // Create name generator based on format
   const nameGenerator = new NameGenerator({ separator });
@@ -138,8 +134,6 @@ function generateSessionName(
     case 'uuid':
       name = crypto.randomUUID().slice(0, 8);
       break;
-
-    case 'adjective-animal':
     default: {
       // Get existing names to avoid collisions
       const existingNames = new Set(listSessions().map((s) => s.name));
@@ -163,10 +157,7 @@ function buildContextMessage(
   event: SessionStartInput,
   isNew: boolean
 ): string {
-  const lines: string[] = [
-    '<session-info>',
-    `Session: ${sessionName}`,
-  ];
+  const lines: string[] = ['<session-info>', `Session: ${sessionName}`];
 
   // Add source if not startup
   if (event.source && event.source !== 'startup') {

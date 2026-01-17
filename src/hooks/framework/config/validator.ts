@@ -5,18 +5,18 @@
  * Returns detailed error messages with field paths.
  */
 
+import type { HookEventType } from '../framework';
+import type { ErrorStrategy } from '../types';
 import type {
-  YamlConfig,
-  ValidationResult,
-  ValidationError,
   BuiltinHandlerType,
-  HandlerConfig,
-  FrameworkSettings,
   BuiltinsConfig,
   CustomHandlerConfig,
+  FrameworkSettings,
+  HandlerConfig,
+  ValidationError,
+  ValidationResult,
+  YamlConfig,
 } from './types';
-import type { ErrorStrategy } from '../types';
-import type { HookEventType } from '../framework';
 
 // ============================================================================
 // Constants
@@ -252,7 +252,13 @@ function validateBuiltins(
 
     if (config !== undefined && config !== null) {
       validateHandlerConfig(config, `${path}.${name}`, errors, warnings);
-      validateBuiltinOptions(name as BuiltinHandlerType, config, `${path}.${name}`, errors, warnings);
+      validateBuiltinOptions(
+        name as BuiltinHandlerType,
+        config,
+        `${path}.${name}`,
+        errors,
+        warnings
+      );
     }
   }
 }
@@ -431,7 +437,10 @@ function validateSessionNamingOptions(
   errors: ValidationError[],
   warnings: ValidationError[]
 ): void {
-  if (options.format !== undefined && !VALID_SESSION_NAMING_FORMATS.includes(options.format as string)) {
+  if (
+    options.format !== undefined &&
+    !VALID_SESSION_NAMING_FORMATS.includes(options.format as string)
+  ) {
     errors.push({
       path: `${path}.format`,
       message: `Invalid format: ${options.format}`,

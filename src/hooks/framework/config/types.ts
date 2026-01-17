@@ -5,8 +5,8 @@
  * Supports both built-in handlers and custom handler definitions.
  */
 
-import type { ErrorStrategy } from '../types';
 import type { HookEventType } from '../framework';
+import type { ErrorStrategy } from '../types';
 
 // ============================================================================
 // Built-in Handler Types
@@ -116,7 +116,9 @@ export interface HandlerConfig<T extends BuiltinHandlerType = BuiltinHandlerType
   /** Execution priority (lower = earlier, default: 100) */
   priority?: number;
   /** Handler-specific options */
-  options?: T extends keyof BuiltinHandlerOptions ? BuiltinHandlerOptions[T] : Record<string, unknown>;
+  options?: T extends keyof BuiltinHandlerOptions
+    ? BuiltinHandlerOptions[T]
+    : Record<string, unknown>;
   /** Event types this handler responds to (default: depends on handler) */
   events?: HookEventType[];
   /** Handler IDs that must run before this one */
@@ -248,5 +250,7 @@ export interface ResolvedConfig {
  * Factory function for creating built-in handlers
  */
 export type BuiltinHandlerFactory<T extends BuiltinHandlerType = BuiltinHandlerType> = (
-  options: T extends keyof BuiltinHandlerOptions ? BuiltinHandlerOptions[T] : Record<string, unknown>
+  options: T extends keyof BuiltinHandlerOptions
+    ? BuiltinHandlerOptions[T]
+    : Record<string, unknown>
 ) => import('../types').HandlerDefinition;

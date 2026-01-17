@@ -8,15 +8,15 @@
  * - Shared context/state
  */
 
+import type { HookEvent } from '../types';
 import type {
-  PipelineConfig,
-  PipelineContext,
-  PipelineResult,
   HandlerDefinition,
   HandlerResult,
   HookOutput,
+  PipelineConfig,
+  PipelineContext,
+  PipelineResult,
 } from './types';
-import type { HookEvent } from '../types';
 
 // ============================================================================
 // Pipeline Executor
@@ -66,10 +66,22 @@ export class HookPipeline<TState = Record<string, unknown>> {
 
       if (this.config.parallelExecution) {
         // Execute with parallel optimization
-        await this.executeParallel(handlers, context, executedHandlers, skippedHandlers, failedHandlers);
+        await this.executeParallel(
+          handlers,
+          context,
+          executedHandlers,
+          skippedHandlers,
+          failedHandlers
+        );
       } else {
         // Execute sequentially
-        await this.executeSequential(handlers, context, executedHandlers, skippedHandlers, failedHandlers);
+        await this.executeSequential(
+          handlers,
+          context,
+          executedHandlers,
+          skippedHandlers,
+          failedHandlers
+        );
       }
 
       // Call onComplete hook
@@ -161,7 +173,9 @@ export class HookPipeline<TState = Record<string, unknown>> {
 
       if (ready.length === 0 && pending.size > 0) {
         // Circular dependency or missing dependency
-        console.error(`[HookPipeline] Circular or missing dependency detected. Pending: ${[...pending].join(', ')}`);
+        console.error(
+          `[HookPipeline] Circular or missing dependency detected. Pending: ${[...pending].join(', ')}`
+        );
         for (const id of pending) {
           failedHandlers.push(id);
         }
@@ -261,7 +275,7 @@ export class HookPipeline<TState = Record<string, unknown>> {
         }
 
         // Exponential backoff for retry
-        const backoffMs = Math.min(1000 * Math.pow(2, attempts - 1), 10000);
+        const backoffMs = Math.min(1000 * 2 ** (attempts - 1), 10000);
         await new Promise((resolve) => setTimeout(resolve, backoffMs));
       }
     }

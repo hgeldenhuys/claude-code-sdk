@@ -5,9 +5,9 @@
  * Supports configurable patterns and allow-lists.
  */
 
-import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
-import type { DangerousCommandGuardOptions } from '../config/types';
 import type { PreToolUseInput } from '../../types';
+import type { DangerousCommandGuardOptions } from '../config/types';
+import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
 // ============================================================================
 // Default Blocked Patterns
@@ -237,11 +237,7 @@ export function wouldBlock(
   command: string,
   options: DangerousCommandGuardOptions = {}
 ): { blocked: boolean; reason?: string; pattern?: string } {
-  const {
-    blockedPatterns = [],
-    allowedPatterns = [],
-    strict = false,
-  } = options;
+  const { blockedPatterns = [], allowedPatterns = [], strict = false } = options;
 
   const customBlockedRegex = compilePatterns(blockedPatterns);
   const customAllowedRegex = compilePatterns(allowedPatterns);

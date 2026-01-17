@@ -25,8 +25,8 @@
  */
 
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 import * as os from 'node:os';
+import * as path from 'node:path';
 import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 import type { BuiltinHandlerFactory, BuiltinHandlerMeta } from './index';
 
@@ -70,7 +70,11 @@ export function getCurrentTurnId(sessionId: string, sequence: number): string {
 /**
  * Generate a subagent turn ID
  */
-export function getSubagentTurnId(sessionId: string, sequence: number, subagentSeq: number): string {
+export function getSubagentTurnId(
+  sessionId: string,
+  sequence: number,
+  subagentSeq: number
+): string {
   return `${sessionId}:${sequence}:s:${subagentSeq}`;
 }
 
@@ -103,7 +107,11 @@ export function loadTurnState(sessionId: string, turnsDir: string = DEFAULT_TURN
 /**
  * Save turn state for a session
  */
-export function saveTurnState(sessionId: string, state: TurnState, turnsDir: string = DEFAULT_TURNS_DIR): void {
+export function saveTurnState(
+  sessionId: string,
+  state: TurnState,
+  turnsDir: string = DEFAULT_TURNS_DIR
+): void {
   // Ensure directory exists
   if (!fs.existsSync(turnsDir)) {
     fs.mkdirSync(turnsDir, { recursive: true });
@@ -123,11 +131,7 @@ export function saveTurnState(sessionId: string, state: TurnState, turnsDir: str
 export function createTurnTrackerHandler<TState = Record<string, unknown>>(
   options: TurnTrackerOptions = {}
 ): HandlerDefinition<TState> {
-  const {
-    turnsDir = DEFAULT_TURNS_DIR,
-    preserveOnResume = true,
-    injectContext = false,
-  } = options;
+  const { turnsDir = DEFAULT_TURNS_DIR, preserveOnResume = true, injectContext = false } = options;
 
   return {
     id: 'turn-tracker',
@@ -261,7 +265,14 @@ export const turnTrackerMeta: BuiltinHandlerMeta = {
   id: 'turn-tracker',
   name: 'Turn Tracker',
   description: 'Tracks turns within a session based on Stop events',
-  defaultEvents: ['SessionStart', 'Stop', 'SubagentStop', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse'],
+  defaultEvents: [
+    'SessionStart',
+    'Stop',
+    'SubagentStop',
+    'UserPromptSubmit',
+    'PreToolUse',
+    'PostToolUse',
+  ],
   defaultPriority: 5,
   optionsSchema: {
     turns_dir: {

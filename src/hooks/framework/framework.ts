@@ -29,8 +29,8 @@
 
 import * as fs from 'node:fs';
 import type { HookEvent } from '../types';
-import type { HandlerDefinition, PipelineConfig, PipelineResult, HookOutput } from './types';
-import { HookPipeline, createPipeline } from './pipeline';
+import { type HookPipeline, createPipeline } from './pipeline';
+import type { HandlerDefinition, HookOutput, PipelineConfig, PipelineResult } from './types';
 
 // ============================================================================
 // Hook Event Types

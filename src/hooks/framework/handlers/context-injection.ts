@@ -5,10 +5,10 @@
  * Supports customizable templates with variable substitution.
  */
 
-import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
-import type { ContextInjectionOptions } from '../config/types';
-import type { SessionStartInput, PreCompactInput } from '../../types';
 import { getSessionName } from '../../sessions/store';
+import type { PreCompactInput, SessionStartInput } from '../../types';
+import type { ContextInjectionOptions } from '../config/types';
+import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
 // ============================================================================
 // Default Template
@@ -46,7 +46,7 @@ export function createContextInjectionHandler(
   return {
     id: 'context-injection',
     name: 'Context Injection',
-    description: 'Injects session context into Claude\'s context',
+    description: "Injects session context into Claude's context",
     priority: 30,
     enabled: true,
     handler: async (ctx: PipelineContext): Promise<HandlerResult> => {
@@ -210,10 +210,7 @@ export function previewContext(
   options: ContextInjectionOptions,
   overrides: Partial<ContextData> = {}
 ): string {
-  const {
-    template = DEFAULT_TEMPLATE,
-    variables = {},
-  } = options;
+  const { template = DEFAULT_TEMPLATE, variables = {} } = options;
 
   const data: ContextData = {
     sessionId: 'example-session-id',

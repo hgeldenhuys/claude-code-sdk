@@ -8,14 +8,19 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import type { YamlConfig, ResolvedConfig, ResolvedHandlerConfig, FrameworkSettings } from './types';
+import type { FrameworkSettings, ResolvedConfig, ResolvedHandlerConfig, YamlConfig } from './types';
 import { validateConfig } from './validator';
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const DEFAULT_CONFIG_PATHS = ['./hooks.yaml', './hooks.yml', './.claude/hooks.yaml', './.claude/hooks.yml'];
+const DEFAULT_CONFIG_PATHS = [
+  './hooks.yaml',
+  './hooks.yml',
+  './.claude/hooks.yaml',
+  './.claude/hooks.yml',
+];
 
 const DEFAULT_SETTINGS: Required<FrameworkSettings> = {
   debug: false,
@@ -70,7 +75,9 @@ export function loadConfig(configPath?: string): YamlConfig {
 
   // Log warnings if debug mode
   if (config.settings?.debug && validation.warnings.length > 0) {
-    const warningMessages = validation.warnings.map((w) => `  - ${w.path}: ${w.message}`).join('\n');
+    const warningMessages = validation.warnings
+      .map((w) => `  - ${w.path}: ${w.message}`)
+      .join('\n');
     console.error(`[Config] Warnings:\n${warningMessages}`);
   }
 
@@ -115,7 +122,11 @@ export function resolveConfig(config: YamlConfig): ResolvedConfig {
 
       handlers.push({
         id: name,
-        type: name as 'session-naming' | 'dangerous-command-guard' | 'context-injection' | 'tool-logger',
+        type: name as
+          | 'session-naming'
+          | 'dangerous-command-guard'
+          | 'context-injection'
+          | 'tool-logger',
         enabled: handlerConfig.enabled ?? true,
         priority: handlerConfig.priority ?? defaults.priority,
         events: (handlerConfig.events ?? defaults.events) as import('../framework').HookEventType[],
