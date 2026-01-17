@@ -618,6 +618,8 @@ interface SearchArgs {
   limit?: number;
   types?: string;
   json?: boolean;
+  sessionIds?: string[];
+  sessionName?: string;
 }
 
 async function cmdSearch(args: SearchArgs): Promise<number> {
@@ -630,6 +632,8 @@ async function cmdSearch(args: SearchArgs): Promise<number> {
       query: args.query,
       limit: args.limit || 50,
       types: types as any,
+      sessionIds: args.sessionIds,
+      sessionName: args.sessionName,
     });
 
     if (results.length === 0) {
@@ -927,6 +931,8 @@ async function main(): Promise<number> {
         limit: flags.limit as number | undefined,
         types: flags.types as string | undefined,
         json: flags.json as boolean | undefined,
+        sessionIds: flags.sessionIds as string[] | undefined,
+        sessionName: flags.sessionNameLookup as string | undefined,
       });
 
     case 'info':

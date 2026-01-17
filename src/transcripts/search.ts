@@ -3,10 +3,45 @@
  * Search across Claude Code session transcripts
  */
 
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { findTranscriptFiles } from './indexer';
 import { extractTextContent, parseTranscriptFile } from './parser';
 import type { SearchOptions, SearchResult, TranscriptLine } from './types';
+
+/**
+ * Resolve a session name to all its historical session IDs using sesh
+ */
+function resolveSessionNameToIds(sessionName: string): string[] {
+  try {
+    const seshPath = join(__dirname, '../../bin/sesh.ts');
+    const result = spawnSync('bun', [seshPath, 'info', sessionName, '--json'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    if (result.status !== 0 || !result.stdout) {
+      return [sessionName];
+    }
+
+    const info = JSON.parse(result.stdout);
+    const ids: string[] = [];
+
+    if (info.sessionId) {
+      ids.push(info.sessionId);
+    }
+    if (info.history && Array.isArray(info.history)) {
+      for (const h of info.history) {
+        if (h.sessionId) {
+          ids.push(h.sessionId);
+        }
+      }
+    }
+    return ids.length > 0 ? ids : [sessionName];
+  } catch {
+    return [sessionName];
+  }
+}
 
 /**
  * Search across transcripts for matching content
@@ -14,10 +49,20 @@ import type { SearchOptions, SearchResult, TranscriptLine } from './types';
  * @returns Array of search results sorted by score
  */
 export async function searchTranscripts(options: SearchOptions): Promise<SearchResult[]> {
-  const { query, limit = 50, contextLines = 2, types, projectPath } = options;
+  const { query, limit = 50, contextLines = 2, types, projectPath, sessionIds, sessionName } =
+    options;
 
   if (!query.trim()) {
     return [];
+  }
+
+  // Resolve session filters
+  let allowedSessionIds: Set<string> | null = null;
+  if (sessionIds && sessionIds.length > 0) {
+    allowedSessionIds = new Set(sessionIds);
+  } else if (sessionName) {
+    const resolvedIds = resolveSessionNameToIds(sessionName);
+    allowedSessionIds = new Set(resolvedIds);
   }
 
   const projectsDir = projectPath || join(process.env.HOME || '~', '.claude', 'projects');
@@ -33,6 +78,11 @@ export async function searchTranscripts(options: SearchOptions): Promise<SearchR
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         if (!line) continue;
+
+        // Filter by session IDs if specified
+        if (allowedSessionIds && !allowedSessionIds.has(line.sessionId)) {
+          continue;
+        }
 
         // Filter by types if specified
         if (types && types.length > 0 && !types.includes(line.type)) {

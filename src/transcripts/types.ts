@@ -82,6 +82,10 @@ export interface SearchOptions {
   contextLines?: number;
   types?: TranscriptLine['type'][];
   projectPath?: string;
+  /** Filter to specific session IDs */
+  sessionIds?: string[];
+  /** Filter to sessions matching a session name (resolves via sesh) */
+  sessionName?: string;
 }
 
 /**
