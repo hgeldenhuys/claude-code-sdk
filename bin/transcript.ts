@@ -39,6 +39,9 @@ import {
   searchDb,
   updateIndex,
   watchTranscripts,
+  indexAllHookFiles,
+  updateHookIndex,
+  watchHookFiles,
   DEFAULT_DB_PATH,
 } from '../src/transcripts/db';
 import {
@@ -879,20 +882,31 @@ async function runDaemonProcess(): Promise<number> {
   const db = getDatabase();
   initSchema(db);
 
-  // Do an initial update
-  const result = await updateIndex(db);
-  appendLog(`Initial update: ${result.filesUpdated} files, +${result.newLines} lines`);
+  // Do an initial update for transcripts
+  const transcriptResult = await updateIndex(db);
+  appendLog(`Initial transcript update: ${transcriptResult.filesUpdated} files, +${transcriptResult.newLines} lines`);
 
-  // Start watching
-  const cleanup = watchTranscripts(db, undefined, (file, newLines) => {
+  // Do an initial update for hook events
+  const hookResult = await updateHookIndex(db);
+  appendLog(`Initial hook update: ${hookResult.filesUpdated} files, +${hookResult.newEvents} events`);
+
+  // Start watching transcripts
+  const cleanupTranscripts = watchTranscripts(db, undefined, (file, newLines) => {
     const fileName = file.split('/').pop() || file;
-    appendLog(`${fileName}: +${newLines} lines indexed`);
+    appendLog(`[transcript] ${fileName}: +${newLines} lines indexed`);
+  });
+
+  // Start watching hook events
+  const cleanupHooks = watchHookFiles(db, undefined, (file, newEvents) => {
+    const fileName = file.split('/').pop() || file;
+    appendLog(`[hooks] ${fileName}: +${newEvents} events indexed`);
   });
 
   // Handle shutdown signals
   const shutdown = () => {
     appendLog('Daemon stopping...');
-    cleanup();
+    cleanupTranscripts();
+    cleanupHooks();
     db.close();
     removeDaemonPid();
     process.exit(0);
@@ -925,10 +939,17 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         console.log('SQLite Index Status\n');
         console.log(`Database:       ${stats.dbPath}`);
         console.log(`Size:           ${formatBytes(stats.dbSizeBytes)}`);
-        console.log(`Lines indexed:  ${stats.lineCount.toLocaleString()}`);
-        console.log(`Sessions:       ${stats.sessionCount.toLocaleString()}`);
-        console.log(`Last indexed:   ${stats.lastIndexed ? formatDate(stats.lastIndexed) : 'never'}`);
         console.log(`Version:        ${stats.version}`);
+        console.log('');
+        console.log('Transcripts:');
+        console.log(`  Lines indexed:  ${stats.lineCount.toLocaleString()}`);
+        console.log(`  Sessions:       ${stats.sessionCount.toLocaleString()}`);
+        console.log('');
+        console.log('Hook Events:');
+        console.log(`  Events indexed: ${stats.hookEventCount.toLocaleString()}`);
+        console.log(`  Hook files:     ${stats.hookFileCount.toLocaleString()}`);
+        console.log('');
+        console.log(`Last indexed:   ${stats.lastIndexed ? formatDate(stats.lastIndexed) : 'never'}`);
         return 0;
       }
 
@@ -939,14 +960,27 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         initSchema(db);
 
         const startTime = Date.now();
-        const result = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
+
+        // Index transcripts
+        console.log('Indexing transcripts...');
+        const transcriptResult = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
           const fileName = file.split('/').pop() || file;
           const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-          process.stdout.write(`\r[${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
+          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
         });
+        console.log(`\n  Indexed ${transcriptResult.filesIndexed} files, ${transcriptResult.linesIndexed.toLocaleString()} lines`);
+
+        // Index hook events
+        console.log('\nIndexing hook events...');
+        const hookResult = await indexAllHookFiles(db, undefined, (file, current, total, events) => {
+          const fileName = file.split('/').pop() || file;
+          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
+          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${events} events)`);
+        });
+        console.log(`\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`);
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`\n\nIndexed ${result.filesIndexed} files, ${result.linesIndexed.toLocaleString()} lines in ${elapsed}s`);
+        console.log(`\nTotal time: ${elapsed}s`);
 
         const stats = getDbStats(db);
         console.log(`Database size: ${formatBytes(stats.dbSizeBytes)}`);
@@ -962,14 +996,27 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         rebuildIndex(db);
 
         const startTime = Date.now();
-        const result = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
+
+        // Index transcripts
+        console.log('Indexing transcripts...');
+        const transcriptResult = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
           const fileName = file.split('/').pop() || file;
           const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-          process.stdout.write(`\r[${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
+          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
         });
+        console.log(`\n  Indexed ${transcriptResult.filesIndexed} files, ${transcriptResult.linesIndexed.toLocaleString()} lines`);
+
+        // Index hook events
+        console.log('\nIndexing hook events...');
+        const hookResult = await indexAllHookFiles(db, undefined, (file, current, total, events) => {
+          const fileName = file.split('/').pop() || file;
+          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
+          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${events} events)`);
+        });
+        console.log(`\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`);
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`\n\nRebuilt index: ${result.filesIndexed} files, ${result.linesIndexed.toLocaleString()} lines in ${elapsed}s`);
+        console.log(`\nTotal time: ${elapsed}s`);
 
         const stats = getDbStats(db);
         console.log(`Database size: ${formatBytes(stats.dbSizeBytes)}`);
@@ -989,21 +1036,37 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         initSchema(db);
 
         const startTime = Date.now();
-        let skippedCount = 0;
-        const result = await updateIndex(db, undefined, (file, current, total, newLines, skipped) => {
+
+        // Update transcripts
+        console.log('Transcripts:');
+        let transcriptSkipped = 0;
+        const transcriptResult = await updateIndex(db, undefined, (file, current, total, newLines, skipped) => {
           if (skipped) {
-            skippedCount++;
+            transcriptSkipped++;
           } else if (newLines > 0) {
             const fileName = file.split('/').pop() || file;
             const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
             console.log(`  ${shortName}: +${newLines} lines`);
           }
         });
+        console.log(`  Checked ${transcriptResult.filesChecked} files, updated ${transcriptResult.filesUpdated}, +${transcriptResult.newLines.toLocaleString()} lines`);
+
+        // Update hook events
+        console.log('\nHook Events:');
+        let hookSkipped = 0;
+        const hookResult = await updateHookIndex(db, undefined, (file, current, total, newEvents, skipped) => {
+          if (skipped) {
+            hookSkipped++;
+          } else if (newEvents > 0) {
+            const fileName = file.split('/').pop() || file;
+            const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
+            console.log(`  ${shortName}: +${newEvents} events`);
+          }
+        });
+        console.log(`  Checked ${hookResult.filesChecked} files, updated ${hookResult.filesUpdated}, +${hookResult.newEvents.toLocaleString()} events`);
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`\nChecked ${result.filesChecked} files in ${elapsed}s`);
-        console.log(`  Updated: ${result.filesUpdated} files, +${result.newLines.toLocaleString()} new lines`);
-        console.log(`  Skipped: ${skippedCount} files (no changes)`);
+        console.log(`\nTotal time: ${elapsed}s`);
         db.close();
         return 0;
       }
@@ -1014,22 +1077,30 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
           return 1;
         }
 
-        console.log('Watching for transcript changes (Ctrl+C to stop)...\n');
+        console.log('Watching for transcript and hook changes (Ctrl+C to stop)...\n');
 
         const db = getDatabase();
         initSchema(db);
 
-        const cleanup = watchTranscripts(db, undefined, (file, newLines) => {
+        const cleanupTranscripts = watchTranscripts(db, undefined, (file, newLines) => {
           const fileName = file.split('/').pop() || file;
           const shortName = fileName.length > 50 ? fileName.slice(0, 47) + '...' : fileName;
           const time = new Date().toLocaleTimeString();
-          console.log(`[${time}] ${shortName}: +${newLines} lines indexed`);
+          console.log(`[${time}] [transcript] ${shortName}: +${newLines} lines indexed`);
+        });
+
+        const cleanupHooks = watchHookFiles(db, undefined, (file, newEvents) => {
+          const fileName = file.split('/').pop() || file;
+          const shortName = fileName.length > 50 ? fileName.slice(0, 47) + '...' : fileName;
+          const time = new Date().toLocaleTimeString();
+          console.log(`[${time}] [hooks] ${shortName}: +${newEvents} events indexed`);
         });
 
         // Handle Ctrl+C
         process.on('SIGINT', () => {
           console.log('\nStopping watch...');
-          cleanup();
+          cleanupTranscripts();
+          cleanupHooks();
           db.close();
           process.exit(0);
         });

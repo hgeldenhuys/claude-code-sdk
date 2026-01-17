@@ -460,6 +460,9 @@ handlers:
 | `dangerous-command-guard` | Blocks dangerous Bash commands | PreToolUse |
 | `context-injection` | Injects session/turn context | SessionStart, PreCompact |
 | `tool-logger` | Logs tool usage with context | PostToolUse |
+| `event-logger` | Logs all hook events to JSONL for indexing | All events |
+| `debug-logger` | Full payload logging for debugging | All events |
+| `metrics` | Records hook execution timing metrics | All events |
 
 ### Environment Variables for Custom Handlers
 

@@ -376,9 +376,52 @@ cat transcript.jsonl | jq -r '.gitBranch // empty' | sort -u
 - Be cautious when sharing transcript excerpts
 - Transcripts are local to your machine
 
+## Hook Event Integration
+
+When the `event-logger` hook handler is enabled, hook events are logged to `~/.claude/hooks/` and can be indexed alongside transcripts for unified analysis.
+
+### Enabling Hook Event Logging
+
+Add to your `hooks.yaml`:
+
+```yaml
+builtins:
+  event-logger:
+    enabled: true
+```
+
+### Unified Index
+
+The transcript CLI indexes both transcripts and hook events:
+
+```bash
+# Build unified index
+bun run bin/transcript.ts index build
+
+# Check status (shows transcript + hook counts)
+bun run bin/transcript.ts index status
+
+# Run daemon to watch both
+bun run bin/transcript.ts index daemon start
+```
+
+### SQL JOINs
+
+Query across transcripts and hook events:
+
+```sql
+-- Find blocked tool calls with transcript context
+SELECT h.toolName, h.decision, l.content_text
+FROM hook_events h
+JOIN lines l ON h.session_id = l.session_id AND h.tool_use_id = l.uuid
+WHERE h.decision = 'block';
+```
+
+See [TYPES.md](./TYPES.md) for complete hook event schema and JOIN patterns.
+
 ## Reference Files
 
 | File | Contents |
 |------|----------|
-| [TYPES.md](./TYPES.md) | Complete TypeScript type definitions |
+| [TYPES.md](./TYPES.md) | Complete TypeScript type definitions (includes hook events) |
 | [SEARCH.md](./SEARCH.md) | Advanced search patterns and queries |

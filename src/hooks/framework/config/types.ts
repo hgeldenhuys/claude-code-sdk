@@ -22,7 +22,8 @@ export type BuiltinHandlerType =
   | 'tool-logger'
   | 'turn-tracker'
   | 'debug-logger'
-  | 'metrics';
+  | 'metrics'
+  | 'event-logger';
 
 /**
  * Options for session-naming handler
@@ -129,6 +130,22 @@ export interface MetricsOptions {
 }
 
 /**
+ * Options for event-logger handler
+ */
+export interface EventLoggerOptions {
+  /** Base directory for hook logs (default: ~/.claude/hooks) */
+  outputDir?: string;
+  /** Include full hook input payload (default: true) */
+  includeInput?: boolean;
+  /** Include hook context (transcript_path, cwd, etc.) (default: true) */
+  includeContext?: boolean;
+  /** Include results from other handlers (default: true) */
+  includeHandlerResults?: boolean;
+  /** Event types to log (default: all) */
+  events?: string[];
+}
+
+/**
  * Map of built-in handler types to their options
  */
 export interface BuiltinHandlerOptions {
@@ -139,6 +156,7 @@ export interface BuiltinHandlerOptions {
   'turn-tracker': TurnTrackerOptions;
   'debug-logger': DebugLoggerOptions;
   'metrics': MetricsOptions;
+  'event-logger': EventLoggerOptions;
 }
 
 // ============================================================================
@@ -178,6 +196,7 @@ export interface BuiltinsConfig {
   'turn-tracker'?: HandlerConfig<'turn-tracker'>;
   'debug-logger'?: HandlerConfig<'debug-logger'>;
   'metrics'?: HandlerConfig<'metrics'>;
+  'event-logger'?: HandlerConfig<'event-logger'>;
 }
 
 /**

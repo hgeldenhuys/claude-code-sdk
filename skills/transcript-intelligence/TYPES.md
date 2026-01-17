@@ -928,6 +928,143 @@ function getSessionDuration(entries: TranscriptLine[]): number {
 
 ---
 
+## Hook Event JSONL Files
+
+When the `event-logger` built-in handler is enabled, hook events are logged to parallel JSONL files for analysis and indexing alongside transcripts.
+
+### File Location
+
+```
+~/.claude/hooks/<project-hash>/<session-id>.hooks.jsonl
+```
+
+### Hook Event Structure
+
+```typescript
+interface HookEventLogEntry {
+  /** Timestamp of the event */
+  timestamp: string;               // ISO 8601
+  /** Session ID (links to transcript file) */
+  sessionId: string;
+  /** Event type (PreToolUse, PostToolUse, etc.) */
+  eventType: string;
+  /** For tool events, the tool_use_id that links to transcript */
+  toolUseId?: string;
+  /** Tool name for tool events */
+  toolName?: string;
+  /** Handler decision (allow, block, etc.) */
+  decision?: string;
+  /** Results from all handlers */
+  handlerResults?: Record<string, unknown>;
+  /** Full hook input payload */
+  input?: HookInput;
+  /** Hook context (transcript_path, cwd, etc.) */
+  context?: {
+    hookEvent: string;
+    transcriptPath: string;
+    cwd: string;
+    claudeCodeVersion: string;
+  };
+  /** Line number in the hooks log file */
+  lineNumber?: number;
+}
+```
+
+### Example Hook Event
+
+```json
+{
+  "timestamp": "2026-01-17T18:30:00.000Z",
+  "sessionId": "4b58bed8-133c-49b5-bba5-1de5c23a2aa0",
+  "eventType": "PreToolUse",
+  "toolUseId": "toolu_01Sn7sJJy8hPGVLQNihopjYo",
+  "toolName": "Bash",
+  "decision": "allow",
+  "handlerResults": {
+    "dangerous-command-guard": { "allowed": true }
+  },
+  "input": {
+    "session_id": "4b58bed8-133c-49b5-bba5-1de5c23a2aa0",
+    "tool_name": "Bash",
+    "tool_input": { "command": "ls -la" },
+    "tool_use_id": "toolu_01Sn7sJJy8hPGVLQNihopjYo"
+  },
+  "context": {
+    "hookEvent": "PreToolUse",
+    "transcriptPath": "~/.claude/projects/-Users-me-project/4b58bed8.jsonl",
+    "cwd": "/Users/me/project",
+    "claudeCodeVersion": "2.0.76"
+  },
+  "lineNumber": 42
+}
+```
+
+### Linking Hook Events to Transcript Lines
+
+Hook events can be joined with transcript lines using these keys:
+
+| Hook Event | Join Key | Transcript Field |
+|------------|----------|------------------|
+| PreToolUse, PostToolUse | `toolUseId` | `message.content[].id` (tool_use blocks) |
+| UserPromptSubmit | Prompt text match | `message.content` (user messages) |
+| Stop, SubagentStop | `sessionId` | `sessionId` + last assistant message |
+| SessionStart, SessionEnd | `sessionId` | Transcript filename |
+
+### SQLite JOIN Example
+
+With the unified transcript/hook indexer:
+
+```sql
+-- Find all hook decisions for a specific tool call
+SELECT
+  h.eventType,
+  h.toolName,
+  h.decision,
+  l.content_text
+FROM hook_events h
+JOIN lines l ON h.session_id = l.session_id
+  AND h.tool_use_id = l.uuid
+WHERE h.tool_use_id = 'toolu_01Sn7sJJy8hPGVLQNihopjYo';
+
+-- Find blocked tool calls
+SELECT
+  h.timestamp,
+  h.toolName,
+  h.decision,
+  json_extract(h.handler_results, '$.dangerous-command-guard.reason') as block_reason
+FROM hook_events h
+WHERE h.decision = 'block';
+
+-- Session statistics with hook events
+SELECT
+  s.session_id,
+  s.slug,
+  COUNT(DISTINCT l.id) as transcript_lines,
+  COUNT(DISTINCT h.id) as hook_events
+FROM sessions s
+LEFT JOIN lines l ON s.session_id = l.session_id
+LEFT JOIN hook_events h ON s.session_id = h.session_id
+GROUP BY s.session_id;
+```
+
+### CLI Commands
+
+```bash
+# Build unified index (transcripts + hooks)
+bun run bin/transcript.ts index build
+
+# Check index status
+bun run bin/transcript.ts index status
+# Shows:
+#   Transcripts: N lines, M sessions
+#   Hook Events: X events, Y hook files
+
+# Watch for changes (both transcripts and hooks)
+bun run bin/transcript.ts index daemon start
+```
+
+---
+
 ## Related Files
 
 - **SKILL.md** - Main transcript intelligence skill

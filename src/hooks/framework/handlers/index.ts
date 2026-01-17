@@ -16,6 +16,7 @@ import type { HandlerDefinition } from '../types';
 import { createContextInjectionHandler } from './context-injection';
 import { createDangerousCommandGuardHandler } from './dangerous-command-guard';
 import { createDebugLoggerHandler } from './debug-logger';
+import { createEventLoggerHandler } from './event-logger';
 import { createMetricsHandler } from './metrics';
 // Handler factories
 import { createSessionNamingHandler } from './session-naming';
@@ -135,6 +136,23 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
     ],
     defaultPriority: 1, // Run first to capture full timing
     factory: createMetricsHandler as HandlerFactory,
+  },
+  'event-logger': {
+    id: 'event-logger',
+    name: 'Event Logger',
+    description: 'Logs hook events to JSONL files for transcript indexing and analysis',
+    defaultEvents: [
+      'SessionStart',
+      'UserPromptSubmit',
+      'PreToolUse',
+      'PostToolUse',
+      'Stop',
+      'SubagentStop',
+      'SessionEnd',
+      'PreCompact',
+    ],
+    defaultPriority: 998, // Run very late to capture all handler results
+    factory: createEventLoggerHandler as HandlerFactory,
   },
 };
 
@@ -290,6 +308,14 @@ export {
   now as metricsNow,
 } from './metrics';
 export type { MetricsOptions, TimingMetric, AggregateStats } from './metrics';
+
+// Event Logger
+export {
+  createEventLoggerHandler,
+  createLogEntry as createHookLogEntry,
+  DEFAULT_OUTPUT_DIR as DEFAULT_HOOKS_DIR,
+} from './event-logger';
+export type { EventLoggerOptions, HookEventLogEntry } from './event-logger';
 
 // Types for external factory usage
 export type { BuiltinHandlerFactory, BuiltinHandlerMeta } from './turn-tracker';

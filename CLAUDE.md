@@ -128,6 +128,31 @@ sesh rename old-name new-name
 sesh info my-project
 ```
 
+**transcript** - Transcript and hook event indexer with SQLite FTS:
+
+```bash
+# Build/rebuild unified index (transcripts + hook events)
+bun run bin/transcript.ts index build
+bun run bin/transcript.ts index rebuild
+
+# Check index status
+bun run bin/transcript.ts index status
+
+# Delta update (only new content)
+bun run bin/transcript.ts index update
+
+# Background daemon (watches for changes)
+bun run bin/transcript.ts index daemon start
+bun run bin/transcript.ts index daemon status
+bun run bin/transcript.ts index daemon stop
+
+# Search transcripts
+bun run bin/transcript.ts search "keyword"
+
+# TUI viewer
+bun run bin/transcript.ts tui
+```
+
 ### Documentation Tracking
 
 The `DocsTracker` module provides:

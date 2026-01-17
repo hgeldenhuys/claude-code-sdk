@@ -9,13 +9,15 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { findTranscriptFiles } from './indexer';
 import type { TranscriptLine, SearchResult } from './types';
 
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
 
 export interface DbStats {
   version: number;
   lineCount: number;
   sessionCount: number;
+  hookEventCount: number;
+  hookFileCount: number;
   lastIndexed: string | null;
   dbPath: string;
   dbSizeBytes: number;
@@ -153,6 +155,43 @@ export function initSchema(db: Database): void {
 
   // Index on session_id for session-based queries
   db.run('CREATE INDEX IF NOT EXISTS idx_sessions_session_id ON sessions(session_id)');
+
+  // Hook events table for storing hook event logs
+  db.run(`
+    CREATE TABLE IF NOT EXISTS hook_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      tool_use_id TEXT,
+      tool_name TEXT,
+      decision TEXT,
+      handler_results TEXT,
+      input_json TEXT,
+      context_json TEXT,
+      file_path TEXT NOT NULL,
+      line_number INTEGER NOT NULL
+    )
+  `);
+
+  // Indexes for hook events
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_session ON hook_events(session_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_tool_use ON hook_events(tool_use_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_event_type ON hook_events(event_type)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_timestamp ON hook_events(timestamp)');
+
+  // Hook files tracking table (for delta updates)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS hook_files (
+      file_path TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_count INTEGER NOT NULL,
+      byte_offset INTEGER NOT NULL DEFAULT 0,
+      first_timestamp TEXT,
+      last_timestamp TEXT,
+      indexed_at TEXT NOT NULL
+    )
+  `);
 
   // Set version
   db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)', ['version', String(DB_VERSION)]);
@@ -546,6 +585,335 @@ export function watchTranscripts(
   };
 }
 
+// ============================================================================
+// Hook Event Indexing
+// ============================================================================
+
+const DEFAULT_HOOKS_DIR = join(process.env.HOME || '~', '.claude', 'hooks');
+
+export interface HookIndexFileResult {
+  eventsIndexed: number;
+  byteOffset: number;
+  sessionId: string;
+}
+
+/**
+ * Find all hook event log files
+ */
+export async function findHookFiles(hooksDir?: string): Promise<string[]> {
+  const dir = hooksDir || DEFAULT_HOOKS_DIR;
+  const files: string[] = [];
+
+  if (!existsSync(dir)) {
+    return files;
+  }
+
+  const { readdirSync, statSync } = require('node:fs');
+
+  function scanDir(currentDir: string) {
+    try {
+      const entries = readdirSync(currentDir);
+      for (const entry of entries) {
+        const fullPath = join(currentDir, entry);
+        try {
+          const stat = statSync(fullPath);
+          if (stat.isDirectory()) {
+            scanDir(fullPath);
+          } else if (entry.endsWith('.hooks.jsonl')) {
+            files.push(fullPath);
+          }
+        } catch {
+          // Skip inaccessible files
+        }
+      }
+    } catch {
+      // Skip inaccessible directories
+    }
+  }
+
+  scanDir(dir);
+  return files;
+}
+
+/**
+ * Get hook file index state
+ */
+export function getHookFileIndexState(db: Database, filePath: string): { byteOffset: number; eventCount: number } | null {
+  const row = db.query('SELECT byte_offset, event_count FROM hook_files WHERE file_path = ?').get(filePath) as { byte_offset: number; event_count: number } | null;
+  if (!row) return null;
+  return { byteOffset: row.byte_offset, eventCount: row.event_count };
+}
+
+/**
+ * Index a single hook events file (full or delta)
+ */
+export function indexHookFile(
+  db: Database,
+  filePath: string,
+  fromByteOffset: number = 0,
+  startLineNumber: number = 1
+): HookIndexFileResult {
+  const file = Bun.file(filePath);
+  const fileSize = file.size;
+
+  if (fromByteOffset >= fileSize) {
+    return { eventsIndexed: 0, byteOffset: fromByteOffset, sessionId: '' };
+  }
+
+  let text: string;
+  try {
+    if (fromByteOffset > 0) {
+      const slice = file.slice(fromByteOffset);
+      text = new TextDecoder().decode(Bun.readableStreamToArrayBuffer(slice.stream()));
+    } else {
+      text = readFileSync(filePath, 'utf-8');
+    }
+  } catch {
+    return { eventsIndexed: 0, byteOffset: fromByteOffset, sessionId: '' };
+  }
+
+  if (!text.trim()) {
+    return { eventsIndexed: 0, byteOffset: fileSize, sessionId: '' };
+  }
+
+  let rawLines = text.split('\n');
+
+  // Handle partial line at start
+  if (fromByteOffset > 0 && rawLines.length > 0) {
+    const firstLine = rawLines[0] || '';
+    if (!firstLine.startsWith('{')) {
+      rawLines = rawLines.slice(1);
+    }
+  }
+
+  if (rawLines.length > 0 && !rawLines[rawLines.length - 1]?.trim()) {
+    rawLines.pop();
+  }
+
+  let indexedCount = 0;
+  let sessionId = '';
+  let firstTimestamp: string | null = null;
+  let lastTimestamp: string | null = null;
+  let lineNumber = startLineNumber;
+
+  const insertEvent = db.prepare(`
+    INSERT INTO hook_events
+    (session_id, timestamp, event_type, tool_use_id, tool_name, decision, handler_results, input_json, context_json, file_path, line_number)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const transaction = db.transaction(() => {
+    for (let i = 0; i < rawLines.length; i++) {
+      const rawLine = rawLines[i];
+      if (!rawLine?.trim()) continue;
+
+      try {
+        const parsed = JSON.parse(rawLine);
+
+        sessionId = parsed.sessionId || sessionId;
+        const timestamp = parsed.timestamp || '';
+        if (!firstTimestamp && timestamp) firstTimestamp = timestamp;
+        if (timestamp) lastTimestamp = timestamp;
+
+        insertEvent.run(
+          parsed.sessionId || '',
+          timestamp,
+          parsed.eventType || '',
+          parsed.toolUseId || null,
+          parsed.toolName || null,
+          parsed.decision || null,
+          parsed.handlerResults ? JSON.stringify(parsed.handlerResults) : null,
+          parsed.input ? JSON.stringify(parsed.input) : null,
+          parsed.context ? JSON.stringify(parsed.context) : null,
+          filePath,
+          lineNumber
+        );
+
+        indexedCount++;
+        lineNumber++;
+      } catch {
+        lineNumber++;
+        continue;
+      }
+    }
+  });
+
+  transaction();
+
+  const newByteOffset = fileSize;
+
+  // Update hook_files tracking table
+  if (sessionId || indexedCount > 0) {
+    if (fromByteOffset === 0) {
+      db.run(`
+        INSERT OR REPLACE INTO hook_files (file_path, session_id, event_count, byte_offset, first_timestamp, last_timestamp, indexed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [filePath, sessionId || 'unknown', lineNumber - 1, newByteOffset, firstTimestamp, lastTimestamp, new Date().toISOString()]);
+    } else {
+      db.run(`
+        UPDATE hook_files SET event_count = ?, byte_offset = ?, last_timestamp = ?, indexed_at = ?
+        WHERE file_path = ?
+      `, [lineNumber - 1, newByteOffset, lastTimestamp, new Date().toISOString(), filePath]);
+    }
+  }
+
+  return { eventsIndexed: indexedCount, byteOffset: newByteOffset, sessionId };
+}
+
+/**
+ * Index all hook event files
+ */
+export async function indexAllHookFiles(
+  db: Database,
+  hooksDir?: string,
+  onProgress?: (file: string, current: number, total: number, eventsIndexed: number) => void
+): Promise<{ filesIndexed: number; eventsIndexed: number }> {
+  const files = await findHookFiles(hooksDir);
+
+  let totalFiles = 0;
+  let totalEvents = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]!;
+    try {
+      const result = indexHookFile(db, file, 0, 1);
+      totalFiles++;
+      totalEvents += result.eventsIndexed;
+
+      if (onProgress) {
+        onProgress(file, i + 1, files.length, result.eventsIndexed);
+      }
+    } catch (err) {
+      console.error(`Error indexing hook file ${file}:`, err);
+    }
+  }
+
+  return { filesIndexed: totalFiles, eventsIndexed: totalEvents };
+}
+
+/**
+ * Update hook index with only new content (delta update)
+ */
+export async function updateHookIndex(
+  db: Database,
+  hooksDir?: string,
+  onProgress?: (file: string, current: number, total: number, newEvents: number, skipped: boolean) => void
+): Promise<{ filesChecked: number; filesUpdated: number; newEvents: number }> {
+  const files = await findHookFiles(hooksDir);
+
+  let filesChecked = 0;
+  let filesUpdated = 0;
+  let totalNewEvents = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]!;
+    filesChecked++;
+
+    try {
+      const state = getHookFileIndexState(db, file);
+      const fileSize = Bun.file(file).size;
+
+      if (state && state.byteOffset >= fileSize) {
+        if (onProgress) {
+          onProgress(file, i + 1, files.length, 0, true);
+        }
+        continue;
+      }
+
+      const fromOffset = state?.byteOffset || 0;
+      const startLine = state ? state.eventCount + 1 : 1;
+      const result = indexHookFile(db, file, fromOffset, startLine);
+
+      if (result.eventsIndexed > 0) {
+        filesUpdated++;
+        totalNewEvents += result.eventsIndexed;
+      }
+
+      if (onProgress) {
+        onProgress(file, i + 1, files.length, result.eventsIndexed, false);
+      }
+    } catch (err) {
+      console.error(`Error updating hook file ${file}:`, err);
+    }
+  }
+
+  return { filesChecked, filesUpdated, newEvents: totalNewEvents };
+}
+
+/**
+ * Watch for hook file changes and update index in real-time
+ */
+export function watchHookFiles(
+  db: Database,
+  hooksDir?: string,
+  onUpdate?: (file: string, newEvents: number) => void
+): () => void {
+  const { watch } = require('node:fs');
+  const dir = hooksDir || DEFAULT_HOOKS_DIR;
+
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  const fileStates = new Map<string, number>();
+
+  // Initialize with current state
+  findHookFiles(dir).then(files => {
+    for (const file of files) {
+      const state = getHookFileIndexState(db, file);
+      if (state) {
+        fileStates.set(file, state.byteOffset);
+      }
+    }
+  });
+
+  const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  const watcher = watch(dir, { recursive: true }, (eventType: string, filename: string | null) => {
+    if (!filename || !filename.endsWith('.hooks.jsonl')) return;
+
+    const filePath = join(dir, filename);
+
+    const existingTimer = debounceTimers.get(filePath);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    debounceTimers.set(filePath, setTimeout(() => {
+      debounceTimers.delete(filePath);
+
+      try {
+        if (!existsSync(filePath)) return;
+
+        const currentSize = Bun.file(filePath).size;
+        const lastOffset = fileStates.get(filePath) || 0;
+
+        if (currentSize > lastOffset) {
+          const state = getHookFileIndexState(db, filePath);
+          const fromOffset = state?.byteOffset || 0;
+          const startLine = state ? state.eventCount + 1 : 1;
+
+          const result = indexHookFile(db, filePath, fromOffset, startLine);
+
+          if (result.eventsIndexed > 0) {
+            fileStates.set(filePath, result.byteOffset);
+            if (onUpdate) {
+              onUpdate(filePath, result.eventsIndexed);
+            }
+          }
+        }
+      } catch {
+        // Ignore errors during watch
+      }
+    }, 100));
+  });
+
+  return () => {
+    watcher.close();
+    for (const timer of debounceTimers.values()) {
+      clearTimeout(timer);
+    }
+  };
+}
+
 /**
  * Search transcripts using FTS
  */
@@ -629,6 +997,18 @@ export function getDbStats(db: Database, dbPath: string = DEFAULT_DB_PATH): DbSt
   const lineCountRow = db.query('SELECT COUNT(*) as count FROM lines').get() as { count: number };
   const sessionCountRow = db.query('SELECT COUNT(*) as count FROM sessions').get() as { count: number };
 
+  // Hook event stats
+  let hookEventCount = 0;
+  let hookFileCount = 0;
+  try {
+    const hookEventRow = db.query('SELECT COUNT(*) as count FROM hook_events').get() as { count: number };
+    const hookFileRow = db.query('SELECT COUNT(*) as count FROM hook_files').get() as { count: number };
+    hookEventCount = hookEventRow?.count || 0;
+    hookFileCount = hookFileRow?.count || 0;
+  } catch {
+    // Tables might not exist yet
+  }
+
   let dbSizeBytes = 0;
   try {
     const file = Bun.file(dbPath);
@@ -641,6 +1021,8 @@ export function getDbStats(db: Database, dbPath: string = DEFAULT_DB_PATH): DbSt
     version: versionRow ? parseInt(versionRow.value, 10) : 0,
     lineCount: lineCountRow?.count || 0,
     sessionCount: sessionCountRow?.count || 0,
+    hookEventCount,
+    hookFileCount,
     lastIndexed: lastIndexedRow?.value || null,
     dbPath,
     dbSizeBytes,
@@ -667,9 +1049,10 @@ export function isDatabaseReady(dbPath: string = DEFAULT_DB_PATH): boolean {
 
 /**
  * Clear and rebuild the entire index
- * Also drops and recreates the sessions table to ensure schema is current
+ * Also drops and recreates the sessions and hook tables to ensure schema is current
  */
 export function rebuildIndex(db: Database): void {
+  // Clear transcript tables
   db.run('DELETE FROM lines');
   db.run('DELETE FROM lines_fts');
 
@@ -688,6 +1071,21 @@ export function rebuildIndex(db: Database): void {
     )
   `);
   db.run('CREATE INDEX IF NOT EXISTS idx_sessions_session_id ON sessions(session_id)');
+
+  // Clear hook tables
+  db.run('DELETE FROM hook_events');
+  db.run('DROP TABLE IF EXISTS hook_files');
+  db.run(`
+    CREATE TABLE hook_files (
+      file_path TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_count INTEGER NOT NULL,
+      byte_offset INTEGER NOT NULL DEFAULT 0,
+      first_timestamp TEXT,
+      last_timestamp TEXT,
+      indexed_at TEXT NOT NULL
+    )
+  `);
 
   db.run("DELETE FROM metadata WHERE key = 'last_indexed'");
 }

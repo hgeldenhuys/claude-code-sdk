@@ -49,9 +49,28 @@ export interface AggregateStats {
 // Capture the absolute earliest time we can
 const PROCESS_START_TIME = performance.now();
 
+// Track current event for exit logging
+let currentEvent: string | null = null;
+let exitHandlerRegistered = false;
+
 /** High-resolution timer */
 export function now(): number {
   return performance.now();
+}
+
+/**
+ * Register process exit handler to log total execution time
+ */
+function registerExitHandler(logToStderr: boolean): void {
+  if (exitHandlerRegistered) return;
+  exitHandlerRegistered = true;
+
+  process.on('exit', () => {
+    const totalTime = now() - PROCESS_START_TIME;
+    if (logToStderr && currentEvent) {
+      console.error(`[metrics] ${currentEvent} TOTAL: ${formatDuration(totalTime)}`);
+    }
+  });
 }
 
 /** Format duration in ms with precision */
@@ -181,6 +200,12 @@ export function createMetricsHandler(options: MetricsOptions = {}): HandlerDefin
     enabled: true,
     handler: async (ctx: PipelineContext): Promise<HandlerResult> => {
       const totalTimeToHandler = now() - PROCESS_START_TIME;
+
+      // Track event and register exit handler for total timing
+      currentEvent = ctx.eventType;
+      if (logToStderr) {
+        registerExitHandler(logToStderr);
+      }
 
       const metric: TimingMetric = {
         timestamp: new Date().toISOString(),
