@@ -30,6 +30,7 @@ const VALID_BUILTIN_HANDLERS: BuiltinHandlerType[] = [
   'turn-tracker',
   'debug-logger',
   'metrics',
+  'event-logger',
 ];
 
 const VALID_ERROR_STRATEGIES: ErrorStrategy[] = ['continue', 'stop', 'retry'];

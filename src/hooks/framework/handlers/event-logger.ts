@@ -8,10 +8,9 @@
  * Output format: ~/.claude/hooks/{project}/{session_id}.hooks.jsonl
  */
 
-import { existsSync, mkdirSync, appendFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import type { HookInput, HookContext, HookResult } from '../../types';
-import type { HandlerDefinition } from '../types';
+import { existsSync, mkdirSync, appendFileSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
 // ============================================================================
 // Types
@@ -46,9 +45,14 @@ export interface HookEventLogEntry {
   /** Results from all handlers */
   handlerResults?: Record<string, unknown>;
   /** Full hook input payload */
-  input?: HookInput;
-  /** Hook context (env vars as object) */
-  context?: Partial<HookContext>;
+  input?: unknown;
+  /** Hook context */
+  context?: {
+    hookEvent: string;
+    transcriptPath?: string;
+    cwd: string;
+    claudeCodeVersion?: string;
+  };
   /** Line number in the hooks log file */
   lineNumber?: number;
 }
@@ -64,12 +68,22 @@ const DEFAULT_OUTPUT_DIR = join(process.env.HOME || '~', '.claude', 'hooks');
  * ~/.claude/projects/-Users-foo-bar/session.jsonl -> -Users-foo-bar
  */
 function getProjectFromTranscriptPath(transcriptPath: string): string {
+  if (!transcriptPath) return 'unknown';
   const parts = transcriptPath.split('/');
   const projectsIndex = parts.indexOf('projects');
   if (projectsIndex >= 0 && parts[projectsIndex + 1]) {
     return parts[projectsIndex + 1];
   }
   return 'unknown';
+}
+
+/**
+ * Get the project from cwd if transcript path is not available
+ * /Users/foo/bar -> -Users-foo-bar
+ */
+function getProjectFromCwd(cwd: string): string {
+  if (!cwd) return 'unknown';
+  return cwd.replace(/\//g, '-').replace(/^-/, '');
 }
 
 /**
@@ -89,7 +103,6 @@ function getOutputPath(outputDir: string, project: string, sessionId: string): s
 function countLines(filePath: string): number {
   if (!existsSync(filePath)) return 0;
   try {
-    const { readFileSync } = require('node:fs');
     const content = readFileSync(filePath, 'utf-8');
     return content.split('\n').filter((l: string) => l.trim()).length;
   } catch {
@@ -98,49 +111,55 @@ function countLines(filePath: string): number {
 }
 
 /**
- * Create a log entry from hook input and context
+ * Create a log entry from pipeline context
  */
 export function createLogEntry(
-  input: HookInput,
-  context: HookContext,
-  handlerResults?: Record<string, unknown>,
+  ctx: PipelineContext,
   options?: EventLoggerOptions
 ): HookEventLogEntry {
   const entry: HookEventLogEntry = {
     timestamp: new Date().toISOString(),
-    sessionId: input.session_id,
-    eventType: context.hookEvent,
+    sessionId: ctx.sessionId,
+    eventType: ctx.eventType,
   };
 
   // Extract tool-specific fields for linking
-  if ('tool_use_id' in input && input.tool_use_id) {
-    entry.toolUseId = input.tool_use_id;
+  const event = ctx.event as Record<string, unknown>;
+  if (event.tool_use_id) {
+    entry.toolUseId = String(event.tool_use_id);
   }
-  if ('tool_name' in input && input.tool_name) {
-    entry.toolName = input.tool_name;
+  if (event.tool_name) {
+    entry.toolName = String(event.tool_name);
   }
 
   // Include handler results
-  if (options?.includeHandlerResults !== false && handlerResults) {
-    entry.handlerResults = handlerResults;
-    // Extract decision if present
-    if (handlerResults.decision) {
-      entry.decision = String(handlerResults.decision);
+  if (options?.includeHandlerResults !== false && ctx.results.size > 0) {
+    entry.handlerResults = {};
+    for (const [id, result] of ctx.results) {
+      entry.handlerResults[id] = {
+        success: result.success,
+        decision: result.decision,
+        data: result.data,
+        error: result.error,
+      };
+      // Extract decision from any handler
+      if (result.decision && !entry.decision) {
+        entry.decision = String(result.decision);
+      }
     }
   }
 
   // Include full input
   if (options?.includeInput !== false) {
-    entry.input = input;
+    entry.input = ctx.event;
   }
 
   // Include context
   if (options?.includeContext !== false) {
     entry.context = {
-      hookEvent: context.hookEvent,
-      transcriptPath: context.transcriptPath,
-      cwd: context.cwd,
-      claudeCodeVersion: context.claudeCodeVersion,
+      hookEvent: ctx.eventType,
+      transcriptPath: ctx.transcriptPath,
+      cwd: ctx.cwd,
     };
   }
 
@@ -170,34 +189,32 @@ export function createEventLoggerHandler(options?: EventLoggerOptions): HandlerD
     priority: 998, // Run very late to capture all handler results
     enabled: true,
 
-    handler: async (
-      input: HookInput,
-      context: HookContext,
-      handlerResults?: Record<string, unknown>
-    ): Promise<HookResult> => {
+    handler: async (ctx: PipelineContext): Promise<HandlerResult> => {
       try {
         // Check event filter
-        if (eventFilter && !eventFilter.has(context.hookEvent)) {
-          return { continue: true };
+        if (eventFilter && !eventFilter.has(ctx.eventType)) {
+          return { success: true, durationMs: 0 };
         }
 
-        // Determine output file
-        const project = getProjectFromTranscriptPath(context.transcriptPath || '');
-        const filePath = getOutputPath(outputDir, project, input.session_id);
+        // Determine output file - use transcript path if available, otherwise cwd
+        const project = ctx.transcriptPath
+          ? getProjectFromTranscriptPath(ctx.transcriptPath)
+          : getProjectFromCwd(ctx.cwd);
+        const filePath = getOutputPath(outputDir, project, ctx.sessionId);
 
         // Create log entry
-        const entry = createLogEntry(input, context, handlerResults, options);
+        const entry = createLogEntry(ctx, options);
         entry.lineNumber = countLines(filePath) + 1;
 
         // Append to file
         const line = JSON.stringify(entry) + '\n';
         appendFileSync(filePath, line);
 
-        return { continue: true };
+        return { success: true, durationMs: 0 };
       } catch (error) {
         // Don't fail the hook pipeline for logging errors
         console.error('[event-logger] Failed to log event:', error);
-        return { continue: true };
+        return { success: true, durationMs: 0, error: String(error) };
       }
     },
   };
