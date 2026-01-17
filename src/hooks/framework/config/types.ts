@@ -227,6 +227,8 @@ export interface ResolvedHandlerConfig {
   onError: ErrorStrategy;
   timeoutMs: number;
   options: Record<string, unknown>;
+  /** Command to execute for custom handlers */
+  command?: string;
 }
 
 /**

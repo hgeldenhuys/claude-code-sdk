@@ -184,7 +184,7 @@ builtins:
   # Events: SessionStart, Stop, SubagentStop, UserPromptSubmit, PreToolUse, PostToolUse
   # Priority: 5 (runs early to establish turn context)
   turn-tracker:
-    enabled: false    # Disabled by default - enable for turn tracking
+    enabled: true     # Enabled by default for turn tracking
     options:
       # Directory to store turn state files
       # turns_dir: "~/.claude/turns"

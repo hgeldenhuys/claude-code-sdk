@@ -87,5 +87,18 @@ export * from './config';
 // Built-in Handlers
 export * from './handlers';
 
+// Command Executor (for custom handlers)
+export {
+  executeCommand,
+  createCommandHandler,
+  buildFrameworkEnv,
+  parseCommandOutput,
+} from './command-executor';
+export type {
+  FrameworkEnvVars,
+  CommandExecutionOptions,
+  CommandExecutionResult,
+} from './command-executor';
+
 // Backward compatibility alias
 export * from './builtins';

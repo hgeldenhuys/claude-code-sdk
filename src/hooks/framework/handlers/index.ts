@@ -133,8 +133,25 @@ export function createBuiltinHandler(
  */
 export function createHandlerFromConfig(config: ResolvedHandlerConfig): HandlerDefinition | null {
   if (config.type === 'custom') {
-    // Custom handlers not supported via this registry
-    return null;
+    // Custom handlers require a command
+    if (!config.command) {
+      console.error(`[Handler] Custom handler '${config.id}' has no command defined`);
+      return null;
+    }
+
+    // Import dynamically to avoid circular dependency
+    const { createCommandHandler } = require('../command-executor');
+
+    return {
+      id: config.id,
+      name: config.id,
+      priority: config.priority,
+      enabled: config.enabled,
+      onError: config.onError,
+      timeoutMs: config.timeoutMs,
+      dependsOn: config.after,
+      handler: createCommandHandler(config.command, config.timeoutMs),
+    };
   }
 
   if (!isBuiltinHandler(config.type)) {

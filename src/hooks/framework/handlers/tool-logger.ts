@@ -22,6 +22,9 @@ interface LogEntry {
   timestamp: string;
   level: LogLevel;
   sessionId?: string;
+  sessionName?: string;
+  turnId?: string;
+  turnSequence?: number;
   toolName: string;
   durationMs?: number;
   input?: Record<string, unknown>;
@@ -101,11 +104,18 @@ export function createToolLoggerHandler(
         return { success: true, durationMs: 0 };
       }
 
+      // Extract context from other handlers
+      const turnTrackerResult = ctx.results.get('turn-tracker');
+      const sessionNamingResult = ctx.results.get('session-naming');
+
       // Build log entry
       const entry: LogEntry = {
         timestamp: new Date().toISOString(),
         level: entryLevel,
         sessionId: ctx.sessionId,
+        sessionName: sessionNamingResult?.data?.sessionName as string | undefined,
+        turnId: turnTrackerResult?.data?.turnId as string | undefined,
+        turnSequence: turnTrackerResult?.data?.sequence as number | undefined,
         toolName: event.tool_name,
         cwd: ctx.cwd,
       };
@@ -204,7 +214,13 @@ function formatEntry(entry: LogEntry, format: LogFormat): string {
     `Tool: ${entry.toolName}`,
   ];
 
-  if (entry.sessionId) {
+  if (entry.turnId) {
+    parts.push(`Turn: ${entry.turnId}`);
+  }
+
+  if (entry.sessionName) {
+    parts.push(`Session: ${entry.sessionName}`);
+  } else if (entry.sessionId) {
     parts.push(`Session: ${entry.sessionId.slice(0, 8)}...`);
   }
 

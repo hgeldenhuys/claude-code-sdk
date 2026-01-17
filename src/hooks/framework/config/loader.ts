@@ -142,6 +142,7 @@ export function resolveConfig(config: YamlConfig): ResolvedConfig {
         onError: handlerConfig.onError ?? settings.defaultErrorStrategy,
         timeoutMs: handlerConfig.timeoutMs ?? settings.defaultTimeoutMs,
         options: (handlerConfig.options ?? {}) as Record<string, unknown>,
+        command: handlerConfig.command,
       });
     }
   }
