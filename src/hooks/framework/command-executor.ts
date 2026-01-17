@@ -129,16 +129,25 @@ export async function executeCommand(
       cwd: cwd ?? context.cwd,
       shell: true,
       stdio: ['pipe', 'pipe', 'pipe'],
+      detached: true, // Create new process group for clean termination
     });
 
     let stdout = '';
     let stderr = '';
     let timedOut = false;
 
-    // Set timeout - use SIGKILL for forceful termination
+    // Set timeout - kill entire process group for clean termination
     const timeout = setTimeout(() => {
       timedOut = true;
-      child.kill('SIGKILL');
+      // Kill the entire process group (negative pid kills the group)
+      if (child.pid) {
+        try {
+          process.kill(-child.pid, 'SIGKILL');
+        } catch {
+          // Process may have already exited
+          child.kill('SIGKILL');
+        }
+      }
     }, timeoutMs);
 
     // Collect stdout
