@@ -392,6 +392,7 @@ interface DiagnosticResult {
 async function runDoctor(fix: boolean): Promise<void> {
   const fs = await import('fs');
   const path = await import('path');
+  const os = await import('os');
 
   const cwd = process.cwd();
   const results: DiagnosticResult[] = [];
@@ -462,6 +463,65 @@ async function runDoctor(fix: boolean): Promise<void> {
           name: 'Built-in handlers',
           status: 'warn',
           message: 'No built-in handlers enabled',
+        });
+      }
+
+      // 3b. Check event-logger specifically for hook event logging
+      const eventLoggerConfig = builtins['event-logger'] as { enabled?: boolean; options?: { outputDir?: string } } | undefined;
+      const hooksDir = eventLoggerConfig?.options?.outputDir || path.join(os.homedir(), '.claude', 'hooks');
+
+      if (eventLoggerConfig?.enabled) {
+        results.push({
+          name: 'Event logger',
+          status: 'pass',
+          message: `Enabled (logging to ${hooksDir})`,
+        });
+
+        // Check if hooks directory exists and has files
+        if (fs.existsSync(hooksDir)) {
+          const hookProjects = fs.readdirSync(hooksDir).filter(f =>
+            fs.statSync(path.join(hooksDir, f)).isDirectory()
+          );
+          if (hookProjects.length > 0) {
+            let totalHookFiles = 0;
+            for (const project of hookProjects) {
+              const projectDir = path.join(hooksDir, project);
+              const hookFiles = fs.readdirSync(projectDir).filter(f => f.endsWith('.hooks.jsonl'));
+              totalHookFiles += hookFiles.length;
+            }
+            results.push({
+              name: 'Hook event files',
+              status: 'pass',
+              message: `${totalHookFiles} .hooks.jsonl files in ${hookProjects.length} projects`,
+            });
+          } else {
+            results.push({
+              name: 'Hook event files',
+              status: 'warn',
+              message: 'No hook event files yet (will be created on first hook execution)',
+            });
+          }
+        } else {
+          results.push({
+            name: 'Hook event files',
+            status: 'warn',
+            message: `Hooks directory not found: ${hooksDir} (will be created on first hook execution)`,
+          });
+        }
+      } else {
+        results.push({
+          name: 'Event logger',
+          status: 'warn',
+          message: 'Disabled. Enable in hooks.yaml to log hook events for analysis.',
+          fix: async () => {
+            // Add event-logger to config
+            const yaml = await import('yaml');
+            const content = fs.readFileSync(foundConfig!, 'utf-8');
+            const cfg = yaml.parse(content);
+            cfg.builtins = cfg.builtins || {};
+            cfg.builtins['event-logger'] = { enabled: true };
+            fs.writeFileSync(foundConfig!, yaml.stringify(cfg));
+          },
         });
       }
 

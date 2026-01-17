@@ -50,5 +50,13 @@ builtins:
   debug-logger:
     enabled: false
 
+  # Event logger - logs hook events to JSONL for indexing
+  event-logger:
+    enabled: true
+    options:
+      includeInput: true
+      includeContext: true
+      includeHandlerResults: true
+
 # No custom subprocess handlers
 handlers: {}
