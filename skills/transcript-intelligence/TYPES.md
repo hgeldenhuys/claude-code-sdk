@@ -31,7 +31,8 @@ type TranscriptLineType =
   | 'file-history-snapshot' // File state tracking
   | 'system'                // System messages (hooks, etc.)
   | 'progress'              // Progress updates (hook events, etc.)
-  | 'summary';              // Session summary
+  | 'summary'               // Session summary
+  | 'queue-operation';      // Background task notifications
 ```
 
 ### Common Fields
@@ -401,7 +402,7 @@ interface TurnDuration extends SystemMessage {
 
 ### 5. Progress Message
 
-Progress updates during execution, primarily for hook events.
+Progress updates during execution for hooks, bash commands, and agents.
 
 ```typescript
 interface ProgressMessage extends TranscriptLineBase {
@@ -411,11 +412,32 @@ interface ProgressMessage extends TranscriptLineBase {
   parentToolUseID?: string;
 }
 
-interface ProgressData {
-  type: 'hook_progress';         // Hook is executing
+type ProgressData = HookProgressData | BashProgressData | AgentProgressData;
+
+// Hook execution progress
+interface HookProgressData {
+  type: 'hook_progress';
   hookEvent: HookEvent;          // Hook event type
   hookName: string;              // Hook name (e.g., "Stop", "PreToolUse:Read")
   command: string;               // Hook command being run
+}
+
+// Bash command execution progress
+interface BashProgressData {
+  type: 'bash_progress';
+  output: string;                // Current output
+  fullOutput: string;            // Complete output so far
+  elapsedTimeSeconds: number;    // Time elapsed
+  totalLines: number;            // Lines of output
+}
+
+// Subagent execution progress
+interface AgentProgressData {
+  type: 'agent_progress';
+  agentId: string;               // Agent identifier
+  prompt: string;                // Prompt sent to agent
+  message: UserMessage;          // Full message object
+  normalizedMessages: UserMessage[];  // Normalized message history
 }
 
 type HookEvent =
@@ -450,6 +472,48 @@ type HookEvent =
 }
 ```
 
+#### Example: Bash Progress
+
+```json
+{
+  "type": "progress",
+  "data": {
+    "type": "bash_progress",
+    "output": "",
+    "fullOutput": "",
+    "elapsedTimeSeconds": 2,
+    "totalLines": 0
+  },
+  "toolUseID": "bash-progress-0",
+  "parentToolUseID": "toolu_012whDpXyHYdc9x8dGeyMmQD",
+  "uuid": "011f76ed-2e9c-423a-9c77-35ab27729985",
+  "timestamp": "2026-01-16T17:57:04.065Z"
+}
+```
+
+#### Example: Agent Progress
+
+```json
+{
+  "type": "progress",
+  "data": {
+    "type": "agent_progress",
+    "agentId": "afd584e",
+    "prompt": "Transform this feature idea into a structured story...",
+    "message": {
+      "type": "user",
+      "message": { "role": "user", "content": [...] },
+      "uuid": "ca628575-bc63-469c-b1ec-e530d332e3c4"
+    },
+    "normalizedMessages": [...]
+  },
+  "toolUseID": "agent_msg_015m677AXZ6jL3c3E5SriGxb",
+  "parentToolUseID": "toolu_01NBGoTDbvsRCcWgFRGbDa1c",
+  "uuid": "be38f7c5-9b93-46a8-8905-fa34268597d9",
+  "timestamp": "2026-01-16T20:03:59.810Z"
+}
+```
+
 ---
 
 ### 6. Summary
@@ -476,16 +540,50 @@ interface SummaryMessage {
 
 ---
 
+### 7. Queue Operation
+
+Background task notifications (e.g., agent completion).
+
+```typescript
+interface QueueOperationMessage {
+  type: 'queue-operation';
+  operation: 'enqueue' | 'dequeue';  // Queue operation type
+  content: string;                   // Notification content (often XML)
+  sessionId: string;
+  timestamp: string;
+}
+```
+
+#### Example
+
+```json
+{
+  "type": "queue-operation",
+  "operation": "enqueue",
+  "timestamp": "2026-01-07T01:33:02.119Z",
+  "sessionId": "be59ef1a-4085-4f98-84ce-e9cbcb9500cc",
+  "content": "<agent-notification>\n<agent-id>a3564bc</agent-id>\n<output-file>/tmp/claude/.../tasks/a3564bc.output</output-file>\n<status>completed</status>\n<summary>Agent \"Create documentation\" completed.</summary>\nRead the output file to retrieve the full result.\n</agent-notification>"
+}
+```
+
+---
+
 ## Content Block Types
 
 Content within messages uses these block types:
 
 ```typescript
-type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock;
+type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock | ThinkingBlock;
 
 interface TextBlock {
   type: 'text';
   text: string;
+}
+
+interface ThinkingBlock {
+  type: 'thinking';
+  thinking: string;                // Claude's reasoning/chain-of-thought
+  signature?: string;              // Cryptographic signature (for verification)
 }
 
 interface ToolUseBlock {
@@ -500,6 +598,27 @@ interface ToolResultBlock {
   tool_use_id: string;             // Matches the tool_use id
   content: string;                 // Result content (often stdout)
   is_error: boolean;               // True if tool execution failed
+}
+```
+
+### Example: Thinking Block
+
+```json
+{
+  "type": "assistant",
+  "message": {
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "The user is asking about session management. Let me analyze the codebase structure first to understand how sessions are currently handled...",
+        "signature": "ErUBCkYIAxgC..."
+      },
+      {
+        "type": "text",
+        "text": "I'll help you with session management..."
+      }
+    ]
+  }
 }
 ```
 
@@ -802,6 +921,7 @@ function getSessionDuration(entries: TranscriptLine[]): number {
 
 | Version | Changes |
 |---------|---------|
+| 2.1.9 | Added `thinking` blocks, `queue-operation`, `bash_progress`, `agent_progress` |
 | 2.0.76 | Current format documented here |
 | 2.0.69 | Added hook summary system messages |
 | 2.0.x | Introduced agent transcripts |
