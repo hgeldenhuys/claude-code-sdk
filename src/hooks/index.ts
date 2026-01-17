@@ -113,3 +113,30 @@ export {
   type SessionAwareOptions,
   type HookContext,
 } from './helpers';
+
+// Framework (re-export for convenience)
+export {
+  // Framework
+  createFramework,
+  runFramework,
+  HookFramework,
+  // Built-in handlers
+  createSessionNamingHandler,
+  createTurnTrackerHandler,
+  createDangerousCommandGuardHandler,
+  createContextInjectionHandler,
+  createToolLoggerHandler,
+  createDebugLoggerHandler,
+  // Handler registry
+  builtinHandlers,
+  getBuiltinHandlerTypes,
+  isBuiltinHandler,
+  createBuiltinHandler,
+  // Builder
+  handler,
+  HandlerBuilder,
+  // Results
+  handlerResult,
+  blockResult,
+  injectResult,
+} from './framework';

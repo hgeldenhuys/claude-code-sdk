@@ -32,6 +32,10 @@
     "./hooks": {
       "import": "./dist/hooks/index.js",
       "types": "./dist/hooks/index.d.ts"
+    },
+    "./hooks/framework": {
+      "import": "./dist/hooks/framework/index.js",
+      "types": "./dist/hooks/framework/index.d.ts"
     }
   },
   "scripts": {
