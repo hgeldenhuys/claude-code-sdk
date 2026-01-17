@@ -252,6 +252,89 @@ const skills = manager.getByType('skill');
 const hooks = manager.getByType('hook');
 ```
 
+### Hook Framework
+
+Build Claude Code hooks with YAML configuration and built-in handlers:
+
+```yaml
+# hooks.yaml
+version: 1
+
+settings:
+  debug: false
+  parallelExecution: true
+  defaultTimeoutMs: 30000
+
+builtins:
+  session-naming:
+    enabled: true
+    options:
+      format: adjective-animal
+
+  turn-tracker:
+    enabled: true
+
+  dangerous-command-guard:
+    enabled: true
+    options:
+      blockedPatterns:
+        - "rm -rf /"
+
+  tool-logger:
+    enabled: true
+    options:
+      outputPath: ~/.claude/logs/tools.log
+
+handlers:
+  my-custom-hook:
+    events: [PreToolUse]
+    command: ./scripts/validate-tool.sh
+```
+
+**Built-in Handlers:**
+
+| Handler | Description | Default Events |
+|---------|-------------|----------------|
+| `session-naming` | Assigns human-friendly names (adjective-animal) | SessionStart |
+| `turn-tracker` | Tracks turns between Stop events | SessionStart, Stop, SubagentStop, PreToolUse, PostToolUse |
+| `dangerous-command-guard` | Blocks dangerous Bash commands | PreToolUse |
+| `context-injection` | Injects session context | SessionStart, PreCompact |
+| `tool-logger` | Logs tool usage with turn/session context | PostToolUse |
+
+**Environment Variables for Custom Handlers:**
+
+Custom command handlers receive these environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `CLAUDE_SESSION_ID` | Current session ID |
+| `CLAUDE_SESSION_NAME` | Human-friendly session name |
+| `CLAUDE_TURN_ID` | Turn identifier (session:sequence) |
+| `CLAUDE_TURN_SEQUENCE` | Current turn number |
+| `CLAUDE_EVENT_TYPE` | Hook event type |
+| `CLAUDE_CWD` | Current working directory |
+
+```typescript
+import { createFramework, handler, blockResult } from 'claude-code-sdk/hooks/framework';
+
+const framework = createFramework({ debug: true });
+
+framework.onPreToolUse(
+  handler()
+    .id('my-validator')
+    .forTools('Bash')
+    .handle(ctx => {
+      const input = ctx.event.tool_input as { command?: string };
+      if (input.command?.includes('rm -rf')) {
+        return blockResult('Dangerous command blocked');
+      }
+      return { success: true };
+    })
+);
+
+await framework.run();
+```
+
 ## CLI Tools
 
 ### Transcript Viewer CLI
@@ -414,8 +497,16 @@ src/
 ├── marketplace/       # Plugin marketplace
 ├── plugins/           # Plugin management
 ├── docs/              # Documentation tracker
-├── hooks/             # Hooks SDK and session naming
+├── hooks/             # Hooks SDK
+│   ├── framework/     # Hook framework (YAML config, pipelines)
+│   │   ├── handlers/  # Built-in handlers (session-naming, turn-tracker, etc.)
+│   │   └── config/    # YAML loader and validator
+│   └── sessions/      # Session naming module
 └── transcripts/       # Transcript parsing, viewing, search
+
+examples/              # Example implementations
+├── hooks.yaml         # Hook framework config example
+└── hooks/             # Hook script examples
 
 tests/                 # Test suites
 ```
