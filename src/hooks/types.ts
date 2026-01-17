@@ -207,3 +207,22 @@ export interface HookEnvironment {
   /** Tool input parameters (PreToolUse, PostToolUse) */
   [key: `TOOL_INPUT_${string}`]: string;
 }
+
+// ============================================================================
+// Generic Hook Event Type
+// ============================================================================
+
+/**
+ * Union type for all hook event inputs
+ */
+export type HookEvent =
+  | SessionStartInput
+  | SessionEndInput
+  | PreToolUseInput
+  | PostToolUseInput
+  | StopInput
+  | SubagentStartInput
+  | SubagentStopInput
+  | UserPromptSubmitInput
+  | PreCompactInput
+  | PermissionRequestInput;

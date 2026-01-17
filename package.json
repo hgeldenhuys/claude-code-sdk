@@ -9,7 +9,8 @@
   "bin": {
     "sesh": "./bin/sesh.ts",
     "transcript": "./bin/transcript.ts",
-    "transcript-tui": "./bin/transcript-tui.ts"
+    "transcript-tui": "./bin/transcript-tui.ts",
+    "hooks": "./bin/hooks.ts"
   },
   "exports": {
     ".": {
@@ -50,7 +51,8 @@
     "docs:status": "bun src/cli/docs.ts status",
     "transcript": "bun bin/transcript.ts",
     "transcript-tui": "bun bin/transcript-tui.ts",
-    "sesh": "bun bin/sesh.ts"
+    "sesh": "bun bin/sesh.ts",
+    "hooks": "bun bin/hooks.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
@@ -82,6 +84,7 @@
     "blessed-contrib": "^4.11.0",
     "claude-hooks-sdk": "^0.8.6",
     "marked": "^17.0.1",
-    "marked-terminal": "^7.3.0"
+    "marked-terminal": "^7.3.0",
+    "yaml": "^2.8.2"
   }
 }

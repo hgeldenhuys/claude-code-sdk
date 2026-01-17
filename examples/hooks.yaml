@@ -1,0 +1,194 @@
+# Hook Framework Configuration
+# ============================
+#
+# This file configures the Claude Code hook framework.
+# Copy to your project root and customize as needed.
+#
+# Location search order:
+#   1. Path specified with --config
+#   2. ./hooks.yaml
+#   3. ./hooks.yml
+#   4. ./.claude/hooks.yaml
+#   5. ./.claude/hooks.yml
+#
+# Usage in Claude Code settings.json:
+#   {
+#     "hooks": {
+#       "PreToolUse": [{ "command": "bun run bin/hooks.ts --config ./hooks.yaml" }],
+#       "PostToolUse": [{ "command": "bun run bin/hooks.ts --config ./hooks.yaml" }],
+#       "SessionStart": [{ "command": "bun run bin/hooks.ts --config ./hooks.yaml" }]
+#     }
+#   }
+
+# Configuration version (required)
+version: 1
+
+# =============================================================================
+# Global Settings
+# =============================================================================
+settings:
+  # Enable debug logging to stderr
+  # Useful for troubleshooting hook behavior
+  debug: false
+
+  # Enable parallel execution where dependencies allow
+  # When true, handlers without dependencies run concurrently
+  parallel_execution: true
+
+  # Default timeout for all handlers (milliseconds)
+  # Handlers that exceed this will be terminated
+  default_timeout_ms: 30000
+
+  # Default error strategy for handlers
+  # Options: 'continue' (ignore error), 'stop' (halt pipeline), 'retry' (retry with backoff)
+  default_error_strategy: continue
+
+# =============================================================================
+# Built-in Handlers
+# =============================================================================
+# These handlers are provided by the framework and can be enabled/configured.
+# Each handler has sensible defaults - you only need to customize as needed.
+
+builtins:
+  # ---------------------------------------------------------------------------
+  # Session Naming Handler
+  # ---------------------------------------------------------------------------
+  # Assigns human-friendly names to Claude Code sessions (e.g., "brave-elephant")
+  # Names persist across /compact and /clear operations
+  #
+  # Events: SessionStart
+  # Priority: 10 (runs early)
+  session-naming:
+    enabled: true
+    # priority: 10        # Override default priority
+    # events: [SessionStart]  # Override default events
+    options:
+      # Name format options:
+      #   - adjective-animal: Human-friendly names like "brave-elephant" (default)
+      #   - timestamp: Numeric timestamps like "session-1704067200000"
+      #   - uuid: Short UUIDs like "a1b2c3d4"
+      format: adjective-animal
+
+      # Separator between words (default: "-")
+      # separator: "-"
+
+      # Add timestamp suffix to prevent collisions (default: false)
+      # include_timestamp: false
+
+  # ---------------------------------------------------------------------------
+  # Dangerous Command Guard Handler
+  # ---------------------------------------------------------------------------
+  # Blocks potentially dangerous Bash commands from executing
+  #
+  # Events: PreToolUse (specifically Bash tool)
+  # Priority: 20
+  dangerous-command-guard:
+    enabled: true
+    options:
+      # Enable strict mode for comprehensive protection
+      # When true, blocks many more patterns including:
+      #   - Any rm -rf on root paths
+      #   - chmod 777 on system directories
+      #   - dd to disk devices
+      #   - curl/wget piped to shell
+      strict: false
+
+      # Additional patterns to block (regex strings)
+      # These are in addition to the default blocked patterns
+      blocked_patterns:
+        # Example: Block force pushes to main
+        # - "git push.*--force.*main"
+        # Example: Block production database connections
+        # - "psql.*production"
+
+      # Patterns to allow even if they match blocked patterns (regex strings)
+      # Use carefully - these override the safety checks
+      allowed_patterns: []
+
+      # Custom message template when commands are blocked
+      # Supports {{reason}} placeholder
+      # message_template: "Command blocked: {{reason}}"
+
+  # ---------------------------------------------------------------------------
+  # Context Injection Handler
+  # ---------------------------------------------------------------------------
+  # Injects session context into Claude's context on SessionStart and PreCompact
+  # This helps Claude maintain awareness of the current session
+  #
+  # Events: SessionStart, PreCompact
+  # Priority: 30
+  context-injection:
+    enabled: false    # Disabled by default - enable if you want context injection
+    options:
+      # Inject context on SessionStart
+      on_session_start: true
+
+      # Inject context on PreCompact (preserved in compaction summary)
+      on_pre_compact: true
+
+      # Custom template for injected context
+      # Supports variables: {{sessionId}}, {{sessionName}}, {{cwd}}, {{source}}
+      # Supports conditionals: {{#sessionName}}...{{/sessionName}}
+      # Supports iteration: {{#each variables}}{{key}}: {{value}}{{/each}}
+      # template: |
+      #   <session-context>
+      #   Session: {{sessionName}}
+      #   Directory: {{cwd}}
+      #   </session-context>
+
+      # Additional key-value pairs to inject
+      variables: {}
+        # project_type: "typescript"
+        # environment: "development"
+
+  # ---------------------------------------------------------------------------
+  # Tool Logger Handler
+  # ---------------------------------------------------------------------------
+  # Logs tool usage for debugging and auditing
+  #
+  # Events: PostToolUse
+  # Priority: 100 (runs late)
+  tool-logger:
+    enabled: false    # Disabled by default - enable for debugging
+    options:
+      # Minimum log level: debug, info, warn, error
+      log_level: info
+
+      # Output file path (default: stderr)
+      # output_path: "./logs/tools.log"
+
+      # Include tool input in logs (may contain sensitive data)
+      include_input: true
+
+      # Include tool output in logs (can be verbose)
+      include_output: false
+
+      # Only log specific tools (default: all tools)
+      # tools:
+      #   - Bash
+      #   - Edit
+      #   - Write
+
+      # Log format: text, json
+      format: text
+
+# =============================================================================
+# Custom Handlers (Advanced)
+# =============================================================================
+# Define your own handlers here. Custom handlers require either:
+#   - command: External script to run
+#   - handler: Inline function (TypeScript config only)
+#
+# Example:
+#
+# handlers:
+#   my-custom-handler:
+#     enabled: true
+#     priority: 50
+#     events: [PostToolUse]
+#     after: [dangerous-command-guard]  # Run after this handler
+#     options:
+#       custom_option: value
+#     command: "bun run ./my-handler.ts"
+
+handlers: {}
