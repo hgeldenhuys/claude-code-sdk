@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { findTranscriptFiles } from './indexer';
 import { extractTextContent, parseTranscriptFile } from './parser';
 import type { SearchOptions, SearchResult, TranscriptLine } from './types';
+import { isDatabaseReady, getDatabase, searchDb } from './db';
 
 /**
  * Resolve a session name to all its historical session IDs using sesh
@@ -45,11 +46,12 @@ function resolveSessionNameToIds(sessionName: string): string[] {
 
 /**
  * Search across transcripts for matching content
+ * Uses SQLite index if available for faster search, otherwise falls back to file scanning
  * @param options - Search options
  * @returns Array of search results sorted by score
  */
 export async function searchTranscripts(options: SearchOptions): Promise<SearchResult[]> {
-  const { query, limit = 50, contextLines = 2, types, projectPath, sessionIds, sessionName } =
+  const { query, limit = 50, contextLines = 2, types, projectPath, sessionIds, sessionName, useIndex } =
     options;
 
   if (!query.trim()) {
@@ -57,14 +59,53 @@ export async function searchTranscripts(options: SearchOptions): Promise<SearchR
   }
 
   // Resolve session filters
-  let allowedSessionIds: Set<string> | null = null;
+  let resolvedSessionIds: string[] | undefined;
   if (sessionIds && sessionIds.length > 0) {
-    allowedSessionIds = new Set(sessionIds);
+    resolvedSessionIds = sessionIds;
   } else if (sessionName) {
-    const resolvedIds = resolveSessionNameToIds(sessionName);
-    allowedSessionIds = new Set(resolvedIds);
+    resolvedSessionIds = resolveSessionNameToIds(sessionName);
   }
 
+  // Try SQLite search if index is available (auto-detect or explicit)
+  const shouldUseIndex = useIndex !== false && isDatabaseReady();
+  if (shouldUseIndex) {
+    try {
+      const db = getDatabase();
+      const dbResults = searchDb(db, {
+        query,
+        limit,
+        types: types as string[] | undefined,
+        sessionIds: resolvedSessionIds,
+      });
+      db.close();
+
+      // Convert DB results to SearchResult format
+      return dbResults.map(r => ({
+        file: '', // File path not stored in simplified DB results
+        sessionId: r.sessionId,
+        line: {
+          lineNumber: r.lineNumber,
+          type: r.type as TranscriptLine['type'],
+          uuid: '',
+          parentUuid: null,
+          sessionId: r.sessionId,
+          timestamp: r.timestamp,
+          cwd: '',
+          slug: r.slug || undefined,
+          raw: r.raw,
+        },
+        context: [],
+        score: 10, // FTS provides its own ranking
+        matchedText: r.matchedText.replace(/>>>>/g, '').replace(/<<<</g, ''),
+      }));
+    } catch (err) {
+      // Fall back to file-based search on error
+      console.warn('SQLite search failed, falling back to file scan:', err);
+    }
+  }
+
+  // Fall back to file-based search
+  const allowedSessionIds = resolvedSessionIds ? new Set(resolvedSessionIds) : null;
   const projectsDir = projectPath || join(process.env.HOME || '~', '.claude', 'projects');
 
   const files = await findTranscriptFiles(projectsDir);

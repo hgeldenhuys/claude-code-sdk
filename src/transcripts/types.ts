@@ -86,6 +86,8 @@ export interface SearchOptions {
   sessionIds?: string[];
   /** Filter to sessions matching a session name (resolves via sesh) */
   sessionName?: string;
+  /** Use SQLite index for faster search (auto-detected if available) */
+  useIndex?: boolean;
 }
 
 /**

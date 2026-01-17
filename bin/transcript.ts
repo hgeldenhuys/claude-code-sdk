@@ -29,6 +29,16 @@ import {
 } from '../src/transcripts/indexer';
 import { searchTranscripts } from '../src/transcripts/search';
 import {
+  getDatabase,
+  initSchema,
+  indexAllTranscripts,
+  rebuildIndex,
+  getDbStats,
+  isDatabaseReady,
+  searchDb,
+  DEFAULT_DB_PATH,
+} from '../src/transcripts/db';
+import {
   filterLines,
   formatJson,
   formatMinimal,
@@ -82,6 +92,7 @@ Usage:
   transcript <file|session> [options]     View transcript with filters
   transcript list [options]               List available transcripts
   transcript search <query> [options]     Search across transcripts
+  transcript index [build|status|rebuild] Manage SQLite search index
   transcript info <file|session>          Show transcript metadata
   transcript help                         Show this help
 
@@ -125,6 +136,12 @@ List Options:
   --recent <days>         Show transcripts from last N days
   --project <path>        Filter by project path
   --names                 Show session names only
+
+Index Commands:
+  transcript index build    Build SQLite index from all transcripts
+  transcript index status   Show index status and statistics
+  transcript index rebuild  Clear and rebuild entire index
+  --use-index              Force search to use SQLite index (auto-detected)
 
 Examples:
   # View last 10 user prompts from a session
@@ -699,6 +716,101 @@ async function cmdInfo(input: string): Promise<number> {
   }
 }
 
+interface IndexArgs {
+  subcommand: string;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function cmdIndex(args: IndexArgs): Promise<number> {
+  const { subcommand } = args;
+
+  try {
+    switch (subcommand) {
+      case 'status': {
+        if (!isDatabaseReady()) {
+          console.log('SQLite index not found or empty.');
+          console.log(`\nRun 'transcript index build' to create the index.`);
+          return 0;
+        }
+
+        const db = getDatabase();
+        const stats = getDbStats(db);
+        db.close();
+
+        console.log('SQLite Index Status\n');
+        console.log(`Database:       ${stats.dbPath}`);
+        console.log(`Size:           ${formatBytes(stats.dbSizeBytes)}`);
+        console.log(`Lines indexed:  ${stats.lineCount.toLocaleString()}`);
+        console.log(`Sessions:       ${stats.sessionCount.toLocaleString()}`);
+        console.log(`Last indexed:   ${stats.lastIndexed ? formatDate(stats.lastIndexed) : 'never'}`);
+        console.log(`Version:        ${stats.version}`);
+        return 0;
+      }
+
+      case 'build': {
+        console.log('Building SQLite index...\n');
+
+        const db = getDatabase();
+        initSchema(db);
+
+        const startTime = Date.now();
+        const result = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
+          const fileName = file.split('/').pop() || file;
+          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
+          process.stdout.write(`\r[${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
+        });
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`\n\nIndexed ${result.filesIndexed} files, ${result.linesIndexed.toLocaleString()} lines in ${elapsed}s`);
+
+        const stats = getDbStats(db);
+        console.log(`Database size: ${formatBytes(stats.dbSizeBytes)}`);
+        db.close();
+        return 0;
+      }
+
+      case 'rebuild': {
+        console.log('Rebuilding SQLite index (clearing existing data)...\n');
+
+        const db = getDatabase();
+        initSchema(db);
+        rebuildIndex(db);
+
+        const startTime = Date.now();
+        const result = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
+          const fileName = file.split('/').pop() || file;
+          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
+          process.stdout.write(`\r[${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
+        });
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`\n\nRebuilt index: ${result.filesIndexed} files, ${result.linesIndexed.toLocaleString()} lines in ${elapsed}s`);
+
+        const stats = getDbStats(db);
+        console.log(`Database size: ${formatBytes(stats.dbSizeBytes)}`);
+        db.close();
+        return 0;
+      }
+
+      default:
+        console.log('Usage: transcript index <build|status|rebuild>');
+        console.log('\nCommands:');
+        console.log('  build    Build SQLite index from all transcript files');
+        console.log('  status   Show index status and statistics');
+        console.log('  rebuild  Clear and rebuild entire index');
+        return 0;
+    }
+  } catch (error) {
+    printError(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
+}
+
 // ============================================================================
 // Argument Parsing
 // ============================================================================
@@ -737,6 +849,11 @@ function parseArgs(args: string[]): {
 
     if (arg === 'info') {
       command = 'info';
+      continue;
+    }
+
+    if (arg === 'index') {
+      command = 'index';
       continue;
     }
 
@@ -852,6 +969,10 @@ function parseArgs(args: string[]): {
       flags.watch = true;
       continue;
     }
+    if (arg === '--use-index') {
+      flags.useIndex = true;
+      continue;
+    }
 
     // Positional argument
     if (!arg.startsWith('-')) {
@@ -941,6 +1062,11 @@ async function main(): Promise<number> {
         return 1;
       }
       return cmdInfo(positional[0]!);
+
+    case 'index':
+      return cmdIndex({
+        subcommand: positional[0] || '',
+      });
 
     default:
       printHelp();
