@@ -13,6 +13,13 @@
       "source": "./",
       "version": "2.0.0",
       "keywords": ["sessions", "naming", "productivity", "hooks", "transcripts", "multi-machine", "sesh"]
+    },
+    {
+      "name": "hook-framework",
+      "description": "YAML-based hook framework with built-in handlers. Includes session naming, turn tracking, dangerous command guards. Routes ALL hook events through a unified framework with environment variable injection.",
+      "source": "./plugins/hook-framework",
+      "version": "1.0.0",
+      "keywords": ["hooks", "framework", "yaml", "session-naming", "turn-tracker", "command-guard", "automation"]
     }
   ]
 }
