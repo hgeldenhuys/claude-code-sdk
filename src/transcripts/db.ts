@@ -17,7 +17,7 @@ import { join } from 'node:path';
 import { findTranscriptFiles } from './indexer';
 import type { SearchResult, TranscriptLine } from './types';
 
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
 
 export interface DbStats {
@@ -99,6 +99,9 @@ export function initSchema(db: Database): void {
       content TEXT,
       raw TEXT NOT NULL,
       file_path TEXT NOT NULL,
+      turn_id TEXT,
+      turn_sequence INTEGER,
+      session_name TEXT,
       UNIQUE(session_id, uuid)
     )
   `);
@@ -109,6 +112,8 @@ export function initSchema(db: Database): void {
   db.run('CREATE INDEX IF NOT EXISTS idx_timestamp ON lines(timestamp)');
   db.run('CREATE INDEX IF NOT EXISTS idx_slug ON lines(slug)');
   db.run('CREATE INDEX IF NOT EXISTS idx_line_number ON lines(line_number)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_lines_turn_id ON lines(turn_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_lines_session_name ON lines(session_name)');
 
   // Full-text search virtual table
   db.run(`
@@ -178,7 +183,10 @@ export function initSchema(db: Database): void {
       input_json TEXT,
       context_json TEXT,
       file_path TEXT NOT NULL,
-      line_number INTEGER NOT NULL
+      line_number INTEGER NOT NULL,
+      turn_id TEXT,
+      turn_sequence INTEGER,
+      session_name TEXT
     )
   `);
 
@@ -187,6 +195,8 @@ export function initSchema(db: Database): void {
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_tool_use ON hook_events(tool_use_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_event_type ON hook_events(event_type)');
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_timestamp ON hook_events(timestamp)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_turn_id ON hook_events(turn_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_session_name ON hook_events(session_name)');
 
   // Hook files tracking table (for delta updates)
   db.run(`
@@ -201,11 +211,64 @@ export function initSchema(db: Database): void {
     )
   `);
 
+  // Run migrations if needed
+  migrateSchema(db);
+
   // Set version
   db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)', [
     'version',
     String(DB_VERSION),
   ]);
+}
+
+/**
+ * Migrate schema from older versions
+ */
+function migrateSchema(db: Database): void {
+  // Check current version
+  let currentVersion = 0;
+  try {
+    const row = db.query('SELECT value FROM metadata WHERE key = ?').get('version') as {
+      value: string;
+    } | null;
+    currentVersion = row ? parseInt(row.value, 10) : 0;
+  } catch {
+    // metadata table might not exist yet - that's fine, schema will be created fresh
+    return;
+  }
+
+  // Migration from v4 to v5: Add turn_id, turn_sequence, session_name columns
+  if (currentVersion === 4) {
+    console.error('[db] Migrating schema from v4 to v5...');
+
+    // Add columns to lines table (if not exists - use try/catch for idempotency)
+    const lineColumns = ['turn_id TEXT', 'turn_sequence INTEGER', 'session_name TEXT'];
+    for (const col of lineColumns) {
+      try {
+        db.run(`ALTER TABLE lines ADD COLUMN ${col}`);
+      } catch {
+        // Column might already exist
+      }
+    }
+
+    // Add columns to hook_events table
+    const hookColumns = ['turn_id TEXT', 'turn_sequence INTEGER', 'session_name TEXT'];
+    for (const col of hookColumns) {
+      try {
+        db.run(`ALTER TABLE hook_events ADD COLUMN ${col}`);
+      } catch {
+        // Column might already exist
+      }
+    }
+
+    // Add new indexes
+    db.run('CREATE INDEX IF NOT EXISTS idx_lines_turn_id ON lines(turn_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_lines_session_name ON lines(session_name)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_hook_turn_id ON hook_events(turn_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_hook_session_name ON hook_events(session_name)');
+
+    console.error('[db] Migration v4→v5 complete');
+  }
 }
 
 /**
@@ -345,8 +408,8 @@ export function indexTranscriptFile(
 
   const insertLine = db.prepare(`
     INSERT OR REPLACE INTO lines
-    (session_id, uuid, parent_uuid, line_number, type, subtype, timestamp, slug, role, model, cwd, content, raw, file_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (session_id, uuid, parent_uuid, line_number, type, subtype, timestamp, slug, role, model, cwd, content, raw, file_path, turn_id, turn_sequence, session_name)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const transaction = db.transaction(() => {
@@ -381,7 +444,10 @@ export function indexTranscriptFile(
           parsed.cwd || null,
           content,
           rawLine,
-          filePath
+          filePath,
+          null, // turn_id - will be correlated later
+          null, // turn_sequence - will be correlated later
+          null // session_name - will be correlated later
         );
 
         indexedCount++;
@@ -761,8 +827,8 @@ export function indexHookFile(
 
   const insertEvent = db.prepare(`
     INSERT INTO hook_events
-    (session_id, timestamp, event_type, tool_use_id, tool_name, decision, handler_results, input_json, context_json, file_path, line_number)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (session_id, timestamp, event_type, tool_use_id, tool_name, decision, handler_results, input_json, context_json, file_path, line_number, turn_id, turn_sequence, session_name)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const transaction = db.transaction(() => {
@@ -778,6 +844,15 @@ export function indexHookFile(
         if (!firstTimestamp && timestamp) firstTimestamp = timestamp;
         if (timestamp) lastTimestamp = timestamp;
 
+        // Extract turn info from handler results
+        const handlerResults = parsed.handlerResults || {};
+        const turnTracker = handlerResults['turn-tracker']?.data;
+        const sessionNaming = handlerResults['session-naming']?.data;
+
+        const turnId = turnTracker?.turnId || parsed.turnId || null;
+        const turnSequence = turnTracker?.sequence ?? turnTracker?.turnSequence ?? parsed.turnSequence ?? null;
+        const sessionName = sessionNaming?.sessionName || parsed.sessionName || null;
+
         insertEvent.run(
           parsed.sessionId || '',
           timestamp,
@@ -789,7 +864,10 @@ export function indexHookFile(
           parsed.input ? JSON.stringify(parsed.input) : null,
           parsed.context ? JSON.stringify(parsed.context) : null,
           filePath,
-          lineNumber
+          lineNumber,
+          turnId,
+          turnSequence,
+          sessionName
         );
 
         indexedCount++;
@@ -1140,6 +1218,190 @@ export function isDatabaseReady(dbPath: string = DEFAULT_DB_PATH): boolean {
   } catch {
     return false;
   }
+}
+
+// ============================================================================
+// Turn Correlation Functions
+// ============================================================================
+
+/**
+ * Correlate transcript lines with turn information from hook events.
+ *
+ * This function updates transcript lines with turn_id, turn_sequence, and session_name
+ * by looking up corresponding hook events (Stop events mark turn boundaries).
+ *
+ * Should be called after both transcripts and hook events have been indexed.
+ */
+export function correlateLinesToTurns(db: Database): { updated: number; sessions: number } {
+  // Get all unique session IDs that have lines without turn info
+  const sessionsToProcess = db
+    .query(
+      `
+    SELECT DISTINCT session_id FROM lines
+    WHERE turn_id IS NULL AND session_id != ''
+  `
+    )
+    .all() as { session_id: string }[];
+
+  let totalUpdated = 0;
+
+  for (const { session_id } of sessionsToProcess) {
+    // Get session_name from the most recent SessionStart event for this session
+    const sessionNameRow = db
+      .query(
+        `
+      SELECT session_name FROM hook_events
+      WHERE session_id = ? AND event_type = 'SessionStart' AND session_name IS NOT NULL
+      ORDER BY timestamp DESC LIMIT 1
+    `
+      )
+      .get(session_id) as { session_name: string } | null;
+
+    const sessionName = sessionNameRow?.session_name || null;
+
+    // Get all Stop events for this session (turn boundaries) ordered by timestamp
+    const stopEvents = db
+      .query(
+        `
+      SELECT timestamp, turn_id, turn_sequence FROM hook_events
+      WHERE session_id = ? AND event_type = 'Stop' AND turn_id IS NOT NULL
+      ORDER BY timestamp ASC
+    `
+      )
+      .all(session_id) as { timestamp: string; turn_id: string; turn_sequence: number }[];
+
+    if (stopEvents.length === 0) {
+      // No Stop events - just update session_name if we have it
+      if (sessionName) {
+        db.run(
+          `
+          UPDATE lines SET session_name = ?
+          WHERE session_id = ? AND session_name IS NULL
+        `,
+          [sessionName, session_id]
+        );
+      }
+      continue;
+    }
+
+    // For each Stop event, update lines between this Stop and the previous Stop
+    // (or session start if this is the first Stop)
+    for (let i = 0; i < stopEvents.length; i++) {
+      const currentStop = stopEvents[i]!;
+      const prevStop = i > 0 ? stopEvents[i - 1] : null;
+
+      // Update lines from prevStop.timestamp (or beginning) up to currentStop.timestamp
+      if (prevStop) {
+        const result = db.run(
+          `
+          UPDATE lines SET turn_id = ?, turn_sequence = ?, session_name = ?
+          WHERE session_id = ? AND timestamp > ? AND timestamp <= ?
+          AND turn_id IS NULL
+        `,
+          [
+            currentStop.turn_id,
+            currentStop.turn_sequence,
+            sessionName,
+            session_id,
+            prevStop.timestamp,
+            currentStop.timestamp,
+          ]
+        );
+        totalUpdated += result.changes;
+      } else {
+        // First turn - update lines from beginning up to first Stop
+        const result = db.run(
+          `
+          UPDATE lines SET turn_id = ?, turn_sequence = ?, session_name = ?
+          WHERE session_id = ? AND timestamp <= ?
+          AND turn_id IS NULL
+        `,
+          [currentStop.turn_id, currentStop.turn_sequence, sessionName, session_id, currentStop.timestamp]
+        );
+        totalUpdated += result.changes;
+      }
+    }
+
+    // Update any remaining lines after the last Stop (current in-progress turn)
+    const lastStop = stopEvents[stopEvents.length - 1]!;
+    if (sessionName) {
+      const result = db.run(
+        `
+        UPDATE lines SET session_name = ?
+        WHERE session_id = ? AND timestamp > ? AND session_name IS NULL
+      `,
+        [sessionName, session_id, lastStop.timestamp]
+      );
+      totalUpdated += result.changes;
+    }
+  }
+
+  return { updated: totalUpdated, sessions: sessionsToProcess.length };
+}
+
+/**
+ * Get turn summary for a session
+ */
+export function getSessionTurns(
+  db: Database,
+  sessionId: string
+): { turnId: string; turnSequence: number; lineCount: number; firstTimestamp: string; lastTimestamp: string }[] {
+  return db
+    .query(
+      `
+    SELECT
+      turn_id as turnId,
+      turn_sequence as turnSequence,
+      COUNT(*) as lineCount,
+      MIN(timestamp) as firstTimestamp,
+      MAX(timestamp) as lastTimestamp
+    FROM lines
+    WHERE session_id = ? AND turn_id IS NOT NULL
+    GROUP BY turn_id, turn_sequence
+    ORDER BY turn_sequence ASC
+  `
+    )
+    .all(sessionId) as {
+    turnId: string;
+    turnSequence: number;
+    lineCount: number;
+    firstTimestamp: string;
+    lastTimestamp: string;
+  }[];
+}
+
+/**
+ * Get lines for a specific turn
+ */
+export function getTurnLines(db: Database, turnId: string): TranscriptLine[] {
+  const rows = db
+    .query(
+      `
+    SELECT session_id, uuid, line_number, type, timestamp, content, raw
+    FROM lines
+    WHERE turn_id = ?
+    ORDER BY line_number ASC
+  `
+    )
+    .all(turnId) as {
+    session_id: string;
+    uuid: string;
+    line_number: number;
+    type: string;
+    timestamp: string;
+    content: string;
+    raw: string;
+  }[];
+
+  return rows.map((row) => ({
+    sessionId: row.session_id,
+    uuid: row.uuid,
+    lineNumber: row.line_number,
+    type: row.type,
+    timestamp: row.timestamp,
+    content: row.content,
+    raw: row.raw,
+  }));
 }
 
 // ============================================================================

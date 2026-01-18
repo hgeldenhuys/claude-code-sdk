@@ -267,6 +267,16 @@ EOF
   done
   success "Created CLI wrappers in .claude/bin/"
 
+  # Symlink skills directory so Claude can discover them
+  info "Linking skills directory..."
+  if [ -d ".claude/skills" ] && [ ! -L ".claude/skills" ]; then
+    warn ".claude/skills/ already exists (not a symlink), skipping"
+  else
+    rm -f .claude/skills 2>/dev/null
+    ln -sf claude-code-sdk/skills .claude/skills
+    success "Linked .claude/skills -> claude-code-sdk/skills"
+  fi
+
   echo ""
   echo -e "${GREEN}Installation complete!${NC}"
   echo ""
@@ -275,6 +285,7 @@ EOF
   echo "  - .claude/settings.json       - Hook registrations"
   echo "  - .claude/claude-code-sdk/    - SDK (cloned from GitHub)"
   echo "  - .claude/bin/                - CLI wrapper scripts"
+  echo "  - .claude/skills/             - Skills (symlink to SDK)"
   echo ""
   echo "Enabled handlers:"
   echo "  - session-naming     : Human-friendly session names"
@@ -288,6 +299,13 @@ EOF
   echo "  .claude/bin/transcript      - Transcript search/view"
   echo "  .claude/bin/transcript-tui  - Transcript TUI viewer"
   echo "  .claude/bin/hook-events     - Hook event logs"
+  echo ""
+  echo "Available skills (use /skill-name in Claude):"
+  echo "  /recall                     - Search past sessions for context"
+  echo "  /transcript-intelligence    - Deep transcript analysis"
+  echo "  /creating-hooks             - Guide for building hooks"
+  echo "  /writing-skills             - Guide for creating skills"
+  echo "  (30+ more skills available)"
   echo ""
   echo "Or add to PATH:"
   echo "  export PATH=\"\$PWD/.claude/bin:\$PATH\""
