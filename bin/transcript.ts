@@ -462,7 +462,8 @@ async function cmdViewDirect(args: ViewArgs): Promise<number> {
       } else if (format === 'minimal') {
         output += formatMinimal(line) + '\n';
       } else {
-        output += renderLine(line, { pretty: args.pretty }) + '\n';
+        const rendered = renderLine(line);
+        output += rendered.fullContent + '\n';
       }
     }
 
