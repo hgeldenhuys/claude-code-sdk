@@ -1143,6 +1143,11 @@ async function cmdInfoDirect(filePath: string): Promise<number> {
 
 async function cmdInfo(input: string): Promise<number> {
   try {
+    // Check if input is a direct file that exists on disk - handle before DB
+    if (existsSync(input) && input.endsWith('.jsonl')) {
+      return cmdInfoDirect(input);
+    }
+
     const db = getDb();
 
     // Try to find session by ID, slug, or file path
@@ -1153,11 +1158,6 @@ async function cmdInfo(input: string): Promise<number> {
       if (match) {
         session = getSession(db, match[1]!);
       }
-    }
-
-    // If not in database but input is an existing file, read directly
-    if (!session && existsSync(input)) {
-      return cmdInfoDirect(input);
     }
 
     if (!session) {
