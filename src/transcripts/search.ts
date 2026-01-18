@@ -5,10 +5,10 @@
 
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { getDatabase, isDatabaseReady, searchDb } from './db';
 import { findTranscriptFiles } from './indexer';
 import { extractTextContent, parseTranscriptFile } from './parser';
 import type { SearchOptions, SearchResult, TranscriptLine } from './types';
-import { isDatabaseReady, getDatabase, searchDb } from './db';
 
 /**
  * Resolve a session name to all its historical session IDs using sesh
@@ -51,8 +51,16 @@ function resolveSessionNameToIds(sessionName: string): string[] {
  * @returns Array of search results sorted by score
  */
 export async function searchTranscripts(options: SearchOptions): Promise<SearchResult[]> {
-  const { query, limit = 50, contextLines = 2, types, projectPath, sessionIds, sessionName, useIndex } =
-    options;
+  const {
+    query,
+    limit = 50,
+    contextLines = 2,
+    types,
+    projectPath,
+    sessionIds,
+    sessionName,
+    useIndex,
+  } = options;
 
   if (!query.trim()) {
     return [];
@@ -80,7 +88,7 @@ export async function searchTranscripts(options: SearchOptions): Promise<SearchR
       db.close();
 
       // Convert DB results to SearchResult format
-      return dbResults.map(r => ({
+      return dbResults.map((r) => ({
         file: '', // File path not stored in simplified DB results
         sessionId: r.sessionId,
         line: {

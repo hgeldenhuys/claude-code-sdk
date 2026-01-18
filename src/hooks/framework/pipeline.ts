@@ -298,7 +298,10 @@ export class HookPipeline<TState = Record<string, unknown>> {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error(`Handler timeout after ${timeoutMs}ms`)), timeoutMs);
+      timeoutId = setTimeout(
+        () => reject(new Error(`Handler timeout after ${timeoutMs}ms`)),
+        timeoutMs
+      );
     });
 
     try {

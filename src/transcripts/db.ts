@@ -4,10 +4,18 @@
  */
 
 import { Database } from 'bun:sqlite';
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readSync,
+  statSync,
+} from 'node:fs';
 import { join } from 'node:path';
-import { existsSync, mkdirSync, readFileSync, openSync, readSync, closeSync, statSync } from 'node:fs';
 import { findTranscriptFiles } from './indexer';
-import type { TranscriptLine, SearchResult } from './types';
+import type { SearchResult, TranscriptLine } from './types';
 
 const DB_VERSION = 4;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
@@ -194,7 +202,10 @@ export function initSchema(db: Database): void {
   `);
 
   // Set version
-  db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)', ['version', String(DB_VERSION)]);
+  db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)', [
+    'version',
+    String(DB_VERSION),
+  ]);
 }
 
 /**
@@ -266,8 +277,8 @@ export interface IndexFileResult {
 export function indexTranscriptFile(
   db: Database,
   filePath: string,
-  fromByteOffset: number = 0,
-  startLineNumber: number = 1,
+  fromByteOffset = 0,
+  startLineNumber = 1,
   onProgress?: (current: number, total: number) => void
 ): IndexFileResult {
   // Get file size first
@@ -315,7 +326,7 @@ export function indexTranscriptFile(
     const firstLine = rawLines[0] || '';
     if (!firstLine.startsWith('{')) {
       // Skip this partial line
-      bytesSkipped = Buffer.byteLength(firstLine + '\n', 'utf-8');
+      bytesSkipped = Buffer.byteLength(`${firstLine}\n`, 'utf-8');
       rawLines = rawLines.slice(1);
     }
   }
@@ -382,7 +393,6 @@ export function indexTranscriptFile(
       } catch {
         // Skip malformed lines
         lineNumber++;
-        continue;
       }
     }
   });
@@ -395,16 +405,31 @@ export function indexTranscriptFile(
   // Record even files without sessionId to track byte offsets for delta updates
   if (fromByteOffset === 0) {
     // Full index - insert/replace (file_path is primary key)
-    db.run(`
+    db.run(
+      `
       INSERT OR REPLACE INTO sessions (file_path, session_id, slug, line_count, byte_offset, first_timestamp, last_timestamp, indexed_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [filePath, sessionId || 'unknown', slug, lineNumber - 1, newByteOffset, firstTimestamp, lastTimestamp, new Date().toISOString()]);
+    `,
+      [
+        filePath,
+        sessionId || 'unknown',
+        slug,
+        lineNumber - 1,
+        newByteOffset,
+        firstTimestamp,
+        lastTimestamp,
+        new Date().toISOString(),
+      ]
+    );
   } else {
     // Delta update - update existing
-    db.run(`
+    db.run(
+      `
       UPDATE sessions SET line_count = ?, byte_offset = ?, last_timestamp = ?, indexed_at = ?
       WHERE file_path = ?
-    `, [lineNumber - 1, newByteOffset, lastTimestamp, new Date().toISOString(), filePath]);
+    `,
+      [lineNumber - 1, newByteOffset, lastTimestamp, new Date().toISOString(), filePath]
+    );
   }
 
   return { linesIndexed: indexedCount, byteOffset: newByteOffset, sessionId };
@@ -413,8 +438,13 @@ export function indexTranscriptFile(
 /**
  * Get the current index state for a file
  */
-export function getFileIndexState(db: Database, filePath: string): { byteOffset: number; lineCount: number } | null {
-  const row = db.query('SELECT byte_offset, line_count FROM sessions WHERE file_path = ?').get(filePath) as { byte_offset: number; line_count: number } | null;
+export function getFileIndexState(
+  db: Database,
+  filePath: string
+): { byteOffset: number; lineCount: number } | null {
+  const row = db
+    .query('SELECT byte_offset, line_count FROM sessions WHERE file_path = ?')
+    .get(filePath) as { byte_offset: number; line_count: number } | null;
   if (!row) return null;
   return { byteOffset: row.byte_offset, lineCount: row.line_count };
 }
@@ -450,8 +480,10 @@ export async function indexAllTranscripts(
   }
 
   // Update last indexed timestamp
-  db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
-    ['last_indexed', new Date().toISOString()]);
+  db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)', [
+    'last_indexed',
+    new Date().toISOString(),
+  ]);
 
   return { filesIndexed: totalFiles, linesIndexed: totalLines };
 }
@@ -463,7 +495,13 @@ export async function indexAllTranscripts(
 export async function updateIndex(
   db: Database,
   projectsDir?: string,
-  onProgress?: (file: string, current: number, total: number, newLines: number, skipped: boolean) => void
+  onProgress?: (
+    file: string,
+    current: number,
+    total: number,
+    newLines: number,
+    skipped: boolean
+  ) => void
 ): Promise<{ filesChecked: number; filesUpdated: number; newLines: number }> {
   const dir = projectsDir || join(process.env.HOME || '~', '.claude', 'projects');
   const files = await findTranscriptFiles(dir);
@@ -510,8 +548,10 @@ export async function updateIndex(
   }
 
   // Update last indexed timestamp
-  db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)',
-    ['last_indexed', new Date().toISOString()]);
+  db.run('INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)', [
+    'last_indexed',
+    new Date().toISOString(),
+  ]);
 
   return { filesChecked, filesUpdated, newLines: totalNewLines };
 }
@@ -531,7 +571,7 @@ export function watchTranscripts(
   const fileStates = new Map<string, number>();
 
   // Initialize with current state
-  findTranscriptFiles(dir).then(files => {
+  findTranscriptFiles(dir).then((files) => {
     for (const file of files) {
       const state = getFileIndexState(db, file);
       if (state) {
@@ -552,35 +592,38 @@ export function watchTranscripts(
     const existingTimer = debounceTimers.get(filePath);
     if (existingTimer) clearTimeout(existingTimer);
 
-    debounceTimers.set(filePath, setTimeout(() => {
-      debounceTimers.delete(filePath);
+    debounceTimers.set(
+      filePath,
+      setTimeout(() => {
+        debounceTimers.delete(filePath);
 
-      try {
-        const file = Bun.file(filePath);
-        if (!existsSync(filePath)) return;
+        try {
+          const file = Bun.file(filePath);
+          if (!existsSync(filePath)) return;
 
-        const currentSize = file.size;
-        const lastOffset = fileStates.get(filePath) || 0;
+          const currentSize = file.size;
+          const lastOffset = fileStates.get(filePath) || 0;
 
-        // Only process if file has grown
-        if (currentSize > lastOffset) {
-          const state = getFileIndexState(db, filePath);
-          const fromOffset = state?.byteOffset || 0;
-          const startLine = state ? state.lineCount + 1 : 1;
+          // Only process if file has grown
+          if (currentSize > lastOffset) {
+            const state = getFileIndexState(db, filePath);
+            const fromOffset = state?.byteOffset || 0;
+            const startLine = state ? state.lineCount + 1 : 1;
 
-          const result = indexTranscriptFile(db, filePath, fromOffset, startLine);
+            const result = indexTranscriptFile(db, filePath, fromOffset, startLine);
 
-          if (result.linesIndexed > 0) {
-            fileStates.set(filePath, result.byteOffset);
-            if (onUpdate) {
-              onUpdate(filePath, result.linesIndexed);
+            if (result.linesIndexed > 0) {
+              fileStates.set(filePath, result.byteOffset);
+              if (onUpdate) {
+                onUpdate(filePath, result.linesIndexed);
+              }
             }
           }
+        } catch {
+          // Ignore errors during watch
         }
-      } catch {
-        // Ignore errors during watch
-      }
-    }, 100));
+      }, 100)
+    );
   });
 
   // Return cleanup function
@@ -645,8 +688,13 @@ export async function findHookFiles(hooksDir?: string): Promise<string[]> {
 /**
  * Get hook file index state
  */
-export function getHookFileIndexState(db: Database, filePath: string): { byteOffset: number; eventCount: number } | null {
-  const row = db.query('SELECT byte_offset, event_count FROM hook_files WHERE file_path = ?').get(filePath) as { byte_offset: number; event_count: number } | null;
+export function getHookFileIndexState(
+  db: Database,
+  filePath: string
+): { byteOffset: number; eventCount: number } | null {
+  const row = db
+    .query('SELECT byte_offset, event_count FROM hook_files WHERE file_path = ?')
+    .get(filePath) as { byte_offset: number; event_count: number } | null;
   if (!row) return null;
   return { byteOffset: row.byte_offset, eventCount: row.event_count };
 }
@@ -657,8 +705,8 @@ export function getHookFileIndexState(db: Database, filePath: string): { byteOff
 export function indexHookFile(
   db: Database,
   filePath: string,
-  fromByteOffset: number = 0,
-  startLineNumber: number = 1
+  fromByteOffset = 0,
+  startLineNumber = 1
 ): HookIndexFileResult {
   const file = Bun.file(filePath);
   const fileSize = file.size;
@@ -748,7 +796,6 @@ export function indexHookFile(
         lineNumber++;
       } catch {
         lineNumber++;
-        continue;
       }
     }
   });
@@ -760,15 +807,29 @@ export function indexHookFile(
   // Update hook_files tracking table
   if (sessionId || indexedCount > 0) {
     if (fromByteOffset === 0) {
-      db.run(`
+      db.run(
+        `
         INSERT OR REPLACE INTO hook_files (file_path, session_id, event_count, byte_offset, first_timestamp, last_timestamp, indexed_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [filePath, sessionId || 'unknown', lineNumber - 1, newByteOffset, firstTimestamp, lastTimestamp, new Date().toISOString()]);
+      `,
+        [
+          filePath,
+          sessionId || 'unknown',
+          lineNumber - 1,
+          newByteOffset,
+          firstTimestamp,
+          lastTimestamp,
+          new Date().toISOString(),
+        ]
+      );
     } else {
-      db.run(`
+      db.run(
+        `
         UPDATE hook_files SET event_count = ?, byte_offset = ?, last_timestamp = ?, indexed_at = ?
         WHERE file_path = ?
-      `, [lineNumber - 1, newByteOffset, lastTimestamp, new Date().toISOString(), filePath]);
+      `,
+        [lineNumber - 1, newByteOffset, lastTimestamp, new Date().toISOString(), filePath]
+      );
     }
   }
 
@@ -812,7 +873,13 @@ export async function indexAllHookFiles(
 export async function updateHookIndex(
   db: Database,
   hooksDir?: string,
-  onProgress?: (file: string, current: number, total: number, newEvents: number, skipped: boolean) => void
+  onProgress?: (
+    file: string,
+    current: number,
+    total: number,
+    newEvents: number,
+    skipped: boolean
+  ) => void
 ): Promise<{ filesChecked: number; filesUpdated: number; newEvents: number }> {
   const files = await findHookFiles(hooksDir);
 
@@ -873,7 +940,7 @@ export function watchHookFiles(
   const fileStates = new Map<string, number>();
 
   // Initialize with current state
-  findHookFiles(dir).then(files => {
+  findHookFiles(dir).then((files) => {
     for (const file of files) {
       const state = getHookFileIndexState(db, file);
       if (state) {
@@ -892,33 +959,36 @@ export function watchHookFiles(
     const existingTimer = debounceTimers.get(filePath);
     if (existingTimer) clearTimeout(existingTimer);
 
-    debounceTimers.set(filePath, setTimeout(() => {
-      debounceTimers.delete(filePath);
+    debounceTimers.set(
+      filePath,
+      setTimeout(() => {
+        debounceTimers.delete(filePath);
 
-      try {
-        if (!existsSync(filePath)) return;
+        try {
+          if (!existsSync(filePath)) return;
 
-        const currentSize = Bun.file(filePath).size;
-        const lastOffset = fileStates.get(filePath) || 0;
+          const currentSize = Bun.file(filePath).size;
+          const lastOffset = fileStates.get(filePath) || 0;
 
-        if (currentSize > lastOffset) {
-          const state = getHookFileIndexState(db, filePath);
-          const fromOffset = state?.byteOffset || 0;
-          const startLine = state ? state.eventCount + 1 : 1;
+          if (currentSize > lastOffset) {
+            const state = getHookFileIndexState(db, filePath);
+            const fromOffset = state?.byteOffset || 0;
+            const startLine = state ? state.eventCount + 1 : 1;
 
-          const result = indexHookFile(db, filePath, fromOffset, startLine);
+            const result = indexHookFile(db, filePath, fromOffset, startLine);
 
-          if (result.eventsIndexed > 0) {
-            fileStates.set(filePath, result.byteOffset);
-            if (onUpdate) {
-              onUpdate(filePath, result.eventsIndexed);
+            if (result.eventsIndexed > 0) {
+              fileStates.set(filePath, result.byteOffset);
+              if (onUpdate) {
+                onUpdate(filePath, result.eventsIndexed);
+              }
             }
           }
+        } catch {
+          // Ignore errors during watch
         }
-      } catch {
-        // Ignore errors during watch
-      }
-    }, 100));
+      }, 100)
+    );
   });
 
   return () => {
@@ -943,8 +1013,8 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
   const ftsQuery = query
     .replace(/['"]/g, '')
     .split(/\s+/)
-    .filter(w => w.length > 0)
-    .map(w => `"${w}"`)
+    .filter((w) => w.length > 0)
+    .map((w) => `"${w}"`)
     .join(' OR ');
 
   let sql = `
@@ -976,7 +1046,7 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
     params.push(...sessionIds);
   }
 
-  sql += ` ORDER BY bm25(lines_fts) LIMIT ?`;
+  sql += ' ORDER BY bm25(lines_fts) LIMIT ?';
   params.push(limit);
 
   const stmt = db.prepare(sql);
@@ -991,7 +1061,7 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
     raw: string;
   }>;
 
-  return rows.map(row => ({
+  return rows.map((row) => ({
     sessionId: row.session_id,
     slug: row.slug,
     lineNumber: row.line_number,
@@ -1007,17 +1077,27 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
  * Get database statistics
  */
 export function getDbStats(db: Database, dbPath: string = DEFAULT_DB_PATH): DbStats {
-  const versionRow = db.query('SELECT value FROM metadata WHERE key = ?').get('version') as { value: string } | null;
-  const lastIndexedRow = db.query('SELECT value FROM metadata WHERE key = ?').get('last_indexed') as { value: string } | null;
+  const versionRow = db.query('SELECT value FROM metadata WHERE key = ?').get('version') as {
+    value: string;
+  } | null;
+  const lastIndexedRow = db
+    .query('SELECT value FROM metadata WHERE key = ?')
+    .get('last_indexed') as { value: string } | null;
   const lineCountRow = db.query('SELECT COUNT(*) as count FROM lines').get() as { count: number };
-  const sessionCountRow = db.query('SELECT COUNT(*) as count FROM sessions').get() as { count: number };
+  const sessionCountRow = db.query('SELECT COUNT(*) as count FROM sessions').get() as {
+    count: number;
+  };
 
   // Hook event stats
   let hookEventCount = 0;
   let hookFileCount = 0;
   try {
-    const hookEventRow = db.query('SELECT COUNT(*) as count FROM hook_events').get() as { count: number };
-    const hookFileRow = db.query('SELECT COUNT(*) as count FROM hook_files').get() as { count: number };
+    const hookEventRow = db.query('SELECT COUNT(*) as count FROM hook_events').get() as {
+      count: number;
+    };
+    const hookFileRow = db.query('SELECT COUNT(*) as count FROM hook_files').get() as {
+      count: number;
+    };
     hookEventCount = hookEventRow?.count || 0;
     hookFileCount = hookFileRow?.count || 0;
   } catch {
@@ -1033,7 +1113,7 @@ export function getDbStats(db: Database, dbPath: string = DEFAULT_DB_PATH): DbSt
   }
 
   return {
-    version: versionRow ? parseInt(versionRow.value, 10) : 0,
+    version: versionRow ? Number.parseInt(versionRow.value, 10) : 0,
     lineCount: lineCountRow?.count || 0,
     sessionCount: sessionCountRow?.count || 0,
     hookEventCount,
@@ -1110,7 +1190,10 @@ export interface GetLinesOptions {
 /**
  * Get all sessions with metadata
  */
-export function getSessions(db: Database, options?: { recentDays?: number; projectPath?: string }): SessionInfo[] {
+export function getSessions(
+  db: Database,
+  options?: { recentDays?: number; projectPath?: string }
+): SessionInfo[] {
   let sql = `
     SELECT
       session_id,
@@ -1128,16 +1211,16 @@ export function getSessions(db: Database, options?: { recentDays?: number; proje
   if (options?.recentDays) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - options.recentDays);
-    sql += ` AND last_timestamp >= ?`;
+    sql += ' AND last_timestamp >= ?';
     params.push(cutoff.toISOString());
   }
 
   if (options?.projectPath) {
-    sql += ` AND file_path LIKE ?`;
+    sql += ' AND file_path LIKE ?';
     params.push(`%${options.projectPath}%`);
   }
 
-  sql += ` ORDER BY last_timestamp DESC`;
+  sql += ' ORDER BY last_timestamp DESC';
 
   const rows = db.prepare(sql).all(...params) as Array<{
     session_id: string;
@@ -1149,7 +1232,7 @@ export function getSessions(db: Database, options?: { recentDays?: number; proje
     indexed_at: string;
   }>;
 
-  return rows.map(row => ({
+  return rows.map((row) => ({
     sessionId: row.session_id,
     slug: row.slug,
     filePath: row.file_path,
@@ -1231,10 +1314,10 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
     // Check if it's a slug or session ID
     const session = getSession(db, options.sessionId);
     if (session) {
-      sql += ` AND session_id = ?`;
+      sql += ' AND session_id = ?';
       params.push(session.sessionId);
     } else {
-      sql += ` AND session_id = ?`;
+      sql += ' AND session_id = ?';
       params.push(options.sessionId);
     }
   }
@@ -1245,27 +1328,27 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
   }
 
   if (options.fromLine !== undefined) {
-    sql += ` AND line_number >= ?`;
+    sql += ' AND line_number >= ?';
     params.push(options.fromLine);
   }
 
   if (options.toLine !== undefined) {
-    sql += ` AND line_number <= ?`;
+    sql += ' AND line_number <= ?';
     params.push(options.toLine);
   }
 
   if (options.fromTime) {
-    sql += ` AND timestamp >= ?`;
+    sql += ' AND timestamp >= ?';
     params.push(options.fromTime);
   }
 
   if (options.toTime) {
-    sql += ` AND timestamp <= ?`;
+    sql += ' AND timestamp <= ?';
     params.push(options.toTime);
   }
 
   if (options.search) {
-    sql += ` AND content LIKE ?`;
+    sql += ' AND content LIKE ?';
     params.push(`%${options.search}%`);
   }
 
@@ -1273,12 +1356,12 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
   sql += ` ORDER BY line_number ${order === 'desc' ? 'DESC' : 'ASC'}`;
 
   if (options.limit) {
-    sql += ` LIMIT ?`;
+    sql += ' LIMIT ?';
     params.push(options.limit);
   }
 
   if (options.offset) {
-    sql += ` OFFSET ?`;
+    sql += ' OFFSET ?';
     params.push(options.offset);
   }
 
@@ -1300,7 +1383,7 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
     file_path: string;
   }>;
 
-  return rows.map(row => ({
+  return rows.map((row) => ({
     id: row.id,
     sessionId: row.session_id,
     uuid: row.uuid,
@@ -1323,11 +1406,11 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
  * Get the maximum line ID for a session (for polling new lines)
  */
 export function getMaxLineId(db: Database, sessionId?: string): number {
-  let sql = `SELECT MAX(id) as max_id FROM lines`;
+  let sql = 'SELECT MAX(id) as max_id FROM lines';
   const params: string[] = [];
 
   if (sessionId) {
-    sql += ` WHERE session_id = ?`;
+    sql += ' WHERE session_id = ?';
     params.push(sessionId);
   }
 
@@ -1338,7 +1421,12 @@ export function getMaxLineId(db: Database, sessionId?: string): number {
 /**
  * Get lines after a specific ID (for tail mode polling)
  */
-export function getLinesAfterId(db: Database, afterId: number, sessionId?: string, types?: string[]): LineResult[] {
+export function getLinesAfterId(
+  db: Database,
+  afterId: number,
+  sessionId?: string,
+  types?: string[]
+): LineResult[] {
   let sql = `
     SELECT
       id,
@@ -1362,7 +1450,7 @@ export function getLinesAfterId(db: Database, afterId: number, sessionId?: strin
   const params: (string | number)[] = [afterId];
 
   if (sessionId) {
-    sql += ` AND session_id = ?`;
+    sql += ' AND session_id = ?';
     params.push(sessionId);
   }
 
@@ -1371,7 +1459,7 @@ export function getLinesAfterId(db: Database, afterId: number, sessionId?: strin
     params.push(...types);
   }
 
-  sql += ` ORDER BY id ASC`;
+  sql += ' ORDER BY id ASC';
 
   const rows = db.prepare(sql).all(...params) as Array<{
     id: number;
@@ -1391,7 +1479,7 @@ export function getLinesAfterId(db: Database, afterId: number, sessionId?: strin
     file_path: string;
   }>;
 
-  return rows.map(row => ({
+  return rows.map((row) => ({
     id: row.id,
     sessionId: row.session_id,
     uuid: row.uuid,
@@ -1417,7 +1505,303 @@ export function getLineCount(db: Database, sessionId: string): number {
   const session = getSession(db, sessionId);
   if (!session) return 0;
 
-  const row = db.prepare('SELECT COUNT(*) as count FROM lines WHERE session_id = ?').get(session.sessionId) as { count: number };
+  const row = db
+    .prepare('SELECT COUNT(*) as count FROM lines WHERE session_id = ?')
+    .get(session.sessionId) as { count: number };
+  return row?.count || 0;
+}
+
+// ============================================================================
+// Hook Event Query Functions
+// ============================================================================
+
+export interface HookEventResult {
+  id: number;
+  sessionId: string;
+  timestamp: string;
+  eventType: string;
+  toolUseId: string | null;
+  toolName: string | null;
+  decision: string | null;
+  handlerResults: string | null;
+  inputJson: string | null;
+  contextJson: string | null;
+  filePath: string;
+  lineNumber: number;
+}
+
+export interface HookSessionInfo {
+  sessionId: string;
+  filePath: string;
+  eventCount: number;
+  firstTimestamp: string | null;
+  lastTimestamp: string | null;
+  indexedAt: string;
+}
+
+export interface GetHookEventsOptions {
+  sessionId?: string;
+  eventTypes?: string[];
+  toolNames?: string[];
+  limit?: number;
+  offset?: number;
+  fromTime?: string;
+  toTime?: string;
+  order?: 'asc' | 'desc';
+}
+
+/**
+ * Get hook events with filtering
+ */
+export function getHookEvents(db: Database, options: GetHookEventsOptions = {}): HookEventResult[] {
+  let sql = `
+    SELECT
+      id,
+      session_id,
+      timestamp,
+      event_type,
+      tool_use_id,
+      tool_name,
+      decision,
+      handler_results,
+      input_json,
+      context_json,
+      file_path,
+      line_number
+    FROM hook_events
+    WHERE 1=1
+  `;
+  const params: (string | number)[] = [];
+
+  if (options.sessionId) {
+    sql += ' AND session_id = ?';
+    params.push(options.sessionId);
+  }
+
+  if (options.eventTypes && options.eventTypes.length > 0) {
+    const placeholders = options.eventTypes.map(() => '?').join(',');
+    sql += ` AND event_type IN (${placeholders})`;
+    params.push(...options.eventTypes);
+  }
+
+  if (options.toolNames && options.toolNames.length > 0) {
+    const placeholders = options.toolNames.map(() => '?').join(',');
+    sql += ` AND tool_name IN (${placeholders})`;
+    params.push(...options.toolNames);
+  }
+
+  if (options.fromTime) {
+    sql += ' AND timestamp >= ?';
+    params.push(options.fromTime);
+  }
+
+  if (options.toTime) {
+    sql += ' AND timestamp <= ?';
+    params.push(options.toTime);
+  }
+
+  sql += ` ORDER BY timestamp ${options.order === 'desc' ? 'DESC' : 'ASC'}, id ${options.order === 'desc' ? 'DESC' : 'ASC'}`;
+
+  if (options.limit) {
+    sql += ' LIMIT ?';
+    params.push(options.limit);
+  }
+
+  if (options.offset) {
+    sql += ' OFFSET ?';
+    params.push(options.offset);
+  }
+
+  const stmt = db.prepare(sql);
+  const rows = stmt.all(...params) as Array<{
+    id: number;
+    session_id: string;
+    timestamp: string;
+    event_type: string;
+    tool_use_id: string | null;
+    tool_name: string | null;
+    decision: string | null;
+    handler_results: string | null;
+    input_json: string | null;
+    context_json: string | null;
+    file_path: string;
+    line_number: number;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    sessionId: row.session_id,
+    timestamp: row.timestamp,
+    eventType: row.event_type,
+    toolUseId: row.tool_use_id,
+    toolName: row.tool_name,
+    decision: row.decision,
+    handlerResults: row.handler_results,
+    inputJson: row.input_json,
+    contextJson: row.context_json,
+    filePath: row.file_path,
+    lineNumber: row.line_number,
+  }));
+}
+
+/**
+ * Get sessions with hook events
+ */
+export function getHookSessions(
+  db: Database,
+  options?: { recentDays?: number }
+): HookSessionInfo[] {
+  let sql = `
+    SELECT
+      session_id,
+      file_path,
+      event_count,
+      first_timestamp,
+      last_timestamp,
+      indexed_at
+    FROM hook_files
+    WHERE 1=1
+  `;
+  const params: (string | number)[] = [];
+
+  if (options?.recentDays) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - options.recentDays);
+    sql += ' AND last_timestamp >= ?';
+    params.push(cutoff.toISOString());
+  }
+
+  sql += ' ORDER BY last_timestamp DESC';
+
+  const stmt = db.prepare(sql);
+  const rows = stmt.all(...params) as Array<{
+    session_id: string;
+    file_path: string;
+    event_count: number;
+    first_timestamp: string | null;
+    last_timestamp: string | null;
+    indexed_at: string;
+  }>;
+
+  return rows.map((row) => ({
+    sessionId: row.session_id,
+    filePath: row.file_path,
+    eventCount: row.event_count,
+    firstTimestamp: row.first_timestamp,
+    lastTimestamp: row.last_timestamp,
+    indexedAt: row.indexed_at,
+  }));
+}
+
+/**
+ * Get maximum hook event ID for a session (for delta updates)
+ */
+export function getMaxHookEventId(db: Database, sessionId?: string): number {
+  let sql = 'SELECT MAX(id) as max_id FROM hook_events';
+  const params: string[] = [];
+
+  if (sessionId) {
+    sql += ' WHERE session_id = ?';
+    params.push(sessionId);
+  }
+
+  const row = db.prepare(sql).get(...params) as { max_id: number | null };
+  return row?.max_id || 0;
+}
+
+/**
+ * Get hook events after a given ID (for live updates)
+ */
+export function getHookEventsAfterId(
+  db: Database,
+  afterId: number,
+  sessionId?: string,
+  eventTypes?: string[],
+  toolNames?: string[]
+): HookEventResult[] {
+  let sql = `
+    SELECT
+      id,
+      session_id,
+      timestamp,
+      event_type,
+      tool_use_id,
+      tool_name,
+      decision,
+      handler_results,
+      input_json,
+      context_json,
+      file_path,
+      line_number
+    FROM hook_events
+    WHERE id > ?
+  `;
+  const params: (string | number)[] = [afterId];
+
+  if (sessionId) {
+    sql += ' AND session_id = ?';
+    params.push(sessionId);
+  }
+
+  if (eventTypes && eventTypes.length > 0) {
+    const placeholders = eventTypes.map(() => '?').join(',');
+    sql += ` AND event_type IN (${placeholders})`;
+    params.push(...eventTypes);
+  }
+
+  if (toolNames && toolNames.length > 0) {
+    const placeholders = toolNames.map(() => '?').join(',');
+    sql += ` AND tool_name IN (${placeholders})`;
+    params.push(...toolNames);
+  }
+
+  sql += ' ORDER BY id ASC';
+
+  const stmt = db.prepare(sql);
+  const rows = stmt.all(...params) as Array<{
+    id: number;
+    session_id: string;
+    timestamp: string;
+    event_type: string;
+    tool_use_id: string | null;
+    tool_name: string | null;
+    decision: string | null;
+    handler_results: string | null;
+    input_json: string | null;
+    context_json: string | null;
+    file_path: string;
+    line_number: number;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    sessionId: row.session_id,
+    timestamp: row.timestamp,
+    eventType: row.event_type,
+    toolUseId: row.tool_use_id,
+    toolName: row.tool_name,
+    decision: row.decision,
+    handlerResults: row.handler_results,
+    inputJson: row.input_json,
+    contextJson: row.context_json,
+    filePath: row.file_path,
+    lineNumber: row.line_number,
+  }));
+}
+
+/**
+ * Get hook event count for a session
+ */
+export function getHookEventCount(db: Database, sessionId?: string): number {
+  let sql = 'SELECT COUNT(*) as count FROM hook_events';
+  const params: string[] = [];
+
+  if (sessionId) {
+    sql += ' WHERE session_id = ?';
+    params.push(sessionId);
+  }
+
+  const row = db.prepare(sql).get(...params) as { count: number };
   return row?.count || 0;
 }
 

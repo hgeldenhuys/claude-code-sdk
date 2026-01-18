@@ -8,8 +8,8 @@
  * with hook output.
  */
 
-import { existsSync, mkdirSync, appendFileSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { MetricsOptions } from '../config/types';
 import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
@@ -32,13 +32,16 @@ export interface AggregateStats {
   avgDurationMs: number;
   maxDurationMs: number;
   minDurationMs: number;
-  byEvent: Record<string, {
-    count: number;
-    totalMs: number;
-    avgMs: number;
-    maxMs: number;
-    minMs: number;
-  }>;
+  byEvent: Record<
+    string,
+    {
+      count: number;
+      totalMs: number;
+      avgMs: number;
+      maxMs: number;
+      minMs: number;
+    }
+  >;
   lastUpdated: string;
 }
 
@@ -235,7 +238,7 @@ export function createMetricsHandler(options: MetricsOptions = {}): HandlerDefin
         if (!existsSync(dir)) {
           mkdirSync(dir, { recursive: true });
         }
-        appendFileSync(logFile, JSON.stringify(metric) + '\n');
+        appendFileSync(logFile, `${JSON.stringify(metric)}\n`);
       }
 
       // Update aggregate stats

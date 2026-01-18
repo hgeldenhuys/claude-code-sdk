@@ -50,7 +50,7 @@ jobs:
       - name: Build CLIs for Node.js
         run: |
           # Build Node.js-compatible CLIs (hooks, sesh)
-          # Note: transcript CLIs use Bun-specific APIs and are Bun-only
+          # Note: transcript and hook-events CLIs use Bun-specific APIs (bun:sqlite) and are Bun-only
           mkdir -p dist/bin
 
           # Build hooks CLI
@@ -61,7 +61,7 @@ jobs:
 
       - name: Verify CLIs are executable
         run: |
-          chmod +x bin/sesh.ts bin/transcript.ts bin/transcript-tui.ts bin/hooks.ts
+          chmod +x bin/sesh.ts bin/transcript.ts bin/transcript-tui.ts bin/hooks.ts bin/hook-events.ts bin/hook-events-tui.ts
 
           # Test hooks CLI
           bun bin/hooks.ts --help
@@ -75,6 +75,12 @@ jobs:
 
           # Test transcript-tui CLI
           bun bin/transcript-tui.ts --help
+
+          # Test hook-events CLI (Bun-only, uses bun:sqlite)
+          bun bin/hook-events.ts --help
+
+          # Test hook-events-tui CLI (Bun-only, uses bun:sqlite)
+          bun bin/hook-events-tui.ts --help
 
       - name: Verify Node.js CLIs work
         run: |

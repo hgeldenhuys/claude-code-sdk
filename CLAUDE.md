@@ -32,6 +32,18 @@ bun run docs:check   # Check for documentation changes (delta detection)
 bun run docs:status  # Show cache status
 bun run docs list    # List all cached documents by category
 bun run docs search <query>  # Search documentation content
+
+# Transcript and hook event viewing (Bun-only)
+bun run transcript             # Transcript CLI
+bun run transcript-tui         # Interactive transcript viewer
+bun run hook-events            # Hook events CLI
+bun run hook-events-tui        # Interactive hook events viewer
+
+# Session management
+bun run sesh                   # Session name manager
+
+# Hooks framework
+bun run hooks                  # Run hook handlers
 ```
 
 ## Architecture
@@ -61,7 +73,12 @@ src/
 └── utils/index.ts     # Shared utilities (version comparison, file ops)
 
 bin/                   # Standalone CLI utilities
-└── sesh.ts            # Session name manager CLI
+├── sesh.ts            # Session name manager CLI
+├── transcript.ts      # Transcript viewer CLI
+├── transcript-tui.ts  # Transcript interactive TUI
+├── hooks.ts           # Hooks framework CLI (run handlers)
+├── hook-events.ts     # Hook events viewer CLI
+└── hook-events-tui.ts # Hook events interactive TUI
 
 skills/                # Distributable skills for Claude Code development
 └── writing-skills/    # Guide for creating effective skills
@@ -152,6 +169,119 @@ bun run bin/transcript.ts search "keyword"
 # TUI viewer
 bun run bin/transcript.ts tui
 ```
+
+**hook-events** - Hook events viewer CLI and TUI (Bun-only, uses bun:sqlite):
+
+```bash
+# List sessions with hook events
+bun run hook-events list
+
+# View events for current project (. = current session)
+bun run hook-events .
+bun run hook-events . --last 10
+bun run hook-events . --event PreToolUse,PostToolUse
+bun run hook-events . --tool Bash,Read
+
+# Search across all hook events
+bun run hook-events search "error"
+
+# Session info and statistics
+bun run hook-events info .
+
+# Watch mode (tail -f style)
+bun run hook-events . --watch
+
+# Interactive TUI
+bun run hook-events-tui .
+bun run hook-events-tui . --event PreToolUse --live
+```
+
+**hook-events-tui** features:
+- **View modes**: Raw JSON (1), Human-readable (2), Minimal (3), Tool I/O (4), Timeline (5)
+- **Bookmarks**: Space to toggle, `[`/`]` to jump (filter-aware, persisted to `~/.claude-code-sdk/hook-event-bookmarks.json`)
+- **Context usage**: Shows `[XX%]` at end of each line (based on 200K context window)
+- **Live mode**: Press `L` to watch for new events in real-time
+- **Navigation**: j/k or arrows, g/G for first/last, Tab to switch panes
+
+### Hook Events Architecture
+
+The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execution. Here's how it works:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Hook Events Data Flow                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Claude Code Session                                                         │
+│  ┌──────────────┐                                                           │
+│  │ User Prompt  │──┐                                                        │
+│  └──────────────┘  │                                                        │
+│                    ▼                                                        │
+│  ┌──────────────────────────────────────┐                                   │
+│  │         Hooks Framework              │                                   │
+│  │  ┌────────────────────────────────┐  │                                   │
+│  │  │ Event Types:                   │  │                                   │
+│  │  │ • UserPromptSubmit             │  │                                   │
+│  │  │ • PreToolUse / PostToolUse     │  │                                   │
+│  │  │ • SessionStart / SessionEnd    │  │                                   │
+│  │  │ • Stop / SubagentStop          │  │                                   │
+│  │  └────────────────────────────────┘  │                                   │
+│  └──────────────────┬───────────────────┘                                   │
+│                     │                                                        │
+│                     ▼                                                        │
+│  ┌──────────────────────────────────────┐                                   │
+│  │    event-logger Hook Handler         │                                   │
+│  │    (logs to ~/.claude/hooks/)        │                                   │
+│  └──────────────────┬───────────────────┘                                   │
+│                     │                                                        │
+│                     ▼                                                        │
+│  ~/.claude/hooks/<project-path>/                                            │
+│  └── hooks.jsonl   ◄─── JSONL format, one event per line                    │
+│                                                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Indexing (transcript CLI)                                                   │
+│  ┌──────────────────────────────────────┐                                   │
+│  │  transcript index build/daemon       │                                   │
+│  │  • Watches hooks.jsonl files         │                                   │
+│  │  • Parses JSONL events               │                                   │
+│  │  • Indexes into SQLite FTS           │                                   │
+│  └──────────────────┬───────────────────┘                                   │
+│                     │                                                        │
+│                     ▼                                                        │
+│  ~/.claude-code-sdk/transcripts.db                                          │
+│  ├── hook_events table (indexed events)                                     │
+│  └── hook_events_fts (full-text search)                                     │
+│                                                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Viewing (hook-events CLI/TUI)                                               │
+│  ┌──────────────────────────────────────┐                                   │
+│  │  hook-events / hook-events-tui       │                                   │
+│  │  • Queries SQLite for events         │                                   │
+│  │  • Filters by event/tool/time        │                                   │
+│  │  • Calculates context usage %        │                                   │
+│  │  • Manages bookmarks (persisted)     │                                   │
+│  │  • Live mode polls for new events    │                                   │
+│  └──────────────────────────────────────┘                                   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key files:**
+- `src/transcripts/db.ts` - SQLite database with hook event queries (`getHookEvents`, `getHookSessions`, etc.)
+- `bin/hook-events.ts` - CLI for viewing/searching hook events
+- `bin/hook-events-tui.ts` - Interactive TUI with blessed library
+
+**Hook event JSONL format:**
+```json
+{"timestamp":"2024-01-18T14:00:00Z","sessionId":"abc-123","eventType":"PreToolUse","toolName":"Bash","toolUseId":"xyz","input":{...},"context":{...}}
+```
+
+**Context usage calculation:**
+- Extracts `usage.input_tokens` + `usage.output_tokens` from event input
+- Calculates percentage against 200K context window
+- Displayed as `[XX%]` at end of each line
 
 ### Documentation Tracking
 

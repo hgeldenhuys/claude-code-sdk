@@ -701,7 +701,10 @@ function validateDebugLoggerOptions(
     });
   }
 
-  if (options.includeHandlerResults !== undefined && typeof options.includeHandlerResults !== 'boolean') {
+  if (
+    options.includeHandlerResults !== undefined &&
+    typeof options.includeHandlerResults !== 'boolean'
+  ) {
     errors.push({
       path: `${path}.includeHandlerResults`,
       message: 'includeHandlerResults must be a boolean',
@@ -710,7 +713,10 @@ function validateDebugLoggerOptions(
     });
   }
 
-  if (options.includeFrameworkEnv !== undefined && typeof options.includeFrameworkEnv !== 'boolean') {
+  if (
+    options.includeFrameworkEnv !== undefined &&
+    typeof options.includeFrameworkEnv !== 'boolean'
+  ) {
     errors.push({
       path: `${path}.includeFrameworkEnv`,
       message: 'includeFrameworkEnv must be a boolean',

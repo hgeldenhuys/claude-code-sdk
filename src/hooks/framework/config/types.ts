@@ -155,7 +155,7 @@ export interface BuiltinHandlerOptions {
   'tool-logger': ToolLoggerOptions;
   'turn-tracker': TurnTrackerOptions;
   'debug-logger': DebugLoggerOptions;
-  'metrics': MetricsOptions;
+  metrics: MetricsOptions;
   'event-logger': EventLoggerOptions;
 }
 
@@ -195,7 +195,7 @@ export interface BuiltinsConfig {
   'tool-logger'?: HandlerConfig<'tool-logger'>;
   'turn-tracker'?: HandlerConfig<'turn-tracker'>;
   'debug-logger'?: HandlerConfig<'debug-logger'>;
-  'metrics'?: HandlerConfig<'metrics'>;
+  metrics?: HandlerConfig<'metrics'>;
   'event-logger'?: HandlerConfig<'event-logger'>;
 }
 

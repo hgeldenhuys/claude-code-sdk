@@ -120,7 +120,7 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
     defaultPriority: 999, // Run very late
     factory: createDebugLoggerHandler as HandlerFactory,
   },
-  'metrics': {
+  metrics: {
     id: 'metrics',
     name: 'Metrics',
     description: 'Records timing metrics for hook execution performance analysis',

@@ -8,7 +8,7 @@
  * Output format: ~/.claude/hooks/{project}/{session_id}.hooks.jsonl
  */
 
-import { existsSync, mkdirSync, appendFileSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { HandlerDefinition, HandlerResult, PipelineContext } from '../types';
 
@@ -207,7 +207,7 @@ export function createEventLoggerHandler(options?: EventLoggerOptions): HandlerD
         entry.lineNumber = countLines(filePath) + 1;
 
         // Append to file
-        const line = JSON.stringify(entry) + '\n';
+        const line = `${JSON.stringify(entry)}\n`;
         appendFileSync(filePath, line);
 
         return { success: true, durationMs: 0 };

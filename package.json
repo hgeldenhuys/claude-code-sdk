@@ -10,7 +10,9 @@
     "sesh": "./bin/sesh.ts",
     "transcript": "./bin/transcript.ts",
     "transcript-tui": "./bin/transcript-tui.ts",
-    "hooks": "./bin/hooks.ts"
+    "hooks": "./bin/hooks.ts",
+    "hook-events": "./bin/hook-events.ts",
+    "hook-events-tui": "./bin/hook-events-tui.ts"
   },
   "exports": {
     ".": {
@@ -56,7 +58,9 @@
     "transcript": "bun bin/transcript.ts",
     "transcript-tui": "bun bin/transcript-tui.ts",
     "sesh": "bun bin/sesh.ts",
-    "hooks": "bun bin/hooks.ts"
+    "hooks": "bun bin/hooks.ts",
+    "hook-events": "bun bin/hook-events.ts",
+    "hook-events-tui": "bun bin/hook-events-tui.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
