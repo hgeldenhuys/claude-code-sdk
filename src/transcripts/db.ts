@@ -231,7 +231,7 @@ function migrateSchema(db: Database): void {
     const row = db.query('SELECT value FROM metadata WHERE key = ?').get('version') as {
       value: string;
     } | null;
-    currentVersion = row ? parseInt(row.value, 10) : 0;
+    currentVersion = row ? Number.parseInt(row.value, 10) : 0;
   } catch {
     // metadata table might not exist yet - that's fine, schema will be created fresh
     return;
@@ -850,7 +850,8 @@ export function indexHookFile(
         const sessionNaming = handlerResults['session-naming']?.data;
 
         const turnId = turnTracker?.turnId || parsed.turnId || null;
-        const turnSequence = turnTracker?.sequence ?? turnTracker?.turnSequence ?? parsed.turnSequence ?? null;
+        const turnSequence =
+          turnTracker?.sequence ?? turnTracker?.turnSequence ?? parsed.turnSequence ?? null;
         const sessionName = sessionNaming?.sessionName || parsed.sessionName || null;
 
         insertEvent.run(
@@ -1316,7 +1317,13 @@ export function correlateLinesToTurns(db: Database): { updated: number; sessions
           WHERE session_id = ? AND timestamp <= ?
           AND turn_id IS NULL
         `,
-          [currentStop.turn_id, currentStop.turn_sequence, sessionName, session_id, currentStop.timestamp]
+          [
+            currentStop.turn_id,
+            currentStop.turn_sequence,
+            sessionName,
+            session_id,
+            currentStop.timestamp,
+          ]
         );
         totalUpdated += result.changes;
       }
@@ -1345,7 +1352,13 @@ export function correlateLinesToTurns(db: Database): { updated: number; sessions
 export function getSessionTurns(
   db: Database,
   sessionId: string
-): { turnId: string; turnSequence: number; lineCount: number; firstTimestamp: string; lastTimestamp: string }[] {
+): {
+  turnId: string;
+  turnSequence: number;
+  lineCount: number;
+  firstTimestamp: string;
+  lastTimestamp: string;
+}[] {
   return db
     .query(
       `
@@ -1373,11 +1386,11 @@ export function getSessionTurns(
 /**
  * Get lines for a specific turn
  */
-export function getTurnLines(db: Database, turnId: string): TranscriptLine[] {
+export function getTurnLines(db: Database, turnId: string): Partial<TranscriptLine>[] {
   const rows = db
     .query(
       `
-    SELECT session_id, uuid, line_number, type, timestamp, content, raw
+    SELECT session_id, uuid, parent_uuid, line_number, type, subtype, timestamp, slug, cwd, content, raw
     FROM lines
     WHERE turn_id = ?
     ORDER BY line_number ASC
@@ -1386,9 +1399,13 @@ export function getTurnLines(db: Database, turnId: string): TranscriptLine[] {
     .all(turnId) as {
     session_id: string;
     uuid: string;
+    parent_uuid: string | null;
     line_number: number;
     type: string;
+    subtype: string | null;
     timestamp: string;
+    slug: string | null;
+    cwd: string | null;
     content: string;
     raw: string;
   }[];
@@ -1396,10 +1413,13 @@ export function getTurnLines(db: Database, turnId: string): TranscriptLine[] {
   return rows.map((row) => ({
     sessionId: row.session_id,
     uuid: row.uuid,
+    parentUuid: row.parent_uuid,
     lineNumber: row.line_number,
-    type: row.type,
+    type: row.type as TranscriptLine['type'],
+    subtype: row.subtype ?? undefined,
     timestamp: row.timestamp,
-    content: row.content,
+    slug: row.slug ?? undefined,
+    cwd: row.cwd ?? '',
     raw: row.raw,
   }));
 }
