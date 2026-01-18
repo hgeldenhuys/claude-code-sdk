@@ -5,7 +5,7 @@
 
 import { Database } from 'bun:sqlite';
 import { join } from 'node:path';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, openSync, readSync, closeSync, statSync } from 'node:fs';
 import { findTranscriptFiles } from './indexer';
 import type { TranscriptLine, SearchResult } from './types';
 
@@ -279,13 +279,20 @@ export function indexTranscriptFile(
     return { linesIndexed: 0, byteOffset: fromByteOffset, sessionId: '' };
   }
 
-  // Read only new bytes using Bun.file().slice()
+  // Read only new bytes
   let text: string;
   try {
     if (fromByteOffset > 0) {
-      // Read only from offset to end
-      const slice = file.slice(fromByteOffset);
-      text = new TextDecoder().decode(Bun.readableStreamToArrayBuffer(slice.stream()));
+      // Read only from offset to end using sync file operations
+      const bytesToRead = fileSize - fromByteOffset;
+      const buffer = Buffer.alloc(bytesToRead);
+      const fd = openSync(filePath, 'r');
+      try {
+        const bytesRead = readSync(fd, buffer, 0, bytesToRead, fromByteOffset);
+        text = buffer.toString('utf-8', 0, bytesRead);
+      } finally {
+        closeSync(fd);
+      }
     } else {
       // Read entire file
       text = readFileSync(filePath, 'utf-8');
@@ -663,8 +670,16 @@ export function indexHookFile(
   let text: string;
   try {
     if (fromByteOffset > 0) {
-      const slice = file.slice(fromByteOffset);
-      text = new TextDecoder().decode(Bun.readableStreamToArrayBuffer(slice.stream()));
+      // Read only from offset to end using sync file operations
+      const bytesToRead = fileSize - fromByteOffset;
+      const buffer = Buffer.alloc(bytesToRead);
+      const fd = openSync(filePath, 'r');
+      try {
+        const bytesRead = readSync(fd, buffer, 0, bytesToRead, fromByteOffset);
+        text = buffer.toString('utf-8', 0, bytesRead);
+      } finally {
+        closeSync(fd);
+      }
     } else {
       text = readFileSync(filePath, 'utf-8');
     }
