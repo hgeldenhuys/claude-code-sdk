@@ -21,7 +21,7 @@
 import { join } from 'node:path';
 import { watch, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
-import { parseTranscriptFile } from '../src/transcripts/parser';
+import { parseTranscriptFile, parseTranscript } from '../src/transcripts/parser';
 import type { TranscriptLine } from '../src/transcripts/types';
 import {
   findTranscriptFiles,
@@ -388,8 +388,216 @@ interface ViewArgs {
   watch?: boolean;
 }
 
+/**
+ * Direct file reading mode - bypasses SQLite for viewing specific files
+ * This is used when the input is an existing .jsonl file path
+ */
+async function cmdViewDirect(args: ViewArgs): Promise<number> {
+  try {
+    const filePath = args.file!;
+
+    // Parse the file directly
+    const allLines = await parseTranscriptFile(filePath);
+    if (allLines.length === 0) {
+      if (args.format === 'json') {
+        // Output empty for JSON format
+        return 0;
+      }
+      console.log('No matching lines.');
+      return 0;
+    }
+
+    // Parse types
+    let types: string[] | undefined;
+    if (args.types) {
+      const typeList = args.types.split(',').map((t) => t.trim()) as ExtendedLineType[];
+      const invalidTypes = typeList.filter((t) => !VALID_TYPES.includes(t));
+      if (invalidTypes.length > 0) {
+        printError(`invalid types: ${invalidTypes.join(', ')}`);
+        return 1;
+      }
+      types = typeList;
+    }
+
+    // Build types from convenience flags
+    if (args.userPrompts) {
+      types = ['user'];
+    } else if (args.assistant) {
+      types = ['assistant'];
+    } else if (args.tools) {
+      types = ['tool_use', 'tool_result'];
+    } else if (args.thinking) {
+      types = ['thinking'];
+    }
+
+    // Apply filters
+    let lines = filterLines(allLines, {
+      types,
+      last: args.last,
+      first: args.first,
+      from: args.from,
+      to: args.to,
+      search: args.search,
+      fromTime: args.fromTime,
+      toTime: args.toTime,
+    });
+
+    // Handle tail mode
+    if (args.tail) {
+      return await tailModeDirect(filePath, types);
+    }
+
+    // Handle watch mode
+    if (args.watch) {
+      return await watchModeDirect(filePath, types, args.format);
+    }
+
+    // Format and output
+    const format = args.format || 'human';
+    let output = '';
+
+    for (const line of lines) {
+      if (format === 'json') {
+        output += formatJson(line, args.pretty) + '\n';
+      } else if (format === 'minimal') {
+        output += formatMinimal(line) + '\n';
+      } else {
+        output += renderLine(line, { pretty: args.pretty }) + '\n';
+      }
+    }
+
+    // Write to file or stdout
+    if (args.output) {
+      const { mkdirSync } = await import('node:fs');
+      const { dirname } = await import('node:path');
+      mkdirSync(dirname(args.output), { recursive: true });
+      writeFileSync(args.output, output);
+      console.log(`Output written to: ${args.output}`);
+    } else {
+      process.stdout.write(output);
+    }
+
+    return 0;
+  } catch (error) {
+    printError(`failed to view transcript: ${error}`);
+    return 1;
+  }
+}
+
+/**
+ * Tail mode for direct file reading
+ * Returns a promise that never resolves (keeps running until killed)
+ */
+async function tailModeDirect(filePath: string, types?: string[]): Promise<number> {
+  let lastLineCount = 0;
+
+  const checkForUpdates = () => {
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      const lines = parseTranscript(content);
+      if (lines.length > lastLineCount) {
+        const newLines = lines.slice(lastLineCount);
+        lastLineCount = lines.length;
+
+        for (const line of newLines) {
+          const displayType = getDisplayType(line);
+          if (types && !types.includes(displayType)) continue;
+
+          const time = line.timestamp
+            ? new Date(line.timestamp).toLocaleTimeString('en-US', { hour12: false })
+            : '--:--';
+          const preview = getPreview(line, 80);
+          console.log(`${time} [${displayType}] ${preview}`);
+        }
+      }
+    } catch {
+      // Ignore errors during polling
+    }
+  };
+
+  // Initial check
+  checkForUpdates();
+
+  // Poll every 200ms
+  const interval = setInterval(checkForUpdates, 200);
+
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    clearInterval(interval);
+    process.exit(0);
+  });
+
+  // Block forever (until SIGINT)
+  await new Promise(() => {});
+  return 0;
+}
+
+/**
+ * Watch mode for direct file reading
+ * Returns a promise that never resolves (keeps running until killed)
+ */
+async function watchModeDirect(filePath: string, types?: string[], format?: string): Promise<number> {
+  let lastLineCount = 0;
+
+  // Initial load
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const lines = parseTranscript(content);
+    lastLineCount = lines.length;
+  } catch {
+    // Ignore
+  }
+
+  const watcher = watch(filePath, () => {
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      const lines = parseTranscript(content);
+      if (lines.length > lastLineCount) {
+        const newLines = lines.slice(lastLineCount);
+        lastLineCount = lines.length;
+
+        for (const line of newLines) {
+          const displayType = getDisplayType(line);
+          if (types && !types.includes(displayType)) continue;
+
+          if (format === 'json') {
+            console.log(formatJson(line));
+          } else {
+            const time = line.timestamp
+              ? new Date(line.timestamp).toLocaleTimeString('en-US', { hour12: false })
+              : '--:--';
+            const preview = getPreview(line, 80);
+            console.log(`${time} [${displayType}] ${preview}`);
+          }
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+  });
+
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    watcher.close();
+    process.exit(0);
+  });
+
+  // Block forever (until SIGINT)
+  await new Promise(() => {});
+  return 0;
+}
+
 async function cmdView(args: ViewArgs): Promise<number> {
   try {
+    // Check if input is a direct file path that exists on disk
+    // This provides fallback for direct file reading without SQLite
+    const isDirectFile = args.file && existsSync(args.file) && args.file.endsWith('.jsonl');
+
+    if (isDirectFile) {
+      // Direct file reading mode - bypass SQLite
+      return cmdViewDirect(args);
+    }
+
     const db = getDb();
     let sessionId: string | null = null;
 
