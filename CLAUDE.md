@@ -166,6 +166,10 @@ bun run bin/transcript.ts index daemon stop
 # Search transcripts
 bun run bin/transcript.ts search "keyword"
 
+# Memory retrieval (grouped by session, with related skills)
+bun run bin/transcript.ts recall "caching strategy"
+bun run bin/transcript.ts recall "error handling" --max-sessions 3
+
 # TUI viewer
 bun run bin/transcript.ts tui
 ```
