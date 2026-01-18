@@ -641,7 +641,9 @@ describe('Transcript CLI', () => {
         await $`bun ${cliPath} /nonexistent/file.jsonl`.throws(true);
         expect(false).toBe(true); // Should not reach here
       } catch (error: any) {
-        expect(error.stderr.toString()).toContain('not found');
+        // Bun shell errors have stderr as string
+        const stderr = typeof error.stderr === 'string' ? error.stderr : error.stderr?.toString() || '';
+        expect(stderr).toContain('not found');
       }
     });
   });

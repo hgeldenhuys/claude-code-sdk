@@ -18,51 +18,49 @@
  *   transcript search "error handling" --limit 20
  */
 
-import { join } from 'node:path';
-import { watch, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
-import { parseTranscriptFile, parseTranscript } from '../src/transcripts/parser';
+import { existsSync, readFileSync, unlinkSync, watch, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  DEFAULT_DB_PATH,
+  type LineResult,
+  type SessionInfo,
+  getDatabase,
+  getDbStats,
+  getLineCount,
+  getLines,
+  getLinesAfterId,
+  getMaxLineId,
+  getSession,
+  getSessions,
+  indexAllHookFiles,
+  indexAllTranscripts,
+  initSchema,
+  isDatabaseReady,
+  rebuildIndex,
+  searchDb,
+  updateHookIndex,
+  updateIndex,
+  watchHookFiles,
+  watchTranscripts,
+} from '../src/transcripts/db';
+import { findTranscriptFiles, getSessionInfo, indexTranscripts } from '../src/transcripts/indexer';
+import { parseTranscript, parseTranscriptFile } from '../src/transcripts/parser';
+import { searchTranscripts } from '../src/transcripts/search';
 import type { TranscriptLine } from '../src/transcripts/types';
 import {
-  findTranscriptFiles,
-  getSessionInfo,
-  indexTranscripts,
-} from '../src/transcripts/indexer';
-import { searchTranscripts } from '../src/transcripts/search';
-import {
-  getDatabase,
-  initSchema,
-  indexAllTranscripts,
-  rebuildIndex,
-  getDbStats,
-  isDatabaseReady,
-  searchDb,
-  updateIndex,
-  watchTranscripts,
-  indexAllHookFiles,
-  updateHookIndex,
-  watchHookFiles,
-  DEFAULT_DB_PATH,
-  getSessions,
-  getSession,
-  getLines,
-  getMaxLineId,
-  getLinesAfterId,
-  getLineCount,
-  type SessionInfo,
-  type LineResult,
-} from '../src/transcripts/db';
-import {
+  type ExtendedLineType,
+  type FilterOptions,
+  type OutputFormat,
   filterLines,
   formatJson,
   formatMinimal,
   formatTailLine,
+  getDisplayType,
+  getPreview,
   getSessionMetadata,
   parseTimestamp,
   renderLine,
-  type ExtendedLineType,
-  type FilterOptions,
-  type OutputFormat,
 } from '../src/transcripts/viewer';
 
 // ============================================================================
@@ -117,17 +115,21 @@ function getDb(): ReturnType<typeof getDatabase> {
   // Check if daemon is running and warn if not
   if (existsSync(PID_FILE)) {
     try {
-      const pid = parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      const pid = Number.parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
       try {
         process.kill(pid, 0); // Check if process exists
       } catch {
-        console.error('\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m\n');
+        console.error(
+          '\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m\n'
+        );
       }
     } catch {
       // Ignore PID file read errors
     }
   } else {
-    console.error('\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m\n');
+    console.error(
+      '\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m\n'
+    );
   }
 
   return _db;
@@ -334,9 +336,7 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
       if (info.slug === input || info.sessionId === input) {
         return filePath;
       }
-    } catch {
-      continue;
-    }
+    } catch {}
   }
 
   // Try sesh integration if available
@@ -431,20 +431,20 @@ async function cmdViewDirect(args: ViewArgs): Promise<number> {
     }
 
     // Apply filters
-    let lines = filterLines(allLines, {
+    const lines = filterLines(allLines, {
       types,
       last: args.last,
       first: args.first,
-      from: args.from,
-      to: args.to,
+      fromLine: args.from,
+      toLine: args.to,
       search: args.search,
-      fromTime: args.fromTime,
-      toTime: args.toTime,
+      fromTime: args.fromTime ? parseTimestamp(args.fromTime) : undefined,
+      toTime: args.toTime ? parseTimestamp(args.toTime) : undefined,
     });
 
     // Handle tail mode
     if (args.tail) {
-      return await tailModeDirect(filePath, types);
+      return await tailModeDirect(filePath, types, lines);
     }
 
     // Handle watch mode
@@ -458,12 +458,12 @@ async function cmdViewDirect(args: ViewArgs): Promise<number> {
 
     for (const line of lines) {
       if (format === 'json') {
-        output += formatJson(line, args.pretty) + '\n';
+        output += `${formatJson(line, args.pretty)}\n`;
       } else if (format === 'minimal') {
-        output += formatMinimal(line) + '\n';
+        output += `${formatMinimal(line)}\n`;
       } else {
         const rendered = renderLine(line);
-        output += rendered.fullContent + '\n';
+        output += `${rendered.fullContent}\n`;
       }
     }
 
@@ -489,8 +489,32 @@ async function cmdViewDirect(args: ViewArgs): Promise<number> {
  * Tail mode for direct file reading
  * Returns a promise that never resolves (keeps running until killed)
  */
-async function tailModeDirect(filePath: string, types?: string[]): Promise<number> {
+async function tailModeDirect(
+  filePath: string,
+  types?: string[],
+  initialLines?: TranscriptLine[]
+): Promise<number> {
+  // Output initial lines if provided
+  if (initialLines && initialLines.length > 0) {
+    for (const line of initialLines) {
+      const displayType = getDisplayType(line);
+      const time = line.timestamp
+        ? new Date(line.timestamp).toLocaleTimeString('en-US', { hour12: false })
+        : '--:--';
+      const preview = getPreview(line, 80);
+      console.log(`${time} [${displayType}] ${preview}`);
+    }
+  }
+
+  // Track how many lines we've seen
   let lastLineCount = 0;
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const lines = parseTranscript(content);
+    lastLineCount = lines.length;
+  } catch {
+    // Ignore initial read errors
+  }
 
   const checkForUpdates = () => {
     try {
@@ -516,9 +540,6 @@ async function tailModeDirect(filePath: string, types?: string[]): Promise<numbe
     }
   };
 
-  // Initial check
-  checkForUpdates();
-
   // Poll every 200ms
   const interval = setInterval(checkForUpdates, 200);
 
@@ -537,7 +558,11 @@ async function tailModeDirect(filePath: string, types?: string[]): Promise<numbe
  * Watch mode for direct file reading
  * Returns a promise that never resolves (keeps running until killed)
  */
-async function watchModeDirect(filePath: string, types?: string[], format?: string): Promise<number> {
+async function watchModeDirect(
+  filePath: string,
+  types?: string[],
+  format?: string
+): Promise<number> {
   let lastLineCount = 0;
 
   // Initial load
@@ -590,9 +615,18 @@ async function watchModeDirect(filePath: string, types?: string[], format?: stri
 
 async function cmdView(args: ViewArgs): Promise<number> {
   try {
+    // Check if input looks like a file path (ends with .jsonl)
+    const looksLikeFile = args.file?.endsWith('.jsonl');
+
+    // If it looks like a file path and doesn't exist, report error early
+    if (looksLikeFile && !existsSync(args.file)) {
+      printError(`transcript file not found: ${args.file}`);
+      return 1;
+    }
+
     // Check if input is a direct file path that exists on disk
     // This provides fallback for direct file reading without SQLite
-    const isDirectFile = args.file && existsSync(args.file) && args.file.endsWith('.jsonl');
+    const isDirectFile = looksLikeFile && existsSync(args.file!);
 
     if (isDirectFile) {
       // Direct file reading mode - bypass SQLite
@@ -699,7 +733,7 @@ async function cmdView(args: ViewArgs): Promise<number> {
 
     // Standard view mode - query SQLite
     let queryLimit = args.limit;
-    let queryOffset = args.offset;
+    const queryOffset = args.offset;
     let order: 'asc' | 'desc' = 'asc';
 
     // Handle --last (get last N lines)
@@ -742,15 +776,17 @@ async function cmdView(args: ViewArgs): Promise<number> {
         case 'json':
           outputLines.push(formatJson(line, args.pretty));
           break;
-        case 'minimal':
+        case 'minimal': {
           const minimal = formatMinimal(line);
           if (minimal) outputLines.push(minimal);
           break;
-        case 'human':
+        }
+        case 'human': {
           const rendered = renderLine(line);
           outputLines.push(rendered.fullContent);
           outputLines.push('');
           break;
+        }
         default:
           // Raw format - just the JSON line
           outputLines.push(line.raw);
@@ -793,7 +829,7 @@ async function tailModeSql(
         return formatMinimal(line);
       case 'human': {
         const rendered = renderLine(line);
-        return rendered.fullContent + '\n';
+        return `${rendered.fullContent}\n`;
       }
       default:
         return formatTailLine(line);
@@ -980,9 +1016,7 @@ async function cmdSearch(args: SearchArgs): Promise<number> {
   try {
     const db = getDb();
 
-    const types = args.types
-      ? args.types.split(',').map((t) => t.trim())
-      : undefined;
+    const types = args.types ? args.types.split(',').map((t) => t.trim()) : undefined;
 
     // Resolve session name to ID if provided
     let sessionIds = args.sessionIds;
@@ -1041,6 +1075,72 @@ async function cmdSearch(args: SearchArgs): Promise<number> {
   }
 }
 
+/**
+ * Direct file info - reads file without SQLite
+ */
+async function cmdInfoDirect(filePath: string): Promise<number> {
+  try {
+    const lines = await parseTranscriptFile(filePath);
+    if (lines.length === 0) {
+      console.log('Transcript Information\n');
+      console.log(`File:           ${filePath}`);
+      console.log('Line Count:     0');
+      return 0;
+    }
+
+    // Extract session ID from first line
+    const firstLine = lines[0]!;
+    const sessionId = firstLine.sessionId || 'unknown';
+
+    // Count types
+    const typeCounts: Record<string, number> = {};
+    for (const line of lines) {
+      const type = getDisplayType(line);
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+    }
+
+    // Extract metadata
+    let version: string | undefined;
+    let cwd: string | undefined;
+    let gitBranch: string | undefined;
+
+    for (const line of lines.slice(0, 10)) {
+      if (line.cwd && !cwd) cwd = line.cwd;
+      // Type assertion to access optional metadata fields
+      const metadata = line as unknown as Record<string, unknown>;
+      if (typeof metadata.version === 'string' && !version) version = metadata.version;
+      if (typeof metadata.gitBranch === 'string' && !gitBranch) gitBranch = metadata.gitBranch;
+      if (version && cwd && gitBranch) break;
+    }
+
+    // Get timestamps
+    const firstTimestamp = lines[0]?.timestamp || '';
+    const lastTimestamp = lines[lines.length - 1]?.timestamp || '';
+
+    console.log('Transcript Information\n');
+    console.log(`File:           ${filePath}`);
+    console.log(`Session ID:     ${sessionId}`);
+    console.log(`Line Count:     ${lines.length}`);
+    console.log(`First Entry:    ${formatDate(firstTimestamp)}`);
+    console.log(`Last Entry:     ${formatDate(lastTimestamp)}`);
+
+    if (version) console.log(`Version:        ${version}`);
+    if (cwd) console.log(`Working Dir:    ${cwd}`);
+    if (gitBranch) console.log(`Git Branch:     ${gitBranch}`);
+
+    console.log('\nMessage Types:');
+    const sortedTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
+    for (const [type, count] of sortedTypes) {
+      console.log(`  ${type.padEnd(20)} ${count}`);
+    }
+
+    return 0;
+  } catch (error) {
+    printError(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
+}
+
 async function cmdInfo(input: string): Promise<number> {
   try {
     const db = getDb();
@@ -1055,19 +1155,26 @@ async function cmdInfo(input: string): Promise<number> {
       }
     }
 
+    // If not in database but input is an existing file, read directly
+    if (!session && existsSync(input)) {
+      return cmdInfoDirect(input);
+    }
+
     if (!session) {
       printError(`transcript not found: ${input}`);
       return 1;
     }
 
     // Get type counts from SQLite
-    const typeCounts = db.prepare(`
+    const typeCounts = db
+      .prepare(`
       SELECT type, COUNT(*) as count
       FROM lines
       WHERE session_id = ?
       GROUP BY type
       ORDER BY count DESC
-    `).all(session.sessionId) as Array<{ type: string; count: number }>;
+    `)
+      .all(session.sessionId) as Array<{ type: string; count: number }>;
 
     // Get some metadata from the first few lines
     const firstLines = getLines(db, {
@@ -1133,8 +1240,8 @@ function formatBytes(bytes: number): string {
 function getDaemonPid(): number | null {
   try {
     if (existsSync(PID_FILE)) {
-      const pid = parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
-      if (!isNaN(pid) && pid > 0) {
+      const pid = Number.parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      if (!Number.isNaN(pid) && pid > 0) {
         // Check if process is actually running
         try {
           process.kill(pid, 0); // Signal 0 just checks if process exists
@@ -1204,10 +1311,9 @@ async function startDaemon(): Promise<number> {
     console.log(`Daemon started (PID: ${child.pid})`);
     console.log(`Logs: ${LOG_FILE}`);
     return 0;
-  } else {
-    console.log('Failed to start daemon');
-    return 1;
   }
+  console.log('Failed to start daemon');
+  return 1;
 }
 
 async function stopDaemon(): Promise<number> {
@@ -1240,7 +1346,7 @@ function showDaemonStatus(): number {
   return 0;
 }
 
-function showDaemonLogs(lines: number = 50): number {
+function showDaemonLogs(lines = 50): number {
   if (!existsSync(LOG_FILE)) {
     console.log('No logs found');
     return 0;
@@ -1267,11 +1373,15 @@ async function runDaemonProcess(): Promise<number> {
 
   // Do an initial update for transcripts
   const transcriptResult = await updateIndex(db);
-  appendLog(`Initial transcript update: ${transcriptResult.filesUpdated} files, +${transcriptResult.newLines} lines`);
+  appendLog(
+    `Initial transcript update: ${transcriptResult.filesUpdated} files, +${transcriptResult.newLines} lines`
+  );
 
   // Do an initial update for hook events
   const hookResult = await updateHookIndex(db);
-  appendLog(`Initial hook update: ${hookResult.filesUpdated} files, +${hookResult.newEvents} events`);
+  appendLog(
+    `Initial hook update: ${hookResult.filesUpdated} files, +${hookResult.newEvents} events`
+  );
 
   // Start watching transcripts
   const cleanupTranscripts = watchTranscripts(db, undefined, (file, newLines) => {
@@ -1332,7 +1442,9 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         console.log(`  Events indexed: ${stats.hookEventCount.toLocaleString()}`);
         console.log(`  Hook files:     ${stats.hookFileCount.toLocaleString()}`);
         console.log('');
-        console.log(`Last indexed:   ${stats.lastIndexed ? formatDate(stats.lastIndexed) : 'never'}`);
+        console.log(
+          `Last indexed:   ${stats.lastIndexed ? formatDate(stats.lastIndexed) : 'never'}`
+        );
         return 0;
       }
 
@@ -1346,21 +1458,37 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
 
         // Index transcripts
         console.log('Indexing transcripts...');
-        const transcriptResult = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
-          const fileName = file.split('/').pop() || file;
-          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
-        });
-        console.log(`\n  Indexed ${transcriptResult.filesIndexed} files, ${transcriptResult.linesIndexed.toLocaleString()} lines`);
+        const transcriptResult = await indexAllTranscripts(
+          db,
+          undefined,
+          (file, current, total, lines) => {
+            const fileName = file.split('/').pop() || file;
+            const shortName = fileName.length > 40 ? `${fileName.slice(0, 37)}...` : fileName;
+            process.stdout.write(
+              `\r  [${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`
+            );
+          }
+        );
+        console.log(
+          `\n  Indexed ${transcriptResult.filesIndexed} files, ${transcriptResult.linesIndexed.toLocaleString()} lines`
+        );
 
         // Index hook events
         console.log('\nIndexing hook events...');
-        const hookResult = await indexAllHookFiles(db, undefined, (file, current, total, events) => {
-          const fileName = file.split('/').pop() || file;
-          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${events} events)`);
-        });
-        console.log(`\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`);
+        const hookResult = await indexAllHookFiles(
+          db,
+          undefined,
+          (file, current, total, events) => {
+            const fileName = file.split('/').pop() || file;
+            const shortName = fileName.length > 40 ? `${fileName.slice(0, 37)}...` : fileName;
+            process.stdout.write(
+              `\r  [${current}/${total}] ${shortName.padEnd(40)} (${events} events)`
+            );
+          }
+        );
+        console.log(
+          `\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`
+        );
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`\nTotal time: ${elapsed}s`);
@@ -1382,21 +1510,37 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
 
         // Index transcripts
         console.log('Indexing transcripts...');
-        const transcriptResult = await indexAllTranscripts(db, undefined, (file, current, total, lines) => {
-          const fileName = file.split('/').pop() || file;
-          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`);
-        });
-        console.log(`\n  Indexed ${transcriptResult.filesIndexed} files, ${transcriptResult.linesIndexed.toLocaleString()} lines`);
+        const transcriptResult = await indexAllTranscripts(
+          db,
+          undefined,
+          (file, current, total, lines) => {
+            const fileName = file.split('/').pop() || file;
+            const shortName = fileName.length > 40 ? `${fileName.slice(0, 37)}...` : fileName;
+            process.stdout.write(
+              `\r  [${current}/${total}] ${shortName.padEnd(40)} (${lines} lines)`
+            );
+          }
+        );
+        console.log(
+          `\n  Indexed ${transcriptResult.filesIndexed} files, ${transcriptResult.linesIndexed.toLocaleString()} lines`
+        );
 
         // Index hook events
         console.log('\nIndexing hook events...');
-        const hookResult = await indexAllHookFiles(db, undefined, (file, current, total, events) => {
-          const fileName = file.split('/').pop() || file;
-          const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-          process.stdout.write(`\r  [${current}/${total}] ${shortName.padEnd(40)} (${events} events)`);
-        });
-        console.log(`\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`);
+        const hookResult = await indexAllHookFiles(
+          db,
+          undefined,
+          (file, current, total, events) => {
+            const fileName = file.split('/').pop() || file;
+            const shortName = fileName.length > 40 ? `${fileName.slice(0, 37)}...` : fileName;
+            process.stdout.write(
+              `\r  [${current}/${total}] ${shortName.padEnd(40)} (${events} events)`
+            );
+          }
+        );
+        console.log(
+          `\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`
+        );
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`\nTotal time: ${elapsed}s`);
@@ -1423,30 +1567,42 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         // Update transcripts
         console.log('Transcripts:');
         let transcriptSkipped = 0;
-        const transcriptResult = await updateIndex(db, undefined, (file, current, total, newLines, skipped) => {
-          if (skipped) {
-            transcriptSkipped++;
-          } else if (newLines > 0) {
-            const fileName = file.split('/').pop() || file;
-            const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-            console.log(`  ${shortName}: +${newLines} lines`);
+        const transcriptResult = await updateIndex(
+          db,
+          undefined,
+          (file, current, total, newLines, skipped) => {
+            if (skipped) {
+              transcriptSkipped++;
+            } else if (newLines > 0) {
+              const fileName = file.split('/').pop() || file;
+              const shortName = fileName.length > 40 ? `${fileName.slice(0, 37)}...` : fileName;
+              console.log(`  ${shortName}: +${newLines} lines`);
+            }
           }
-        });
-        console.log(`  Checked ${transcriptResult.filesChecked} files, updated ${transcriptResult.filesUpdated}, +${transcriptResult.newLines.toLocaleString()} lines`);
+        );
+        console.log(
+          `  Checked ${transcriptResult.filesChecked} files, updated ${transcriptResult.filesUpdated}, +${transcriptResult.newLines.toLocaleString()} lines`
+        );
 
         // Update hook events
         console.log('\nHook Events:');
         let hookSkipped = 0;
-        const hookResult = await updateHookIndex(db, undefined, (file, current, total, newEvents, skipped) => {
-          if (skipped) {
-            hookSkipped++;
-          } else if (newEvents > 0) {
-            const fileName = file.split('/').pop() || file;
-            const shortName = fileName.length > 40 ? fileName.slice(0, 37) + '...' : fileName;
-            console.log(`  ${shortName}: +${newEvents} events`);
+        const hookResult = await updateHookIndex(
+          db,
+          undefined,
+          (file, current, total, newEvents, skipped) => {
+            if (skipped) {
+              hookSkipped++;
+            } else if (newEvents > 0) {
+              const fileName = file.split('/').pop() || file;
+              const shortName = fileName.length > 40 ? `${fileName.slice(0, 37)}...` : fileName;
+              console.log(`  ${shortName}: +${newEvents} events`);
+            }
           }
-        });
-        console.log(`  Checked ${hookResult.filesChecked} files, updated ${hookResult.filesUpdated}, +${hookResult.newEvents.toLocaleString()} events`);
+        );
+        console.log(
+          `  Checked ${hookResult.filesChecked} files, updated ${hookResult.filesUpdated}, +${hookResult.newEvents.toLocaleString()} events`
+        );
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`\nTotal time: ${elapsed}s`);
@@ -1467,14 +1623,14 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
 
         const cleanupTranscripts = watchTranscripts(db, undefined, (file, newLines) => {
           const fileName = file.split('/').pop() || file;
-          const shortName = fileName.length > 50 ? fileName.slice(0, 47) + '...' : fileName;
+          const shortName = fileName.length > 50 ? `${fileName.slice(0, 47)}...` : fileName;
           const time = new Date().toLocaleTimeString();
           console.log(`[${time}] [transcript] ${shortName}: +${newLines} lines indexed`);
         });
 
         const cleanupHooks = watchHookFiles(db, undefined, (file, newEvents) => {
           const fileName = file.split('/').pop() || file;
-          const shortName = fileName.length > 50 ? fileName.slice(0, 47) + '...' : fileName;
+          const shortName = fileName.length > 50 ? `${fileName.slice(0, 47)}...` : fileName;
           const time = new Date().toLocaleTimeString();
           console.log(`[${time}] [hooks] ${shortName}: +${newEvents} events indexed`);
         });
@@ -1596,27 +1752,27 @@ function parseArgs(args: string[]): {
       continue;
     }
     if (arg === '--last' || arg === '-n') {
-      flags.last = parseInt(args[++i]!, 10);
+      flags.last = Number.parseInt(args[++i]!, 10);
       continue;
     }
     if (arg === '--first') {
-      flags.first = parseInt(args[++i]!, 10);
+      flags.first = Number.parseInt(args[++i]!, 10);
       continue;
     }
     if (arg === '--from') {
-      flags.from = parseInt(args[++i]!, 10);
+      flags.from = Number.parseInt(args[++i]!, 10);
       continue;
     }
     if (arg === '--to') {
-      flags.to = parseInt(args[++i]!, 10);
+      flags.to = Number.parseInt(args[++i]!, 10);
       continue;
     }
     if (arg === '--offset') {
-      flags.offset = parseInt(args[++i]!, 10);
+      flags.offset = Number.parseInt(args[++i]!, 10);
       continue;
     }
     if (arg === '--limit') {
-      flags.limit = parseInt(args[++i]!, 10);
+      flags.limit = Number.parseInt(args[++i]!, 10);
       continue;
     }
     if (arg === '--search') {
@@ -1636,7 +1792,7 @@ function parseArgs(args: string[]): {
       continue;
     }
     if (arg === '--recent') {
-      flags.recent = parseInt(args[++i]!, 10);
+      flags.recent = Number.parseInt(args[++i]!, 10);
       continue;
     }
     if (arg === '--project') {
@@ -1732,9 +1888,9 @@ interface DiagnosticResult {
 }
 
 async function cmdDoctor(): Promise<number> {
-  const fs = await import('fs');
-  const path = await import('path');
-  const os = await import('os');
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const os = await import('node:os');
 
   const results: DiagnosticResult[] = [];
   const cwd = process.cwd();
@@ -1745,7 +1901,7 @@ async function cmdDoctor(): Promise<number> {
   // 1. Check daemon status
   if (fs.existsSync(PID_FILE)) {
     try {
-      const pid = parseInt(fs.readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      const pid = Number.parseInt(fs.readFileSync(PID_FILE, 'utf-8').trim(), 10);
       try {
         process.kill(pid, 0); // Check if process exists
         results.push({
@@ -1812,7 +1968,9 @@ async function cmdDoctor(): Promise<number> {
         }
 
         // Check freshness
-        const lastIndexed = db.query('SELECT value FROM metadata WHERE key = ?').get('last_indexed') as { value: string } | null;
+        const lastIndexed = db
+          .query('SELECT value FROM metadata WHERE key = ?')
+          .get('last_indexed') as { value: string } | null;
         if (lastIndexed) {
           const lastTime = new Date(lastIndexed.value);
           const ageMinutes = Math.floor((Date.now() - lastTime.getTime()) / 60000);
@@ -1974,7 +2132,7 @@ async function cmdDoctor(): Promise<number> {
   const hooksDir = path.join(os.homedir(), '.claude', 'hooks');
   if (fs.existsSync(hooksDir)) {
     try {
-      const projects = fs.readdirSync(hooksDir).filter(f => {
+      const projects = fs.readdirSync(hooksDir).filter((f) => {
         const stat = fs.statSync(path.join(hooksDir, f));
         return stat.isDirectory();
       });
@@ -1982,7 +2140,7 @@ async function cmdDoctor(): Promise<number> {
       let totalFiles = 0;
       for (const project of projects) {
         const projectDir = path.join(hooksDir, project);
-        const files = fs.readdirSync(projectDir).filter(f => f.endsWith('.hooks.jsonl'));
+        const files = fs.readdirSync(projectDir).filter((f) => f.endsWith('.hooks.jsonl'));
         totalFiles += files.length;
       }
 
@@ -2041,13 +2199,13 @@ async function cmdDoctor(): Promise<number> {
   if (hasFailures) {
     console.log('Some checks failed. Fix the issues above to enable full functionality.');
     return 1;
-  } else if (hasWarnings) {
+  }
+  if (hasWarnings) {
     console.log('Some checks have warnings. Review the messages above.');
     return 0;
-  } else {
-    console.log('All checks passed! Transcript indexing is properly configured.');
-    return 0;
   }
+  console.log('All checks passed! Transcript indexing is properly configured.');
+  return 0;
 }
 
 // ============================================================================
@@ -2072,7 +2230,7 @@ async function main(): Promise<number> {
         return 1;
       }
       return cmdView({
-        file: positional[0] || '',  // May be empty if using --session-name
+        file: positional[0] || '', // May be empty if using --session-name
         types: flags.types as string | undefined,
         last: flags.last as number | undefined,
         first: flags.first as number | undefined,
