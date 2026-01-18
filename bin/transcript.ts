@@ -185,6 +185,7 @@ Usage:
   transcript <file|session> [options]     View transcript with filters
   transcript list [options]               List available transcripts
   transcript search <query> [options]     Search across transcripts
+  transcript recall <query> [options]     Memory retrieval - find past discussions
   transcript index [build|status|rebuild] Manage SQLite search index
   transcript info <file|session>          Show transcript metadata
   transcript doctor                       Diagnose transcript indexing configuration
@@ -223,6 +224,14 @@ Live Modes:
 
 Search Options:
   --search <query>        Filter lines containing query
+
+Recall Options (for memory retrieval):
+  --max-sessions <n>      Maximum sessions to show (default: 5)
+  --context <n>           Matches per session to show (default: 3)
+  --limit <n>             Total matches to search (default: 100)
+  --artifacts             Include related skills (default: true)
+  --no-artifacts          Exclude related skills
+  --json                  Output as JSON
 
 Session Filters:
   --session <ids>         Filter by session ID(s) (comma-separated)
@@ -275,6 +284,10 @@ Examples:
 
   # Search for error handling discussions
   transcript search "error handling" --limit 20
+
+  # Recall past discussions (memory retrieval)
+  transcript recall "sandbox integration tests"
+  transcript recall "caching strategy" --max-sessions 3
 
   # List recent transcripts
   transcript list --recent 7
@@ -1089,6 +1102,271 @@ async function cmdSearch(args: SearchArgs): Promise<number> {
   }
 }
 
+// ============================================================================
+// Recall Command - Memory Retrieval
+// ============================================================================
+
+interface RecallArgs {
+  query: string;
+  limit?: number;
+  maxSessions?: number;
+  context?: number;
+  json?: boolean;
+  includeArtifacts?: boolean;
+}
+
+interface RecallSession {
+  sessionId: string;
+  slug: string;
+  firstTimestamp: string;
+  lastTimestamp: string;
+  matchCount: number;
+  matches: Array<{
+    lineNumber: number;
+    type: string;
+    timestamp: string;
+    text: string;
+  }>;
+  artifacts: string[];
+}
+
+/**
+ * Find related skills in the skills directory
+ */
+function findRelatedSkills(query: string): string[] {
+  const skillsDir = join(process.cwd(), 'skills');
+  const claudeSkillsDir = join(process.cwd(), '.claude', 'skills');
+  const homeSkillsDir = join(process.env.HOME || '~', '.claude', 'skills');
+
+  const skills: string[] = [];
+  const queryWords = query.toLowerCase().split(/\s+/);
+
+  for (const dir of [skillsDir, claudeSkillsDir, homeSkillsDir]) {
+    if (!existsSync(dir)) continue;
+
+    try {
+      const { readdirSync, statSync } = require('node:fs');
+      const entries = readdirSync(dir) as string[];
+
+      for (const entry of entries) {
+        const entryPath = join(dir, entry);
+        const stat = statSync(entryPath);
+
+        if (stat.isDirectory()) {
+          const skillFile = join(entryPath, 'SKILL.md');
+          if (existsSync(skillFile)) {
+            // Check if skill name matches query
+            const entryLower = entry.toLowerCase();
+            const matches = queryWords.some(
+              (word) => entryLower.includes(word) || word.includes(entryLower)
+            );
+
+            if (matches) {
+              // Read skill description from frontmatter
+              try {
+                const content = readFileSync(skillFile, 'utf-8');
+                const descMatch = content.match(/description:\s*(.+)/i);
+                const desc = descMatch ? descMatch[1].trim() : '';
+                skills.push(`${entry}: ${desc}`);
+              } catch {
+                skills.push(entry);
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Directory access error, skip
+    }
+  }
+
+  return skills;
+}
+
+/**
+ * Recall command - memory retrieval optimized for finding past discussions
+ */
+async function cmdRecall(args: RecallArgs): Promise<number> {
+  try {
+    const db = getDb();
+    const maxSessions = args.maxSessions || 5;
+    const contextLines = args.context || 3;
+    const limit = args.limit || 100;
+
+    // Search with higher limit to get enough results for grouping
+    const results = searchDb(db, {
+      query: args.query,
+      limit,
+    });
+
+    if (results.length === 0) {
+      console.log(`No memories found for "${args.query}"`);
+
+      // Still check for related skills
+      if (args.includeArtifacts !== false) {
+        const skills = findRelatedSkills(args.query);
+        if (skills.length > 0) {
+          console.log('\nRelated skills found:');
+          for (const skill of skills) {
+            console.log(`  - ${skill}`);
+          }
+        }
+      }
+
+      return 0;
+    }
+
+    // Group results by session
+    const sessionMap = new Map<string, RecallSession>();
+
+    for (const result of results) {
+      const key = result.sessionId;
+
+      if (!sessionMap.has(key)) {
+        sessionMap.set(key, {
+          sessionId: result.sessionId,
+          slug: result.slug || result.sessionId.slice(0, 8),
+          firstTimestamp: result.timestamp,
+          lastTimestamp: result.timestamp,
+          matchCount: 0,
+          matches: [],
+          artifacts: [],
+        });
+      }
+
+      const session = sessionMap.get(key)!;
+      session.matchCount++;
+
+      // Track timestamp range
+      if (result.timestamp < session.firstTimestamp) {
+        session.firstTimestamp = result.timestamp;
+      }
+      if (result.timestamp > session.lastTimestamp) {
+        session.lastTimestamp = result.timestamp;
+      }
+
+      // Keep top matches per session (limit to contextLines)
+      if (session.matches.length < contextLines) {
+        session.matches.push({
+          lineNumber: result.lineNumber,
+          type: result.type,
+          timestamp: result.timestamp,
+          text: result.matchedText.replace(/>>>>/g, '').replace(/<<<<'/g, ''),
+        });
+      }
+    }
+
+    // Sort sessions by most matches, then most recent
+    const sessions = Array.from(sessionMap.values())
+      .sort((a, b) => {
+        if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+        return b.lastTimestamp.localeCompare(a.lastTimestamp);
+      })
+      .slice(0, maxSessions);
+
+    // Find related skills
+    const relatedSkills = args.includeArtifacts !== false ? findRelatedSkills(args.query) : [];
+
+    if (args.json) {
+      console.log(
+        JSON.stringify(
+          {
+            query: args.query,
+            totalMatches: results.length,
+            sessions,
+            relatedSkills,
+          },
+          null,
+          2
+        )
+      );
+      return 0;
+    }
+
+    // Format output for human reading
+    console.log(`\n🔍 Recall: "${args.query}"\n`);
+    console.log(`Found ${results.length} matches across ${sessionMap.size} sessions\n`);
+
+    for (const session of sessions) {
+      const dateRange = formatDateRange(session.firstTimestamp, session.lastTimestamp);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`📁 ${session.slug} (${session.matchCount} matches)`);
+      console.log(`   ${dateRange}`);
+      console.log('');
+
+      for (const match of session.matches) {
+        const time = formatTime(match.timestamp);
+        const typeLabel = match.type.padEnd(10);
+        console.log(`   [${time}] ${typeLabel} Line ${match.lineNumber}`);
+        // Wrap long text
+        const text = match.text.slice(0, 200);
+        console.log(`   ${text}${match.text.length > 200 ? '...' : ''}`);
+        console.log('');
+      }
+
+      console.log(`   → transcript ${session.slug} --search "${args.query}" --human`);
+      console.log('');
+    }
+
+    if (relatedSkills.length > 0) {
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`📚 Related Skills`);
+      console.log('');
+      for (const skill of relatedSkills) {
+        console.log(`   - ${skill}`);
+      }
+      console.log('');
+    }
+
+    return 0;
+  } catch (error) {
+    printError(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
+}
+
+/**
+ * Format a date range for display
+ */
+function formatDateRange(start: string, end: string): string {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  const startStr = startDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  if (startDate.toDateString() === endDate.toDateString()) {
+    const endTime = endDate.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    return `${startStr} - ${endTime}`;
+  }
+
+  const endStr = endDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  return `${startStr} → ${endStr}`;
+}
+
+/**
+ * Format time for display
+ */
+function formatTime(timestamp: string): string {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 /**
  * Direct file info - reads file without SQLite
  */
@@ -1759,6 +2037,11 @@ function parseArgs(args: string[]): {
       continue;
     }
 
+    if (arg === 'recall') {
+      command = 'recall';
+      continue;
+    }
+
     if (arg === 'info') {
       command = 'info';
       continue;
@@ -2311,6 +2594,20 @@ async function main(): Promise<number> {
         json: flags.json as boolean | undefined,
         sessionIds: flags.sessionIds as string[] | undefined,
         sessionName: flags.sessionNameLookup as string | undefined,
+      });
+
+    case 'recall':
+      if (positional.length === 0) {
+        printError('usage: transcript recall <query> [options]');
+        return 1;
+      }
+      return cmdRecall({
+        query: positional.join(' '),
+        limit: flags.limit as number | undefined,
+        maxSessions: flags.maxSessions as number | undefined,
+        context: flags.context as number | undefined,
+        json: flags.json as boolean | undefined,
+        includeArtifacts: flags.artifacts as boolean | undefined,
       });
 
     case 'info':
