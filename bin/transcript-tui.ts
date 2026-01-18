@@ -20,36 +20,36 @@
  *   transcript-tui cryptic-crunching-candle
  */
 
-import blessed from 'blessed';
-import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { getConversationThread } from '../src/transcripts/parser';
-import {
-  getDatabase,
-  getSessions,
-  getSession,
-  getLines,
-  getMaxLineId,
-  getLinesAfterId,
-  DEFAULT_DB_PATH,
-  type SessionInfo,
-  type LineResult,
-} from '../src/transcripts/db';
 import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import blessed from 'blessed';
 import {
-  renderLine,
+  DEFAULT_DB_PATH,
+  type LineResult,
+  type SessionInfo,
+  getDatabase,
+  getLines,
+  getLinesAfterId,
+  getMaxLineId,
+  getSession,
+  getSessions,
+} from '../src/transcripts/db';
+import { getConversationThread } from '../src/transcripts/parser';
+import type { TranscriptLine } from '../src/transcripts/types';
+import {
+  type ExtendedLineType,
+  type FilterOptions,
+  type RenderedLine,
+  filterLines,
   formatJson,
   formatMinimal,
   getDisplayType,
   getPreview,
   getSessionMetadata,
-  filterLines,
+  renderLine,
   renderTextOnlyContent,
-  type RenderedLine,
-  type FilterOptions,
-  type ExtendedLineType,
 } from '../src/transcripts/viewer';
-import type { TranscriptLine } from '../src/transcripts/types';
 
 // ============================================================================
 // Constants
@@ -80,7 +80,7 @@ function getDb(): ReturnType<typeof getDatabase> {
   let daemonRunning = false;
   if (existsSync(PID_FILE)) {
     try {
-      const pid = parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      const pid = Number.parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
       try {
         process.kill(pid, 0);
         daemonRunning = true;
@@ -93,7 +93,9 @@ function getDb(): ReturnType<typeof getDatabase> {
   }
 
   if (!daemonRunning) {
-    console.error('\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m');
+    console.error(
+      '\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m'
+    );
     // Give user a moment to see warning
     setTimeout(() => {}, 2000);
   }
@@ -188,9 +190,12 @@ interface AppState {
   pollInterval: ReturnType<typeof setInterval> | null; // SQLite polling interval
   lastMaxLineId: number; // Last known max line ID for delta detection
   filterOpts: FilterOptions; // Store filter options for reapplying
+  // Performance cache
+  cachedListItems: string[]; // Pre-computed list items for performance
+  listItemsDirty: boolean; // Flag to regenerate list items
 }
 
-let state: AppState = {
+const state: AppState = {
   lines: [],
   allLines: [],
   currentIndex: 0,
@@ -218,6 +223,9 @@ let state: AppState = {
   pollInterval: null,
   lastMaxLineId: 0,
   filterOpts: {},
+  // Performance cache
+  cachedListItems: [],
+  listItemsDirty: true,
 };
 
 // ============================================================================
@@ -312,9 +320,8 @@ function getTypeColor(type: string): string {
  * Copy text to system clipboard
  */
 function copyToClipboard(text: string): void {
-  const proc = process.platform === 'darwin'
-    ? spawn('pbcopy')
-    : spawn('xclip', ['-selection', 'clipboard']);
+  const proc =
+    process.platform === 'darwin' ? spawn('pbcopy') : spawn('xclip', ['-selection', 'clipboard']);
   proc.stdin.write(text);
   proc.stdin.end();
 }
@@ -328,6 +335,7 @@ function toggleBookmark(lineNumber: number): void {
   } else {
     state.bookmarks.add(lineNumber);
   }
+  invalidateListCache(); // Bookmark display changed
 }
 
 /**
@@ -453,7 +461,9 @@ function generateUsageGraph(width: number, height: number): string {
   }
 
   lines.push('');
-  lines.push(`{gray-fg}Lines: ${sourceLines.length} | Current: ${state.lines[state.currentIndex]?.lineNumber || 0}{/gray-fg}`);
+  lines.push(
+    `{gray-fg}Lines: ${sourceLines.length} | Current: ${state.lines[state.currentIndex]?.lineNumber || 0}{/gray-fg}`
+  );
 
   return lines.join('\n');
 }
@@ -466,9 +476,11 @@ function generateHelpContent(): string {
   const mouseStr = state.mouseEnabled ? 'ON' : 'OFF';
   const liveStr = state.liveMode ? 'ON' : 'OFF';
   const bookmarkCount = state.bookmarks.size;
-  const sessionFilterStr = state.sessionFilter.length > 0
-    ? state.sessionFilter.join(', ').slice(0, 30) + (state.sessionFilter.join(', ').length > 30 ? '...' : '')
-    : 'none';
+  const sessionFilterStr =
+    state.sessionFilter.length > 0
+      ? state.sessionFilter.join(', ').slice(0, 30) +
+        (state.sessionFilter.join(', ').length > 30 ? '...' : '')
+      : 'none';
 
   return `{bold}{center}Transcript TUI Help{/center}{/bold}
 
@@ -526,7 +538,11 @@ function generateHelpContent(): string {
 /**
  * Calculate cumulative token usage up to and including the given line
  */
-function getCumulativeUsage(upToLine: TranscriptLine): { input: number; output: number; total: number } {
+function getCumulativeUsage(upToLine: TranscriptLine): {
+  input: number;
+  output: number;
+  total: number;
+} {
   let input = 0;
   let output = 0;
 
@@ -563,7 +579,8 @@ function renderCurrentLine(): string {
   }
 
   // Helper to add view label at top
-  const viewLabel = (mode: string, color: string) => `{${color}-fg}=== VIEW: ${mode.toUpperCase()} ==={/${color}-fg}\n\n`;
+  const viewLabel = (mode: string, color: string) =>
+    `{${color}-fg}=== VIEW: ${mode.toUpperCase()} ==={/${color}-fg}\n\n`;
 
   switch (state.viewMode) {
     case 'raw':
@@ -578,7 +595,9 @@ function renderCurrentLine(): string {
     }
 
     case 'minimal':
-      return viewLabel('minimal', 'magenta') + escapeBlessedMarkup(formatMinimal(line) || '(empty)');
+      return (
+        viewLabel('minimal', 'magenta') + escapeBlessedMarkup(formatMinimal(line) || '(empty)')
+      );
 
     case 'context': {
       // Show conversation thread (user prompt + response) from full transcript
@@ -603,7 +622,7 @@ function renderCurrentLine(): string {
         } else if (Array.isArray(line.message.content)) {
           for (const block of line.message.content as any[]) {
             if (block.type === 'text' && block.text) {
-              textContent += block.text + '\n';
+              textContent += `${block.text}\n`;
             }
           }
         }
@@ -613,22 +632,22 @@ function renderCurrentLine(): string {
         } else if (Array.isArray(line.message.content)) {
           for (const block of line.message.content as any[]) {
             if (block.type === 'text' && block.text) {
-              textContent += block.text + '\n';
+              textContent += `${block.text}\n`;
             }
           }
         }
       }
 
       if (!textContent.trim()) {
-        return viewLabel('markdown', 'red') + `--- Line ${line.lineNumber} [${line.type}] ---\n\n(no text content to render as markdown)`;
+        return `${viewLabel('markdown', 'red')}--- Line ${line.lineNumber} [${line.type}] ---\n\n(no text content to render as markdown)`;
       }
 
       try {
         const rendered = marked(textContent) as string;
         // Escape curly braces in rendered markdown (may contain code blocks with JSON)
-        return viewLabel('markdown', 'red') + `--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(rendered)}`;
+        return `${viewLabel('markdown', 'red')}--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(rendered)}`;
       } catch {
-        return viewLabel('markdown', 'red') + `--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(textContent)}`;
+        return `${viewLabel('markdown', 'red')}--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(textContent)}`;
       }
     }
 
@@ -637,17 +656,39 @@ function renderCurrentLine(): string {
   }
 }
 
+/**
+ * Generate list items - uses cache for performance
+ * Only regenerates when listItemsDirty is true
+ */
 function getListItems(): string[] {
-  return state.lines.map((line, index) => {
+  if (!state.listItemsDirty && state.cachedListItems.length === state.lines.length) {
+    return state.cachedListItems;
+  }
+
+  // Pre-compute search result set for O(1) lookup
+  const searchResultSet = new Set(state.searchResults);
+
+  state.cachedListItems = state.lines.map((line, index) => {
     // Compact format: lineNum type preview (no timestamp to save space)
     const type = getDisplayType(line).slice(0, 6).padEnd(6);
     const typeColor = getTypeColor(line.type);
     const preview = getPreview(line, 50);
-    const searchMatch = state.searchResults.includes(index) ? '*' : ' ';
+    const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(line.lineNumber) ? '{yellow-fg}★{/yellow-fg}' : ' ';
 
     return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(5)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}`;
   });
+
+  state.listItemsDirty = false;
+  return state.cachedListItems;
+}
+
+/**
+ * Mark list items as needing regeneration
+ * Call this when lines, filters, search, or bookmarks change
+ */
+function invalidateListCache(): void {
+  state.listItemsDirty = true;
 }
 
 /**
@@ -675,6 +716,7 @@ function performSearch(query: string): void {
   state.searchResultIndex = 0;
 
   if (!query.trim()) {
+    invalidateListCache(); // Clear search markers
     return;
   }
 
@@ -683,10 +725,12 @@ function performSearch(query: string): void {
   for (let i = 0; i < state.lines.length; i++) {
     const line = state.lines[i]!;
     const content = formatMinimal(line);
-    if (content && content.toLowerCase().includes(queryLower)) {
+    if (content?.toLowerCase().includes(queryLower)) {
       state.searchResults.push(i);
     }
   }
+
+  invalidateListCache(); // Search results changed
 }
 
 function jumpToNextSearchResult(): void {
@@ -748,7 +792,7 @@ async function createTUI(): Promise<void> {
       item: { fg: 'white' },
     },
     keys: false, // Disabled - we handle navigation ourselves
-    vi: false,   // Disabled - we handle navigation ourselves
+    vi: false, // Disabled - we handle navigation ourselves
     mouse: false, // Disabled to allow text selection for copying
     scrollbar: {
       ch: ' ',
@@ -917,10 +961,43 @@ async function createTUI(): Promise<void> {
     }, duration);
   };
 
-  // Update function
+  // Lightweight selection update - only updates selection and content, no list regeneration
+  // This is the fast path for navigation (j/k, up/down, etc.)
+  const updateSelection = () => {
+    // Update header with current position
+    const filterInfo =
+      state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
+    const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
+    header.setContent(
+      `{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length}${filterInfo} | Line: ${state.currentIndex + 1}/${state.lines.length} | View: [${state.viewMode}]${fullscreenInfo}${state.searchQuery ? ` | Search: "${state.searchQuery}" (${state.searchResults.length})` : ''}`
+    );
+
+    // Update fullscreen label if in fullscreen
+    if (state.fullscreen) {
+      const modeStr = state.scrollMode ? 'SCROLL' : 'NAV';
+      contentBox.setLabel(
+        ` [${modeStr}] Line ${state.currentIndex + 1}/${state.lines.length} | s:toggle f:exit `
+      );
+    }
+
+    // Just update selection index (blessed handles the visual update)
+    listBox.select(state.currentIndex);
+
+    // Update content pane
+    const newContent = renderCurrentLine();
+    contentBox.setLabel(` Content [${state.viewMode}] `);
+    contentBox.setContent(newContent);
+    contentBox.scrollTo(0);
+
+    screen.render();
+  };
+
+  // Full UI update - regenerates list if dirty, updates layout
+  // Use this for filter changes, search, bookmarks, fullscreen toggle
   const updateUI = () => {
     // Update header
-    const filterInfo = state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
+    const filterInfo =
+      state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
     const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
     header.setContent(
       `{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length}${filterInfo} | Line: ${state.currentIndex + 1}/${state.lines.length} | View: [${state.viewMode}]${fullscreenInfo}${state.searchQuery ? ` | Search: "${state.searchQuery}" (${state.searchResults.length})` : ''}`
@@ -935,10 +1012,18 @@ async function createTUI(): Promise<void> {
       contentBox.left = 0;
       contentBox.width = '100%';
       contentBox.height = '100%';
-      contentBox.border = { type: 'line', left: false, right: false, top: false, bottom: false } as any;
+      contentBox.border = {
+        type: 'line',
+        left: false,
+        right: false,
+        top: false,
+        bottom: false,
+      } as any;
       // Show mode indicator at top-left in fullscreen
       const modeStr = state.scrollMode ? 'SCROLL' : 'NAV';
-      contentBox.setLabel(` [${modeStr}] Line ${state.currentIndex + 1}/${state.lines.length} | s:toggle f:exit `);
+      contentBox.setLabel(
+        ` [${modeStr}] Line ${state.currentIndex + 1}/${state.lines.length} | s:toggle f:exit `
+      );
     } else {
       listBox.show();
       header.show();
@@ -949,10 +1034,12 @@ async function createTUI(): Promise<void> {
       contentBox.height = '100%-6';
       contentBox.border = 'line';
       state.scrollMode = false; // Reset scroll mode when exiting fullscreen
-      footer.setContent('{bold}j/k{/bold}:nav {bold}b{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}u{/bold}:usage {bold}m{/bold}:mouse {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit');
+      footer.setContent(
+        '{bold}j/k{/bold}:nav {bold}b{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}u{/bold}:usage {bold}m{/bold}:mouse {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit'
+      );
     }
 
-    // Update list
+    // Update list (uses cache if not dirty)
     listBox.setItems(getListItems());
     listBox.select(state.currentIndex);
 
@@ -964,7 +1051,9 @@ async function createTUI(): Promise<void> {
 
     // Update border colors based on focus
     listBox.style.border = { fg: state.focusedPane === 'list' ? 'green' : 'blue' };
-    contentBox.style.border = { fg: state.focusedPane === 'content' || state.fullscreen ? 'green' : 'blue' };
+    contentBox.style.border = {
+      fg: state.focusedPane === 'content' || state.fullscreen ? 'green' : 'blue',
+    };
 
     screen.render();
   };
@@ -979,11 +1068,11 @@ async function createTUI(): Promise<void> {
     return state.focusedPane === 'list';
   };
 
-  // Navigation
+  // Navigation - uses lightweight updateSelection() for speed
   screen.key(['j', 'down'], () => {
     if (shouldNavigateLines() && state.currentIndex < state.lines.length - 1) {
       state.currentIndex++;
-      updateUI();
+      updateSelection();
     } else if (!shouldNavigateLines()) {
       contentBox.scroll(1);
       screen.render();
@@ -993,7 +1082,7 @@ async function createTUI(): Promise<void> {
   screen.key(['k', 'up'], () => {
     if (shouldNavigateLines() && state.currentIndex > 0) {
       state.currentIndex--;
-      updateUI();
+      updateSelection();
     } else if (!shouldNavigateLines()) {
       contentBox.scroll(-1);
       screen.render();
@@ -1003,7 +1092,7 @@ async function createTUI(): Promise<void> {
   screen.key(['pagedown', 'C-d'], () => {
     if (shouldNavigateLines()) {
       state.currentIndex = Math.min(state.currentIndex + 20, state.lines.length - 1);
-      updateUI();
+      updateSelection();
     } else {
       contentBox.scroll(10);
       screen.render();
@@ -1013,7 +1102,7 @@ async function createTUI(): Promise<void> {
   screen.key(['pageup', 'C-u'], () => {
     if (shouldNavigateLines()) {
       state.currentIndex = Math.max(state.currentIndex - 20, 0);
-      updateUI();
+      updateSelection();
     } else {
       contentBox.scroll(-10);
       screen.render();
@@ -1034,7 +1123,7 @@ async function createTUI(): Promise<void> {
   screen.key('g', () => {
     if (shouldNavigateLines()) {
       state.currentIndex = 0;
-      updateUI();
+      updateSelection();
     } else {
       contentBox.setScrollPerc(0);
       screen.render();
@@ -1044,7 +1133,7 @@ async function createTUI(): Promise<void> {
   screen.key('G', () => {
     if (shouldNavigateLines()) {
       state.currentIndex = state.lines.length - 1;
-      updateUI();
+      updateSelection();
     } else {
       contentBox.setScrollPerc(100);
       screen.render();
@@ -1145,31 +1234,32 @@ async function createTUI(): Promise<void> {
     screen.render();
   });
 
-  // Search navigation
+  // Search navigation - uses lightweight updateSelection
   screen.key('n', () => {
     jumpToNextSearchResult();
-    updateUI();
+    updateSelection();
   });
 
   screen.key('N', () => {
     jumpToPrevSearchResult();
-    updateUI();
+    updateSelection();
   });
 
   // Clear search
   screen.key('escape', () => {
     state.searchQuery = '';
     state.searchResults = [];
+    invalidateListCache(); // Search markers need to be cleared
     updateUI();
   });
 
-  // Type filters (quick filters)
+  // Type filters (quick filters) - uses lightweight updateSelection
   screen.key('a', () => {
     // Jump to next assistant message
     for (let i = state.currentIndex + 1; i < state.lines.length; i++) {
       if (state.lines[i]?.type === 'assistant') {
         state.currentIndex = i;
-        updateUI();
+        updateSelection();
         return;
       }
     }
@@ -1177,7 +1267,7 @@ async function createTUI(): Promise<void> {
     for (let i = 0; i < state.currentIndex; i++) {
       if (state.lines[i]?.type === 'assistant') {
         state.currentIndex = i;
-        updateUI();
+        updateSelection();
         return;
       }
     }
@@ -1208,14 +1298,14 @@ async function createTUI(): Promise<void> {
     }
   });
 
-  // Bookmark navigation with '[' and ']'
+  // Bookmark navigation with '[' and ']' - uses lightweight updateSelection
   screen.key('[', () => {
     if (state.bookmarks.size === 0) {
       showToast('No bookmarks set');
       return;
     }
     jumpToPrevBookmark();
-    updateUI();
+    updateSelection();
   });
 
   screen.key(']', () => {
@@ -1224,7 +1314,7 @@ async function createTUI(): Promise<void> {
       return;
     }
     jumpToNextBookmark();
-    updateUI();
+    updateSelection();
   });
 
   // Usage graph toggle with 'u' key
@@ -1290,6 +1380,7 @@ async function createTUI(): Promise<void> {
               const filteredLines = filterLines(state.allLines, state.filterOpts);
               const previousFilteredCount = state.lines.length;
               state.lines = filteredLines;
+              invalidateListCache(); // Lines changed
 
               // Auto-scroll to end if we were at the end
               const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
@@ -1391,6 +1482,7 @@ async function createTUI(): Promise<void> {
             const filteredLines = filterLines(state.allLines, state.filterOpts);
             const previousFilteredCount = state.lines.length;
             state.lines = filteredLines;
+            invalidateListCache(); // Lines changed
 
             const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
             if (wasAtEnd && filteredLines.length > previousFilteredCount) {
@@ -1500,7 +1592,7 @@ Examples:
     const arg = args[i]!;
 
     if (arg === '--type' || arg === '-t') {
-      const types = args[++i]?.split(',').map(t => t.trim()) as ExtendedLineType[];
+      const types = args[++i]?.split(',').map((t) => t.trim()) as ExtendedLineType[];
       filterOpts.types = types;
       filterLabel = `type:${types.join(',')}`;
     } else if (arg === '--user-prompts' || arg === '-u') {
@@ -1519,7 +1611,7 @@ Examples:
       filterOpts.textOnly = true;
       filterLabel = 'text-only';
     } else if (arg === '--last') {
-      filterOpts.last = parseInt(args[++i]!, 10);
+      filterOpts.last = Number.parseInt(args[++i]!, 10);
     } else if (arg === '--session' || arg === '-s') {
       const ids = args[++i]?.split(',').map((s) => s.trim()) || [];
       filterOpts.sessionIds = ids;
@@ -1574,7 +1666,7 @@ Examples:
     const filteredLines = filterLines(allLines, filterOpts);
 
     if (filteredLines.length === 0) {
-      console.error(`Error: No lines match the filter criteria`);
+      console.error('Error: No lines match the filter criteria');
       return 1;
     }
 
