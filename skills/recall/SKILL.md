@@ -1,7 +1,7 @@
 ---
 name: recall
 description: Deep search across all past Claude Code sessions for decisions, solutions, and discussions
-version: 0.2.0
+version: 0.3.0
 triggers:
   - "I forgot"
   - "do you remember"
@@ -13,10 +13,30 @@ triggers:
 tools:
   - Bash
   - Read
-  - Grep
 ---
 
 # Recall: Self-Memory Retrieval
+
+**CRITICAL: You MUST use the `transcript` CLI for all searches. NEVER use raw tools like `rg`, `grep`, or `find` to search transcripts directly.**
+
+## MANDATORY Tool Usage
+
+```bash
+# CORRECT - Always use transcript CLI
+transcript search "your query" --limit 20
+
+# WRONG - Never do this
+rg "query" ~/.claude/projects/  # DO NOT USE
+grep -r "query" ~/.claude/      # DO NOT USE
+find ~/.claude -name "*.jsonl"  # DO NOT USE
+```
+
+**Why this matters:**
+- The `transcript` CLI handles JSONL parsing, session metadata, and formatting
+- Raw tools return unreadable JSON blobs and miss context
+- The CLI was built specifically for this purpose - USE IT
+
+---
 
 You are searching your own memory - past versions of yourself that share your session name or worked in the same project. This is recursive memory retrieval: search broadly, then drill deeper based on findings.
 
