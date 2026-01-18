@@ -80,9 +80,9 @@ version: 1
 
 settings:
   debug: false
-  parallel_execution: true
-  default_timeout_ms: 30000
-  default_error_strategy: continue
+  parallelExecution: false
+  defaultTimeoutMs: 30000
+  defaultErrorStrategy: continue
 
 builtins:
   # Human-friendly session names (e.g., "brave-elephant")
