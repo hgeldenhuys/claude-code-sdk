@@ -73,6 +73,14 @@ function generateUUID(): string {
 let cachedMachineId: string | null = null;
 
 /**
+ * Reset the machine ID cache (for testing purposes)
+ * This forces the next getMachineId() call to read from disk
+ */
+export function resetMachineIdCache(): void {
+  cachedMachineId = null;
+}
+
+/**
  * Get the machine ID, creating one if it doesn't exist
  *
  * The machine ID is a UUID stored at ~/.claude/machine-id.

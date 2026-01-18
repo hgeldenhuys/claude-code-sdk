@@ -16,6 +16,7 @@ import { tmpdir } from 'node:os';
 
 // Import the modules we're testing
 import { SessionStore } from '../src/hooks/sessions/store';
+import { resetMachineIdCache } from '../src/hooks/sessions/machine';
 import type {
   GlobalSessionDatabase,
   MigrationResult,
@@ -52,6 +53,9 @@ function setupTestEnvironment() {
   originalUserProfile = process.env.USERPROFILE;
   process.env.HOME = testDir;
   process.env.USERPROFILE = testDir;
+
+  // Reset the machine ID cache so it picks up the new HOME
+  resetMachineIdCache();
 }
 
 function teardownTestEnvironment() {
@@ -66,6 +70,9 @@ function teardownTestEnvironment() {
   } else {
     delete process.env.USERPROFILE;
   }
+
+  // Reset the machine ID cache so subsequent tests get fresh state
+  resetMachineIdCache();
 
   // Clean up test directory
   if (existsSync(testDir)) {
