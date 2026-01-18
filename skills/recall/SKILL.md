@@ -1,7 +1,7 @@
 ---
 name: recall
 description: Deep search across all past Claude Code sessions for decisions, solutions, and discussions
-version: 0.4.0
+version: 0.5.0
 triggers:
   - "I forgot"
   - "do you remember"
@@ -17,212 +17,106 @@ tools:
 
 # Recall: Self-Memory Retrieval
 
-**CRITICAL: You MUST use the `transcript` CLI for all searches. NEVER use raw tools like `rg`, `grep`, or `find` to search transcripts directly.**
+> **STOP. READ THIS FIRST.**
+>
+> **THE ONLY COMMAND YOU MAY USE IS:**
+> ```
+> transcript recall "your query"
+> ```
+>
+> **YOU MUST NOT USE:**
+> - `rg` - FORBIDDEN
+> - `grep` - FORBIDDEN
+> - `find` - FORBIDDEN
+> - `cat ~/.claude/` - FORBIDDEN
+> - Any direct file access to `~/.claude/projects/` - FORBIDDEN
+>
+> If you use any forbidden command, you are violating this skill's requirements.
 
-## Quick Start - Use `transcript recall`
+## Why This Matters
 
-The `transcript recall` command is optimized for memory retrieval. **Always start here:**
+The `transcript` CLI:
+- Handles JSONL parsing correctly
+- Groups results by session
+- Shows timestamps and context
+- Finds related skills automatically
+
+Raw tools like `rg` return unreadable JSON blobs and miss context. **Using them is a failure mode.**
+
+## The Command
 
 ```bash
-# Primary method - groups results by session automatically
 transcript recall "your query"
-
-# With options
-transcript recall "caching strategy" --max-sessions 5 --context 3
 ```
 
-**Output includes:**
-- Results grouped by session with timestamps
-- Match counts and context snippets
-- Related skills found in skills directories
-- Drill-down commands for each session
+That's it. Run this command. Read the output. Done.
 
-## When to Use Each Command
-
-| Command | Use Case |
-|---------|----------|
-| `transcript recall "X"` | Memory retrieval - "what did we discuss about X?" |
-| `transcript search "X"` | Raw search - need specific line numbers |
-| `transcript <session> --search "X"` | Drill into a specific session |
-
-## Step-by-Step Workflow
-
-### Step 1: Recall Broadly
+### Options (if needed)
 
 ```bash
-# Start with recall - it groups results and finds related skills
-transcript recall "database migration"
+transcript recall "query" --max-sessions 5    # Limit sessions shown
+transcript recall "query" --context 3         # Matches per session
+transcript recall "query" --limit 100         # Total matches to search
 ```
 
-This returns:
-- Sessions grouped by relevance
-- Timestamp ranges for each session
-- Context snippets with highlights
-- Related skills (if any match your query)
-- Drill-down commands for each session
+## Example
 
-### Step 2: Drill Into Promising Sessions
+User asks: "Do you remember the sandbox integration tests?"
 
-When recall shows a promising session, dig deeper:
+You run:
+```bash
+transcript recall "sandbox integration tests"
+```
+
+You get grouped results showing which sessions discussed it, with context snippets and drill-down commands.
+
+## If You Need More Detail
+
+After running `transcript recall`, you may want to drill deeper into a specific session. Use the drill-down command shown in the output:
 
 ```bash
-# View specific session with search highlighting
-transcript <session-id> --search "query" --human
-
-# Get more context (50 lines)
-transcript <session-id> --search "query" -n 50 --human
-
-# View only your past thoughts (assistant responses)
-transcript <session-id> --search "query" --assistant --human
-
-# View the full discussion
-transcript <session-id> --user-prompts --assistant --human
+transcript <session-slug> --search "query" --human
 ```
 
-### Step 3: Follow Cross-References
+## Workflow
 
-If you find mentions of related topics:
+```
+User asks about past discussion
+         ↓
+transcript recall "topic"     ← START HERE, ALWAYS
+         ↓
+Read the grouped output
+         ↓
+Need more detail? → Use drill-down command from output
+         ↓
+Synthesize and respond to user
+```
+
+## Common Mistakes (DO NOT DO THESE)
 
 ```bash
-# Search for related topic in same session
-transcript <session-id> --search "related topic" --human
+# WRONG - Do not use rg
+rg "sandbox" ~/.claude/projects/
 
-# Or recall the related topic across all sessions
-transcript recall "related topic"
+# WRONG - Do not use grep
+grep -r "sandbox" ~/.claude/
+
+# WRONG - Do not use find
+find ~/.claude -name "*.jsonl" | xargs grep sandbox
+
+# WRONG - Do not cat jsonl files directly
+cat ~/.claude/projects/*/abc123.jsonl | grep sandbox
 ```
-
-### Step 4: Synthesize Findings
-
-After gathering memories:
-1. Summarize what you found
-2. Note any contradictions between past decisions
-3. Identify if context has changed since the original decision
-4. Present findings to the user with confidence levels
-
-## Workflow Diagram
-
-```
-┌─────────────────────────────────────────────────┐
-│  "I need to remember X"                         │
-└─────────────────┬───────────────────────────────┘
-                  ▼
-┌─────────────────────────────────────────────────┐
-│  transcript recall "X"                          │
-│  → Groups results by session                    │
-│  → Shows related skills                         │
-│  → Provides drill-down commands                 │
-└─────────────────┬───────────────────────────────┘
-                  ▼
-        ┌─────────┴─────────┐
-        ▼                   ▼
-┌───────────────┐   ┌───────────────────────┐
-│ Found answer  │   │ Need more context?    │
-│ → Synthesize  │   │ → Use drill-down cmd  │
-└───────────────┘   └───────────┬───────────┘
-                                │
-                    ┌───────────┘
-                    ▼
-┌─────────────────────────────────────────────────┐
-│  transcript <session> --search "X" --human      │
-└─────────────────┬───────────────────────────────┘
-                  ▼
-        ┌─────────┴─────────┐
-        ▼                   ▼
-┌───────────────┐   ┌───────────────────────┐
-│ Found answer  │   │ Found cross-reference │
-│ → Synthesize  │   │ → Recall that topic   │
-└───────────────┘   └───────────────────────┘
-```
-
-## Common Recall Scenarios
-
-### "What did we decide about X?"
-```bash
-transcript recall "X decision"
-# or
-transcript recall "decided X"
-```
-
-### "We tried something before that didn't work"
-```bash
-transcript recall "error failed"
-# or
-transcript recall "didn't work broken"
-```
-
-### "What was the solution to Y problem?"
-```bash
-transcript recall "Y solution"
-transcript recall "Y fix"
-```
-
-### "Do you remember the architecture we discussed?"
-```bash
-transcript recall "architecture design"
-```
-
-## Recall Command Options
 
 ```bash
-transcript recall <query> [options]
-
-Options:
-  --max-sessions <n>    Maximum sessions to show (default: 5)
-  --context <n>         Matches per session to show (default: 3)
-  --limit <n>           Total matches to search (default: 100)
-  --artifacts           Include related skills (default: true)
-  --no-artifacts        Exclude related skills
-  --json                Output as JSON for programmatic use
+# CORRECT - Use transcript recall
+transcript recall "sandbox"
 ```
 
-## Understanding Session Identity
+## Summary
 
-Your identity persists through **session name**, not session ID:
-- When a session is resumed, the ID changes but the name stays
-- All session IDs sharing your name are "past versions of yourself"
-- Use `sesh history <name>` to find all your past session IDs
-
-## Tips for Effective Recall
-
-1. **Start with recall, not search** - `transcript recall` groups results automatically
-2. **Use multiple keywords** - "caching redis strategy" finds more than just "caching"
-3. **Check related skills** - recall shows skills that match your query
-4. **Drill down when needed** - use the provided drill-down commands
-5. **Note timestamps** - recent memories may be more relevant
-6. **Trust but verify** - past decisions may need updating for new context
-
-## When Memory Fails
-
-If you can't find what you're looking for:
-1. Try different keywords or synonyms
-2. Ask the user for more context clues
-3. Check if it might be in a different project
-4. Acknowledge the gap honestly: "I couldn't find a record of that discussion"
-
-## Example Session
-
-User: "Do you remember what we decided about the caching strategy?"
-
-You:
-```bash
-transcript recall "caching strategy"
-```
-
-Output:
-```
-🔍 Recall: "caching strategy"
-
-Found 12 matches across 2 sessions
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📁 loyal-whippet (10 matches)
-   Jan 15 at 2:30 PM → Jan 15 at 4:45 PM
-
-   [02:35 PM] assistant  Line 1234
-   We decided to use Redis with a 5-minute TTL because...
-
-   → transcript loyal-whippet --search "caching strategy" --human
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Then synthesize: "I found our discussion from January 15th. We decided to use Redis with a 5-minute TTL because of the high read volume on the product catalog endpoint. The key decision factors were..."
+1. **USE:** `transcript recall "query"`
+2. **DO NOT USE:** `rg`, `grep`, `find`, `cat` on transcript files
+3. Read the grouped output
+4. Drill down if needed using commands from the output
+5. Synthesize findings for the user
