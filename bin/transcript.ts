@@ -103,6 +103,7 @@ Usage:
   transcript search <query> [options]     Search across transcripts
   transcript index [build|status|rebuild] Manage SQLite search index
   transcript info <file|session>          Show transcript metadata
+  transcript doctor                       Diagnose transcript indexing configuration
   transcript help                         Show this help
 
 View Options:
@@ -159,6 +160,13 @@ Daemon Commands:
   transcript index daemon stop    Stop the background daemon
   transcript index daemon status  Show daemon status
   transcript index daemon logs    Show daemon logs
+
+Doctor Command:
+  transcript doctor               Check indexing pipeline configuration
+                                  - Daemon status (running/stopped)
+                                  - Database health and freshness
+                                  - Hook event logging configuration
+                                  - Claude Code hooks integration
 
 Examples:
   # View last 10 user prompts from a session
@@ -1202,6 +1210,11 @@ function parseArgs(args: string[]): {
       continue;
     }
 
+    if (arg === 'doctor') {
+      command = 'doctor';
+      continue;
+    }
+
     // Flags with values
     if (arg === '--type' || arg === '-t') {
       flags.types = args[++i] || '';
@@ -1334,6 +1347,335 @@ function parseArgs(args: string[]): {
 }
 
 // ============================================================================
+// Doctor Command
+// ============================================================================
+
+interface DiagnosticResult {
+  name: string;
+  status: 'pass' | 'warn' | 'fail';
+  message: string;
+}
+
+async function cmdDoctor(): Promise<number> {
+  const fs = await import('fs');
+  const path = await import('path');
+  const os = await import('os');
+
+  const results: DiagnosticResult[] = [];
+  const cwd = process.cwd();
+
+  console.log('Transcript Indexer Doctor\n');
+  console.log('Checking configuration...\n');
+
+  // 1. Check daemon status
+  if (fs.existsSync(PID_FILE)) {
+    try {
+      const pid = parseInt(fs.readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      try {
+        process.kill(pid, 0); // Check if process exists
+        results.push({
+          name: 'Daemon status',
+          status: 'pass',
+          message: `Running (PID: ${pid})`,
+        });
+      } catch {
+        results.push({
+          name: 'Daemon status',
+          status: 'warn',
+          message: 'PID file exists but process not running. Run: transcript index daemon start',
+        });
+      }
+    } catch {
+      results.push({
+        name: 'Daemon status',
+        status: 'warn',
+        message: 'Could not read PID file',
+      });
+    }
+  } else {
+    results.push({
+      name: 'Daemon status',
+      status: 'warn',
+      message: 'Not running. Run: transcript index daemon start',
+    });
+  }
+
+  // 2. Check database exists and is valid
+  if (fs.existsSync(DEFAULT_DB_PATH)) {
+    try {
+      const stats = fs.statSync(DEFAULT_DB_PATH);
+      const sizeMb = (stats.size / 1024 / 1024).toFixed(1);
+      results.push({
+        name: 'Database file',
+        status: 'pass',
+        message: `Found (${sizeMb} MB)`,
+      });
+
+      // Check database health
+      try {
+        const db = getDatabase();
+        const dbStats = getDbStats(db, DEFAULT_DB_PATH);
+        results.push({
+          name: 'Database health',
+          status: 'pass',
+          message: `${dbStats.lineCount.toLocaleString()} lines, ${dbStats.sessionCount} sessions`,
+        });
+
+        // Check hook events
+        if (dbStats.hookEventCount !== undefined && dbStats.hookEventCount > 0) {
+          results.push({
+            name: 'Hook events indexed',
+            status: 'pass',
+            message: `${dbStats.hookEventCount.toLocaleString()} events from ${dbStats.hookFileCount || 0} files`,
+          });
+        } else {
+          results.push({
+            name: 'Hook events indexed',
+            status: 'warn',
+            message: 'No hook events indexed yet',
+          });
+        }
+
+        // Check freshness
+        const lastIndexed = db.query('SELECT value FROM metadata WHERE key = ?').get('last_indexed') as { value: string } | null;
+        if (lastIndexed) {
+          const lastTime = new Date(lastIndexed.value);
+          const ageMinutes = Math.floor((Date.now() - lastTime.getTime()) / 60000);
+          if (ageMinutes < 5) {
+            results.push({
+              name: 'Index freshness',
+              status: 'pass',
+              message: `Last indexed ${ageMinutes} minutes ago`,
+            });
+          } else if (ageMinutes < 60) {
+            results.push({
+              name: 'Index freshness',
+              status: 'pass',
+              message: `Last indexed ${ageMinutes} minutes ago`,
+            });
+          } else {
+            const ageHours = Math.floor(ageMinutes / 60);
+            results.push({
+              name: 'Index freshness',
+              status: 'warn',
+              message: `Last indexed ${ageHours} hours ago. Consider running: transcript index update`,
+            });
+          }
+        }
+        db.close();
+      } catch (error) {
+        results.push({
+          name: 'Database health',
+          status: 'fail',
+          message: `Error reading database: ${error instanceof Error ? error.message : error}`,
+        });
+      }
+    } catch (error) {
+      results.push({
+        name: 'Database file',
+        status: 'fail',
+        message: `Error: ${error instanceof Error ? error.message : error}`,
+      });
+    }
+  } else {
+    results.push({
+      name: 'Database file',
+      status: 'fail',
+      message: 'Not found. Run: transcript index build',
+    });
+  }
+
+  // 3. Check hooks.yaml for event-logger
+  const hooksYamlPaths = [
+    path.join(cwd, 'hooks.yaml'),
+    path.join(cwd, 'hooks.yml'),
+    path.join(cwd, '.claude', 'hooks.yaml'),
+    path.join(cwd, '.claude', 'hooks.yml'),
+  ];
+
+  let foundHooksConfig: string | null = null;
+  for (const p of hooksYamlPaths) {
+    if (fs.existsSync(p)) {
+      foundHooksConfig = p;
+      break;
+    }
+  }
+
+  if (foundHooksConfig) {
+    try {
+      const yaml = await import('yaml');
+      const content = fs.readFileSync(foundHooksConfig, 'utf-8');
+      const config = yaml.parse(content);
+      const builtins = config.builtins || {};
+      const eventLogger = builtins['event-logger'] as { enabled?: boolean } | undefined;
+
+      if (eventLogger?.enabled) {
+        results.push({
+          name: 'Event logger (hooks.yaml)',
+          status: 'pass',
+          message: 'Enabled - hook events will be logged',
+        });
+      } else {
+        results.push({
+          name: 'Event logger (hooks.yaml)',
+          status: 'warn',
+          message: 'Disabled. Enable event-logger in hooks.yaml for hook event tracking',
+        });
+      }
+    } catch (error) {
+      results.push({
+        name: 'Event logger (hooks.yaml)',
+        status: 'warn',
+        message: `Could not parse hooks.yaml: ${error instanceof Error ? error.message : error}`,
+      });
+    }
+  } else {
+    results.push({
+      name: 'Event logger (hooks.yaml)',
+      status: 'warn',
+      message: 'No hooks.yaml found. Hook event logging not configured.',
+    });
+  }
+
+  // 4. Check .claude/settings.json for hooks integration
+  const settingsPath = path.join(cwd, '.claude', 'settings.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const content = fs.readFileSync(settingsPath, 'utf-8');
+      const settings = JSON.parse(content);
+
+      if (settings.hooks) {
+        const eventCount = Object.keys(settings.hooks).length;
+        // Check if hooks route through framework
+        let routesThroughFramework = false;
+        for (const [_event, matchers] of Object.entries(settings.hooks)) {
+          const matcherArray = matchers as Array<{ hooks?: Array<{ command?: string }> }>;
+          for (const matcher of matcherArray) {
+            for (const hook of matcher.hooks || []) {
+              if (hook.command?.includes('hooks.ts') || hook.command?.includes('hooks.yaml')) {
+                routesThroughFramework = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (routesThroughFramework) {
+          results.push({
+            name: 'Claude Code hooks integration',
+            status: 'pass',
+            message: `${eventCount} events configured, routing through framework`,
+          });
+        } else {
+          results.push({
+            name: 'Claude Code hooks integration',
+            status: 'warn',
+            message: `${eventCount} events configured but not routing through hooks framework`,
+          });
+        }
+      } else {
+        results.push({
+          name: 'Claude Code hooks integration',
+          status: 'warn',
+          message: 'No hooks configured in .claude/settings.json',
+        });
+      }
+    } catch (error) {
+      results.push({
+        name: 'Claude Code hooks integration',
+        status: 'warn',
+        message: `Could not parse settings.json: ${error instanceof Error ? error.message : error}`,
+      });
+    }
+  } else {
+    results.push({
+      name: 'Claude Code hooks integration',
+      status: 'warn',
+      message: 'No .claude/settings.json found',
+    });
+  }
+
+  // 5. Check hook events directory
+  const hooksDir = path.join(os.homedir(), '.claude', 'hooks');
+  if (fs.existsSync(hooksDir)) {
+    try {
+      const projects = fs.readdirSync(hooksDir).filter(f => {
+        const stat = fs.statSync(path.join(hooksDir, f));
+        return stat.isDirectory();
+      });
+
+      let totalFiles = 0;
+      for (const project of projects) {
+        const projectDir = path.join(hooksDir, project);
+        const files = fs.readdirSync(projectDir).filter(f => f.endsWith('.hooks.jsonl'));
+        totalFiles += files.length;
+      }
+
+      if (totalFiles > 0) {
+        results.push({
+          name: 'Hook event files',
+          status: 'pass',
+          message: `${totalFiles} .hooks.jsonl files in ${projects.length} projects`,
+        });
+      } else {
+        results.push({
+          name: 'Hook event files',
+          status: 'warn',
+          message: 'No hook event files found yet',
+        });
+      }
+    } catch (error) {
+      results.push({
+        name: 'Hook event files',
+        status: 'warn',
+        message: `Error reading hooks directory: ${error instanceof Error ? error.message : error}`,
+      });
+    }
+  } else {
+    results.push({
+      name: 'Hook event files',
+      status: 'warn',
+      message: 'Hooks directory not found (will be created on first hook event)',
+    });
+  }
+
+  // Print results
+  console.log('Results:\n');
+  let hasFailures = false;
+  let hasWarnings = false;
+
+  for (const result of results) {
+    let icon: string;
+    switch (result.status) {
+      case 'pass':
+        icon = '\x1b[32m✓\x1b[0m';
+        break;
+      case 'warn':
+        icon = '\x1b[33m⚠\x1b[0m';
+        hasWarnings = true;
+        break;
+      case 'fail':
+        icon = '\x1b[31m✗\x1b[0m';
+        hasFailures = true;
+        break;
+    }
+    console.log(`  ${icon} ${result.name}: ${result.message}`);
+  }
+
+  console.log('');
+  if (hasFailures) {
+    console.log('Some checks failed. Fix the issues above to enable full functionality.');
+    return 1;
+  } else if (hasWarnings) {
+    console.log('Some checks have warnings. Review the messages above.');
+    return 0;
+  } else {
+    console.log('All checks passed! Transcript indexing is properly configured.');
+    return 0;
+  }
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -1412,6 +1754,9 @@ async function main(): Promise<number> {
       return cmdIndex({
         subcommand: positional[0] || '',
       });
+
+    case 'doctor':
+      return cmdDoctor();
 
     default:
       printHelp();
