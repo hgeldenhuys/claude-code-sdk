@@ -22,19 +22,19 @@
  *   hook-events-tui peaceful-osprey
  */
 
-import blessed from 'blessed';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import blessed from 'blessed';
+import { getSessionStore } from '../src/hooks/sessions/store';
 import {
-  getDatabase,
-  getHookEvents,
-  getHookSessions,
-  getMaxHookEventId,
-  getHookEventsAfterId,
   DEFAULT_DB_PATH,
   type HookEventResult,
+  getDatabase,
+  getHookEvents,
+  getHookEventsAfterId,
+  getHookSessions,
+  getMaxHookEventId,
 } from '../src/transcripts/db';
-import { getSessionStore } from '../src/hooks/sessions/store';
 
 // ============================================================================
 // Constants
@@ -134,7 +134,7 @@ function getDb(): ReturnType<typeof getDatabase> {
   let daemonRunning = false;
   if (existsSync(PID_FILE)) {
     try {
-      const pid = parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      const pid = Number.parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
       try {
         process.kill(pid, 0);
         daemonRunning = true;
@@ -147,7 +147,9 @@ function getDb(): ReturnType<typeof getDatabase> {
   }
 
   if (!daemonRunning) {
-    console.error('\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m');
+    console.error(
+      '\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m'
+    );
   }
 
   return _db;
@@ -195,9 +197,12 @@ interface AppState {
   filterOpts: FilterOptions;
   // Context tracking
   maxContextUsage: { tokens: number; percentage: number } | null;
+  // Performance cache
+  cachedListItems: string[];
+  listItemsDirty: boolean;
 }
 
-let state: AppState = {
+const state: AppState = {
   events: [],
   allEvents: [],
   currentIndex: 0,
@@ -219,6 +224,8 @@ let state: AppState = {
   lastMaxEventId: 0,
   filterOpts: {},
   maxContextUsage: null,
+  cachedListItems: [],
+  listItemsDirty: true,
 };
 
 // ============================================================================
@@ -386,6 +393,7 @@ function toggleBookmark(eventId: number): void {
   // Persist bookmarks
   state.bookmarkStore[state.sessionId] = Array.from(state.bookmarks);
   saveBookmarks(state.bookmarkStore);
+  invalidateListCache(); // Bookmark display changed
 }
 
 /**
@@ -674,10 +682,11 @@ function renderCurrentEvent(): string {
     }
 
     case 'timeline': {
-      // Show a timeline of recent events around current
+      // Show a timeline of events around current (dynamic height, ~30 events for typical terminal)
       const lines: string[] = [];
-      const start = Math.max(0, state.currentIndex - 5);
-      const end = Math.min(state.events.length, state.currentIndex + 6);
+      const contextLines = 25; // Show more context for better timeline view
+      const start = Math.max(0, state.currentIndex - contextLines);
+      const end = Math.min(state.events.length, state.currentIndex + contextLines + 1);
 
       for (let i = start; i < end; i++) {
         const e = state.events[i]!;
@@ -690,9 +699,13 @@ function renderCurrentEvent(): string {
         const bookmarkMark = state.bookmarks.has(e.id) ? ' ★' : '';
 
         if (isCurrent) {
-          lines.push(`{inverse}${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${eventUsageStr}${bookmarkMark}{/inverse}`);
+          lines.push(
+            `{inverse}${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${eventUsageStr}${bookmarkMark}{/inverse}`
+          );
         } else {
-          lines.push(`${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${eventUsageStr}${bookmarkMark}`);
+          lines.push(
+            `${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${eventUsageStr}${bookmarkMark}`
+          );
         }
       }
 
@@ -704,20 +717,54 @@ function renderCurrentEvent(): string {
   }
 }
 
+/**
+ * Generate list items - uses cache for performance
+ * Only regenerates when listItemsDirty is true
+ */
 function getListItems(): string[] {
-  return state.events.map((event, index) => {
-    const type = event.eventType.slice(0, 12).padEnd(12);
+  if (!state.listItemsDirty && state.cachedListItems.length === state.events.length) {
+    return state.cachedListItems;
+  }
+
+  // Pre-compute search result set for O(1) lookup
+  const searchResultSet = new Set(state.searchResults);
+
+  state.cachedListItems = state.events.map((event, index) => {
+    const type = event.eventType.slice(0, 14).padEnd(14);
     const color = getEventColor(event.eventType);
-    const toolInfo = event.toolName ? event.toolName.slice(0, 8).padEnd(8) : '        ';
-    const searchMatch = state.searchResults.includes(index) ? '*' : ' ';
+    const toolInfo = event.toolName ? event.toolName.slice(0, 12).padEnd(12) : '            ';
+    const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(event.id) ? '{yellow-fg}★{/yellow-fg}' : ' ';
 
-    // Context usage percentage at end of line
-    const usage = getContextUsage(event);
-    const usageStr = usage ? `{gray-fg}[${String(usage.percentage).padStart(2)}%]{/gray-fg}` : '     ';
+    // Timestamp (time only)
+    const time = formatTime(event.timestamp);
 
-    return `${searchMatch}${bookmarkMark}${String(event.id).padStart(5)} {${color}-fg}${type}{/${color}-fg} ${toolInfo} ${usageStr}`;
+    // Context usage percentage
+    const usage = getContextUsage(event);
+    const usageStr = usage
+      ? `{gray-fg}[${String(usage.percentage).padStart(2)}%]{/gray-fg}`
+      : '     ';
+
+    // Decision for PreToolUse events
+    const decision = event.decision
+      ? '{green-fg}✓{/green-fg}'
+      : event.eventType === 'PreToolUse'
+        ? '{gray-fg}?{/gray-fg}'
+        : ' ';
+
+    return `${searchMatch}${bookmarkMark}${time} {${color}-fg}${type}{/${color}-fg} ${toolInfo} ${decision} ${usageStr}`;
   });
+
+  state.listItemsDirty = false;
+  return state.cachedListItems;
+}
+
+/**
+ * Mark list items as needing regeneration
+ * Call this when events, filters, search, or bookmarks change
+ */
+function invalidateListCache(): void {
+  state.listItemsDirty = true;
 }
 
 function generateHelpContent(): string {
@@ -785,22 +832,25 @@ function performSearch(query: string): void {
   state.searchResults = [];
   state.searchResultIndex = 0;
 
-  if (!query.trim()) return;
+  if (!query.trim()) {
+    invalidateListCache(); // Clear search markers
+    return;
+  }
 
   const queryLower = query.toLowerCase();
 
   for (let i = 0; i < state.events.length; i++) {
     const event = state.events[i]!;
-    const searchText = [
-      event.eventType,
-      event.toolName || '',
-      event.inputJson || '',
-    ].join(' ').toLowerCase();
+    const searchText = [event.eventType, event.toolName || '', event.inputJson || '']
+      .join(' ')
+      .toLowerCase();
 
     if (searchText.includes(queryLower)) {
       state.searchResults.push(i);
     }
   }
+
+  invalidateListCache(); // Search results changed
 }
 
 function jumpToNextSearchResult(): void {
@@ -811,7 +861,8 @@ function jumpToNextSearchResult(): void {
 
 function jumpToPrevSearchResult(): void {
   if (state.searchResults.length === 0) return;
-  state.searchResultIndex = (state.searchResultIndex - 1 + state.searchResults.length) % state.searchResults.length;
+  state.searchResultIndex =
+    (state.searchResultIndex - 1 + state.searchResults.length) % state.searchResults.length;
   state.currentIndex = state.searchResults[state.searchResultIndex]!;
 }
 
@@ -820,10 +871,9 @@ function jumpToPrevSearchResult(): void {
 // ============================================================================
 
 function copyToClipboard(text: string): void {
-  const { spawn } = require('child_process');
-  const proc = process.platform === 'darwin'
-    ? spawn('pbcopy')
-    : spawn('xclip', ['-selection', 'clipboard']);
+  const { spawn } = require('node:child_process');
+  const proc =
+    process.platform === 'darwin' ? spawn('pbcopy') : spawn('xclip', ['-selection', 'clipboard']);
   proc.stdin.write(text);
   proc.stdin.end();
 }
@@ -842,7 +892,8 @@ async function createTUI(): Promise<void> {
 
   // Build header content with context usage
   const buildHeaderContent = (): string => {
-    const filterInfo = state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
+    const filterInfo =
+      state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
     const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
     const liveInfo = state.liveMode ? ' | {green-fg}LIVE{/green-fg}' : '';
     const contextInfo = state.maxContextUsage
@@ -919,7 +970,8 @@ async function createTUI(): Promise<void> {
     height: 3,
     border: 'line',
     style: { border: { fg: 'blue' }, fg: 'gray' },
-    content: '{bold}j/k{/bold}:nav {bold}Space{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit',
+    content:
+      '{bold}j/k{/bold}:nav {bold}Space{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit',
     tags: true,
   });
 
@@ -982,7 +1034,33 @@ async function createTUI(): Promise<void> {
     }, duration);
   };
 
-  // Update function
+  // Lightweight selection update - only updates selection and content, no list regeneration
+  // This is the fast path for navigation (j/k, up/down, etc.)
+  const updateSelection = () => {
+    // Update header with current position
+    header.setContent(buildHeaderContent());
+
+    // Update fullscreen label if in fullscreen
+    if (state.fullscreen) {
+      const modeStr = state.scrollMode ? 'SCROLL' : 'NAV';
+      contentBox.setLabel(
+        ` [${modeStr}] Event ${state.currentIndex + 1}/${state.events.length} | s:toggle f:exit `
+      );
+    }
+
+    // Just update selection index (blessed handles the visual update)
+    listBox.select(state.currentIndex);
+
+    // Update content pane
+    contentBox.setLabel(` Content [${state.viewMode}] `);
+    contentBox.setContent(renderCurrentEvent());
+    contentBox.scrollTo(0);
+
+    screen.render();
+  };
+
+  // Full UI update - regenerates list if dirty, updates layout
+  // Use this for filter changes, search, bookmarks, fullscreen toggle
   const updateUI = () => {
     // Update header
     header.setContent(buildHeaderContent());
@@ -996,9 +1074,17 @@ async function createTUI(): Promise<void> {
       contentBox.left = 0;
       contentBox.width = '100%';
       contentBox.height = '100%';
-      contentBox.border = { type: 'line', left: false, right: false, top: false, bottom: false } as any;
+      contentBox.border = {
+        type: 'line',
+        left: false,
+        right: false,
+        top: false,
+        bottom: false,
+      } as any;
       const modeStr = state.scrollMode ? 'SCROLL' : 'NAV';
-      contentBox.setLabel(` [${modeStr}] Event ${state.currentIndex + 1}/${state.events.length} | s:toggle f:exit `);
+      contentBox.setLabel(
+        ` [${modeStr}] Event ${state.currentIndex + 1}/${state.events.length} | s:toggle f:exit `
+      );
     } else {
       listBox.show();
       header.show();
@@ -1011,7 +1097,7 @@ async function createTUI(): Promise<void> {
       state.scrollMode = false;
     }
 
-    // Update list
+    // Update list (uses cache if not dirty)
     listBox.setItems(getListItems());
     listBox.select(state.currentIndex);
 
@@ -1022,7 +1108,9 @@ async function createTUI(): Promise<void> {
 
     // Update border colors
     listBox.style.border = { fg: state.focusedPane === 'list' ? 'green' : 'blue' };
-    contentBox.style.border = { fg: state.focusedPane === 'content' || state.fullscreen ? 'green' : 'blue' };
+    contentBox.style.border = {
+      fg: state.focusedPane === 'content' || state.fullscreen ? 'green' : 'blue',
+    };
 
     screen.render();
   };
@@ -1033,11 +1121,11 @@ async function createTUI(): Promise<void> {
     return state.focusedPane === 'list';
   };
 
-  // Key bindings
+  // Key bindings - navigation uses lightweight updateSelection() for speed
   screen.key(['j', 'down'], () => {
     if (shouldNavigateEvents() && state.currentIndex < state.events.length - 1) {
       state.currentIndex++;
-      updateUI();
+      updateSelection();
     } else if (!shouldNavigateEvents()) {
       contentBox.scroll(1);
       screen.render();
@@ -1047,7 +1135,7 @@ async function createTUI(): Promise<void> {
   screen.key(['k', 'up'], () => {
     if (shouldNavigateEvents() && state.currentIndex > 0) {
       state.currentIndex--;
-      updateUI();
+      updateSelection();
     } else if (!shouldNavigateEvents()) {
       contentBox.scroll(-1);
       screen.render();
@@ -1057,7 +1145,7 @@ async function createTUI(): Promise<void> {
   screen.key(['pagedown', 'C-d'], () => {
     if (shouldNavigateEvents()) {
       state.currentIndex = Math.min(state.currentIndex + 20, state.events.length - 1);
-      updateUI();
+      updateSelection();
     } else {
       contentBox.scroll(10);
       screen.render();
@@ -1067,7 +1155,7 @@ async function createTUI(): Promise<void> {
   screen.key(['pageup', 'C-u'], () => {
     if (shouldNavigateEvents()) {
       state.currentIndex = Math.max(state.currentIndex - 20, 0);
-      updateUI();
+      updateSelection();
     } else {
       contentBox.scroll(-10);
       screen.render();
@@ -1087,7 +1175,7 @@ async function createTUI(): Promise<void> {
   screen.key('g', () => {
     if (shouldNavigateEvents()) {
       state.currentIndex = 0;
-      updateUI();
+      updateSelection();
     } else {
       contentBox.setScrollPerc(0);
       screen.render();
@@ -1097,7 +1185,7 @@ async function createTUI(): Promise<void> {
   screen.key('G', () => {
     if (shouldNavigateEvents()) {
       state.currentIndex = state.events.length - 1;
-      updateUI();
+      updateSelection();
     } else {
       contentBox.setScrollPerc(100);
       screen.render();
@@ -1119,11 +1207,26 @@ async function createTUI(): Promise<void> {
   });
 
   // View modes
-  screen.key('1', () => { state.viewMode = 'raw'; updateUI(); });
-  screen.key('2', () => { state.viewMode = 'human'; updateUI(); });
-  screen.key('3', () => { state.viewMode = 'minimal'; updateUI(); });
-  screen.key('4', () => { state.viewMode = 'tool-io'; updateUI(); });
-  screen.key('5', () => { state.viewMode = 'timeline'; updateUI(); });
+  screen.key('1', () => {
+    state.viewMode = 'raw';
+    updateUI();
+  });
+  screen.key('2', () => {
+    state.viewMode = 'human';
+    updateUI();
+  });
+  screen.key('3', () => {
+    state.viewMode = 'minimal';
+    updateUI();
+  });
+  screen.key('4', () => {
+    state.viewMode = 'tool-io';
+    updateUI();
+  });
+  screen.key('5', () => {
+    state.viewMode = 'timeline';
+    updateUI();
+  });
 
   // Fullscreen toggle
   let prevFocusedPane: 'list' | 'content' = 'list';
@@ -1158,7 +1261,7 @@ async function createTUI(): Promise<void> {
     if (!jumped) {
       showToast('No visible bookmarks in current filter');
     }
-    updateUI();
+    updateSelection();
   });
 
   screen.key(']', () => {
@@ -1170,19 +1273,23 @@ async function createTUI(): Promise<void> {
     if (!jumped) {
       showToast('No visible bookmarks in current filter');
     }
-    updateUI();
+    updateSelection();
   });
 
   // Copy to clipboard
   screen.key('c', () => {
     const event = state.events[state.currentIndex];
     if (event) {
-      const content = JSON.stringify({
-        id: event.id,
-        eventType: event.eventType,
-        toolName: event.toolName,
-        timestamp: event.timestamp,
-      }, null, 2);
+      const content = JSON.stringify(
+        {
+          id: event.id,
+          eventType: event.eventType,
+          toolName: event.toolName,
+          timestamp: event.timestamp,
+        },
+        null,
+        2
+      );
       copyToClipboard(content);
       showToast('Copied to clipboard!');
     }
@@ -1219,17 +1326,18 @@ async function createTUI(): Promise<void> {
 
   screen.key('n', () => {
     jumpToNextSearchResult();
-    updateUI();
+    updateSelection();
   });
 
   screen.key('N', () => {
     jumpToPrevSearchResult();
-    updateUI();
+    updateSelection();
   });
 
   screen.key('escape', () => {
     state.searchQuery = '';
     state.searchResults = [];
+    invalidateListCache(); // Search markers need to be cleared
     updateUI();
   });
 
@@ -1262,6 +1370,7 @@ async function createTUI(): Promise<void> {
               const filteredEvents = filterEvents(state.allEvents, state.filterOpts);
               const prevCount = state.events.length;
               state.events = filteredEvents;
+              invalidateListCache(); // Events changed
 
               const wasAtEnd = state.currentIndex >= prevCount - 1;
               if (wasAtEnd && filteredEvents.length > prevCount) {
@@ -1275,7 +1384,7 @@ async function createTUI(): Promise<void> {
         } catch {
           // Ignore polling errors
         }
-      }, 500);
+      }, 2000); // Poll every 2 seconds (hook events update frequently)
     } else if (!state.liveMode && state.pollInterval) {
       clearInterval(state.pollInterval);
       state.pollInterval = null;
@@ -1394,9 +1503,10 @@ Examples:
       filterLabel = `event:${filterOpts.eventTypes!.length}`;
     } else if (arg === '--tool' || arg === '-t') {
       filterOpts.toolNames = args[++i]?.split(',').map((t) => t.trim());
-      filterLabel = filterLabel === 'all' ? `tool:${filterOpts.toolNames!.length}` : `${filterLabel}+tool`;
+      filterLabel =
+        filterLabel === 'all' ? `tool:${filterOpts.toolNames!.length}` : `${filterLabel}+tool`;
     } else if (arg === '--last') {
-      filterOpts.last = parseInt(args[++i]!, 10);
+      filterOpts.last = Number.parseInt(args[++i]!, 10);
     } else if (arg === '--live' || arg === '-w') {
       state.liveMode = true;
     } else if (!arg.startsWith('-')) {
