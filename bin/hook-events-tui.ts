@@ -45,32 +45,6 @@ const DAEMON_DIR = join(process.env.HOME || '~', '.claude-code-sdk');
 const PID_FILE = join(DAEMON_DIR, 'transcript-daemon.pid');
 const BOOKMARKS_FILE = join(DAEMON_DIR, 'hook-event-bookmarks.json');
 
-// Context window size for current Claude models
-const CONTEXT_WINDOW_SIZE = 200000;
-
-/**
- * Calculate context usage percentage from hook event input
- */
-function getContextUsage(event: HookEventResult): { tokens: number; percentage: number } | null {
-  if (!event.inputJson) return null;
-
-  try {
-    const input = JSON.parse(event.inputJson);
-    // Look for usage info in various places
-    const usage = input.tool_response?.usage || input.usage || input.message?.usage;
-    if (usage) {
-      const inputTokens = usage.input_tokens || 0;
-      const outputTokens = usage.output_tokens || 0;
-      const totalTokens = inputTokens + outputTokens;
-      const percentage = Math.round((totalTokens / CONTEXT_WINDOW_SIZE) * 100);
-      return { tokens: totalTokens, percentage };
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return null;
-}
-
 // Valid event types for filtering
 const VALID_EVENT_TYPES = [
   'PreToolUse',
@@ -195,8 +169,6 @@ interface AppState {
   pollInterval: ReturnType<typeof setInterval> | null;
   lastMaxEventId: number;
   filterOpts: FilterOptions;
-  // Context tracking
-  maxContextUsage: { tokens: number; percentage: number } | null;
   // Performance cache
   cachedListItems: string[];
   listItemsDirty: boolean;
@@ -223,7 +195,6 @@ const state: AppState = {
   pollInterval: null,
   lastMaxEventId: 0,
   filterOpts: {},
-  maxContextUsage: null,
   cachedListItems: [],
   listItemsDirty: true,
 };
@@ -461,25 +432,6 @@ function jumpToNextBookmark(): boolean {
 }
 
 /**
- * Calculate max context usage across all events
- */
-function calculateMaxContextUsage(): void {
-  let maxTokens = 0;
-  for (const event of state.allEvents) {
-    const usage = getContextUsage(event);
-    if (usage && usage.tokens > maxTokens) {
-      maxTokens = usage.tokens;
-    }
-  }
-  if (maxTokens > 0) {
-    state.maxContextUsage = {
-      tokens: maxTokens,
-      percentage: Math.round((maxTokens / CONTEXT_WINDOW_SIZE) * 100),
-    };
-  }
-}
-
-/**
  * Filter events based on options
  */
 function filterEvents(events: HookEventResult[], opts: FilterOptions): HookEventResult[] {
@@ -519,12 +471,6 @@ function renderCurrentEvent(): string {
   const viewLabel = (mode: string, color: string) =>
     `{${color}-fg}=== VIEW: ${mode.toUpperCase()} ==={/${color}-fg}\n\n`;
 
-  // Context usage for current event
-  const usage = getContextUsage(event);
-  const usageStr = usage
-    ? `\n\n{cyan-fg}[Context: ${usage.tokens.toLocaleString()} tokens (${usage.percentage}% of 200K)]{/cyan-fg}`
-    : '';
-
   switch (state.viewMode) {
     case 'raw': {
       // Raw JSON
@@ -558,7 +504,7 @@ function renderCurrentEvent(): string {
           obj.handlerResults = event.handlerResults;
         }
       }
-      return viewLabel('raw', 'yellow') + highlightJson(JSON.stringify(obj, null, 2)) + usageStr;
+      return viewLabel('raw', 'yellow') + highlightJson(JSON.stringify(obj, null, 2));
     }
 
     case 'human': {
@@ -636,7 +582,7 @@ function renderCurrentEvent(): string {
       if (event.toolName) lines.push(`Tool: ${event.toolName}`);
       if (event.decision) lines.push(`Decision: ${event.decision}`);
       if (usage) lines.push(`Context: ${usage.percentage}%`);
-      return viewLabel('minimal', 'magenta') + lines.join('\n') + usageStr;
+      return viewLabel('minimal', 'magenta') + lines.join('\n');
     }
 
     case 'tool-io': {
@@ -678,7 +624,7 @@ function renderCurrentEvent(): string {
         lines.push('Use view mode 2 (human) for other event types.');
       }
 
-      return viewLabel('tool-io', 'blue') + lines.join('\n') + usageStr;
+      return viewLabel('tool-io', 'blue') + lines.join('\n');
     }
 
     case 'timeline': {
@@ -694,22 +640,20 @@ function renderCurrentEvent(): string {
         const prefix = isCurrent ? '>>> ' : '    ';
         const color = getEventColor(e.eventType);
         const toolInfo = e.toolName ? ` [${e.toolName}]` : '';
-        const eventUsage = getContextUsage(e);
-        const eventUsageStr = eventUsage ? ` [${eventUsage.percentage}%]` : '';
         const bookmarkMark = state.bookmarks.has(e.id) ? ' ★' : '';
 
         if (isCurrent) {
           lines.push(
-            `{inverse}${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${eventUsageStr}${bookmarkMark}{/inverse}`
+            `{inverse}${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${bookmarkMark}{/inverse}`
           );
         } else {
           lines.push(
-            `${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${eventUsageStr}${bookmarkMark}`
+            `${prefix}${formatTime(e.timestamp)} {${color}-fg}${e.eventType.padEnd(16)}{/${color}-fg}${toolInfo}${bookmarkMark}`
           );
         }
       }
 
-      return viewLabel('timeline', 'cyan') + lines.join('\n') + usageStr;
+      return viewLabel('timeline', 'cyan') + lines.join('\n');
     }
 
     default:
@@ -739,20 +683,15 @@ function getListItems(): string[] {
     // Timestamp (time only)
     const time = formatTime(event.timestamp);
 
-    // Context usage percentage
-    const usage = getContextUsage(event);
-    const usageStr = usage
-      ? `{gray-fg}[${String(usage.percentage).padStart(2)}%]{/gray-fg}`
-      : '     ';
-
-    // Decision for PreToolUse events
-    const decision = event.decision
-      ? '{green-fg}✓{/green-fg}'
-      : event.eventType === 'PreToolUse'
-        ? '{gray-fg}?{/gray-fg}'
+    // Decision indicator (PreToolUse only)
+    const decision =
+      event.eventType === 'PreToolUse'
+        ? event.decision
+          ? '{green-fg}✓{/green-fg}'
+          : '{gray-fg}?{/gray-fg}'
         : ' ';
 
-    return `${searchMatch}${bookmarkMark}${time} {${color}-fg}${type}{/${color}-fg} ${toolInfo} ${decision} ${usageStr}`;
+    return `${searchMatch}${bookmarkMark}${time} {${color}-fg}${type}{/${color}-fg} ${toolInfo} ${decision}`;
   });
 
   state.listItemsDirty = false;
@@ -813,9 +752,9 @@ function generateHelpContent(): string {
   {green-fg}L{/green-fg}               Toggle live mode (watch for new events)
   {green-fg}?{/green-fg}               Toggle this help overlay
 
-{bold}Context Usage:{/bold}
-  Each line shows [XX%] context usage at the end
-  Context window is 200K tokens for current Claude models
+{bold}Decision Indicator (PreToolUse only):{/bold}
+  {green-fg}✓{/green-fg}                Hook handler approved
+  {gray-fg}?{/gray-fg}                No handler decision
 
 {bold}Quit:{/bold}
   {green-fg}q{/green-fg} or {green-fg}Ctrl+C{/green-fg}    Exit
@@ -890,20 +829,17 @@ async function createTUI(): Promise<void> {
     fullUnicode: true,
   });
 
-  // Build header content with context usage
+  // Build header content
   const buildHeaderContent = (): string => {
     const filterInfo =
       state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
     const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
     const liveInfo = state.liveMode ? ' | {green-fg}LIVE{/green-fg}' : '';
-    const contextInfo = state.maxContextUsage
-      ? ` | Context: {cyan-fg}${state.maxContextUsage.percentage}%{/cyan-fg}`
-      : '';
     const searchInfo = state.searchQuery
       ? ` | Search: "${state.searchQuery}" (${state.searchResults.length})`
       : '';
 
-    return `{bold}Hook Events{/bold} | Session: {green-fg}${state.sessionId.slice(0, 8)}...{/green-fg} | Events: ${state.events.length}${filterInfo} | ${state.currentIndex + 1}/${state.events.length} | [${state.viewMode}]${contextInfo}${fullscreenInfo}${liveInfo}${searchInfo}`;
+    return `{bold}Hook Events{/bold} | Session: {green-fg}${state.sessionId.slice(0, 8)}...{/green-fg} | Events: ${state.events.length}${filterInfo} | ${state.currentIndex + 1}/${state.events.length} | [${state.viewMode}]${fullscreenInfo}${liveInfo}${searchInfo}`;
   };
 
   // Header
@@ -1377,7 +1313,6 @@ async function createTUI(): Promise<void> {
                 state.currentIndex = filteredEvents.length - 1;
               }
 
-              calculateMaxContextUsage();
               updateUI();
             }
           }
@@ -1479,9 +1414,9 @@ Features:
   ?                Show help
   q                Quit
 
-Context Usage:
-  Each line shows [XX%] context usage
-  200K context window for current Claude models
+Decision Indicator (PreToolUse only):
+  ✓                Hook handler approved
+  ?                No handler decision
 
 Examples:
   hook-events-tui .
@@ -1574,9 +1509,6 @@ Examples:
   state.filterOpts = filterOpts;
   state.bookmarks = sessionBookmarks;
   state.bookmarkStore = bookmarkStore;
-
-  // Calculate max context usage
-  calculateMaxContextUsage();
 
   // Start TUI
   await createTUI();

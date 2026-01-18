@@ -2,7 +2,7 @@
  * Hook Events CLI/TUI Tests
  *
  * Tests for hook-events CLI (bin/hook-events.ts) and TUI (bin/hook-events-tui.ts)
- * Covers database queries, context usage calculation, filtering, and bookmark persistence
+ * Covers database queries, filtering, and bookmark persistence
  */
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test';
@@ -484,176 +484,6 @@ describe('Hook Events Database Queries', () => {
 });
 
 // ============================================================================
-// Context Usage Calculation Tests
-// ============================================================================
-
-describe('Context Usage Calculation', () => {
-  const CONTEXT_WINDOW_SIZE = 200000;
-
-  function getContextUsage(event: HookEventResult): { tokens: number; percentage: number } | null {
-    if (!event.inputJson) return null;
-    try {
-      const input = JSON.parse(event.inputJson);
-      const usage = input.tool_response?.usage || input.usage || input.message?.usage;
-      if (usage) {
-        const inputTokens = usage.input_tokens || 0;
-        const outputTokens = usage.output_tokens || 0;
-        const totalTokens = inputTokens + outputTokens;
-        const percentage = Math.round((totalTokens / CONTEXT_WINDOW_SIZE) * 100);
-        return { tokens: totalTokens, percentage };
-      }
-    } catch {
-      // Invalid JSON
-    }
-    return null;
-  }
-
-  test('calculates usage from PostToolUse with usage data', () => {
-    const event: HookEventResult = {
-      id: 1,
-      sessionId: 'test',
-      timestamp: '2024-01-18T10:00:00Z',
-      eventType: 'PostToolUse',
-      toolUseId: 'tool-1',
-      toolName: 'Bash',
-      decision: null,
-      handlerResults: null,
-      inputJson: JSON.stringify({
-        tool_name: 'Bash',
-        usage: { input_tokens: 10000, output_tokens: 5000 },
-      }),
-      contextJson: '{}',
-      filePath: '/test/hooks.jsonl',
-      lineNumber: 1,
-    };
-
-    const usage = getContextUsage(event);
-    expect(usage).not.toBeNull();
-    expect(usage!.tokens).toBe(15000);
-    expect(usage!.percentage).toBe(8); // 15000/200000 = 7.5% rounded to 8%
-  });
-
-  test('calculates high usage correctly', () => {
-    const event: HookEventResult = {
-      id: 1,
-      sessionId: 'test',
-      timestamp: '2024-01-18T10:00:00Z',
-      eventType: 'PostToolUse',
-      toolUseId: 'tool-1',
-      toolName: 'Read',
-      decision: null,
-      handlerResults: null,
-      inputJson: JSON.stringify({
-        tool_name: 'Read',
-        usage: { input_tokens: 150000, output_tokens: 30000 },
-      }),
-      contextJson: '{}',
-      filePath: '/test/hooks.jsonl',
-      lineNumber: 1,
-    };
-
-    const usage = getContextUsage(event);
-    expect(usage).not.toBeNull();
-    expect(usage!.tokens).toBe(180000);
-    expect(usage!.percentage).toBe(90); // 180000/200000 = 90%
-  });
-
-  test('returns null for events without usage data', () => {
-    const event: HookEventResult = {
-      id: 1,
-      sessionId: 'test',
-      timestamp: '2024-01-18T10:00:00Z',
-      eventType: 'PreToolUse',
-      toolUseId: 'tool-1',
-      toolName: 'Bash',
-      decision: 'allow',
-      handlerResults: null,
-      inputJson: JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'ls' } }),
-      contextJson: '{}',
-      filePath: '/test/hooks.jsonl',
-      lineNumber: 1,
-    };
-
-    const usage = getContextUsage(event);
-    expect(usage).toBeNull();
-  });
-
-  test('returns null for events with null inputJson', () => {
-    const event: HookEventResult = {
-      id: 1,
-      sessionId: 'test',
-      timestamp: '2024-01-18T10:00:00Z',
-      eventType: 'SessionStart',
-      toolUseId: null,
-      toolName: null,
-      decision: null,
-      handlerResults: null,
-      inputJson: null,
-      contextJson: '{}',
-      filePath: '/test/hooks.jsonl',
-      lineNumber: 1,
-    };
-
-    const usage = getContextUsage(event);
-    expect(usage).toBeNull();
-  });
-
-  test('handles tool_response.usage format', () => {
-    const event: HookEventResult = {
-      id: 1,
-      sessionId: 'test',
-      timestamp: '2024-01-18T10:00:00Z',
-      eventType: 'PostToolUse',
-      toolUseId: 'tool-1',
-      toolName: 'Task',
-      decision: null,
-      handlerResults: null,
-      inputJson: JSON.stringify({
-        tool_name: 'Task',
-        tool_response: {
-          usage: { input_tokens: 50000, output_tokens: 25000 },
-        },
-      }),
-      contextJson: '{}',
-      filePath: '/test/hooks.jsonl',
-      lineNumber: 1,
-    };
-
-    const usage = getContextUsage(event);
-    expect(usage).not.toBeNull();
-    expect(usage!.tokens).toBe(75000);
-    expect(usage!.percentage).toBe(38); // 75000/200000 = 37.5% rounded to 38%
-  });
-
-  test('handles message.usage format', () => {
-    const event: HookEventResult = {
-      id: 1,
-      sessionId: 'test',
-      timestamp: '2024-01-18T10:00:00Z',
-      eventType: 'PostToolUse',
-      toolUseId: 'tool-1',
-      toolName: 'Task',
-      decision: null,
-      handlerResults: null,
-      inputJson: JSON.stringify({
-        tool_name: 'Task',
-        message: {
-          usage: { input_tokens: 20000, output_tokens: 10000 },
-        },
-      }),
-      contextJson: '{}',
-      filePath: '/test/hooks.jsonl',
-      lineNumber: 1,
-    };
-
-    const usage = getContextUsage(event);
-    expect(usage).not.toBeNull();
-    expect(usage!.tokens).toBe(30000);
-    expect(usage!.percentage).toBe(15); // 30000/200000 = 15%
-  });
-});
-
-// ============================================================================
 // Bookmark Persistence Tests
 // ============================================================================
 
@@ -1130,6 +960,6 @@ describe('CLI Integration', () => {
     expect(output).toContain('hook-events-tui');
     expect(output).toContain('Navigation:');
     expect(output).toContain('Bookmarks');
-    expect(output).toContain('Context Usage');
+    expect(output).toContain('Decision Indicator');
   });
 });
