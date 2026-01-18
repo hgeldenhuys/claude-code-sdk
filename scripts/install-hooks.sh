@@ -258,7 +258,7 @@ SETTINGS_JSON
   info "Creating CLI wrapper scripts..."
   mkdir -p .claude/bin
 
-  for cli in sesh transcript transcript-tui hook-events hook-events-tui; do
+  for cli in sesh transcript transcript-tui hook-events hook-events-tui hooks; do
     cat > ".claude/bin/$cli" << EOF
 #!/usr/bin/env bash
 exec bun "\$(dirname "\$0")/../claude-code-sdk/bin/${cli}.ts" "\$@"
@@ -283,6 +283,7 @@ EOF
   echo "  - event-logger       : Log events for indexing"
   echo ""
   echo "Available CLIs (run from project root):"
+  echo "  .claude/bin/hooks           - Hook framework (doctor, init, inspect)"
   echo "  .claude/bin/sesh            - Session name manager"
   echo "  .claude/bin/transcript      - Transcript search/view"
   echo "  .claude/bin/transcript-tui  - Transcript TUI viewer"
@@ -290,6 +291,9 @@ EOF
   echo ""
   echo "Or add to PATH:"
   echo "  export PATH=\"\$PWD/.claude/bin:\$PATH\""
+  echo ""
+  echo "Verify installation:"
+  echo "  .claude/bin/hooks doctor"
   echo ""
   echo "Next steps:"
   echo "  1. Start Claude Code in this directory"
