@@ -250,8 +250,9 @@ The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execut
 │                     │                                                        │
 │                     ▼                                                        │
 │  ~/.claude-code-sdk/transcripts.db                                          │
-│  ├── hook_events table (indexed events)                                     │
-│  └── hook_events_fts (full-text search)                                     │
+│  ├── lines table (transcript content + turn_id, session_name)               │
+│  ├── hook_events table (indexed events + turn_id, session_name)             │
+│  └── *_fts tables (full-text search)                                        │
 │                                                                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
@@ -272,6 +273,13 @@ The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execut
 - `src/transcripts/db.ts` - SQLite database with hook event queries (`getHookEvents`, `getHookSessions`, etc.)
 - `bin/hook-events.ts` - CLI for viewing/searching hook events
 - `bin/hook-events-tui.ts` - Interactive TUI with blessed library
+
+**Turn tracking (v5 schema):**
+- Both `lines` and `hook_events` tables have `turn_id`, `turn_sequence`, `session_name` columns
+- `correlateLinesToTurns(db)` - Updates transcript lines with turn info from Stop events
+- `getSessionTurns(db, sessionId)` - Get turn summary for a session
+- `getTurnLines(db, turnId)` - Get all lines for a specific turn
+- Turn boundaries are marked by `Stop` hook events from turn-tracker handler
 
 **Hook event JSONL format:**
 ```json

@@ -2,6 +2,21 @@
 
 A TypeScript toolkit for extending Claude Code with documentation tracking, transcript search, and reusable skills.
 
+## Quick Start (Project Install)
+
+Get hooks, skills, and CLI tools in one command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hgeldenhuys/claude-code-sdk/main/scripts/install-hooks.sh | bash
+```
+
+This installs:
+- **Hook Framework** - Session naming, turn tracking, context injection, event logging
+- **30+ Skills** - Including `/recall`, `/transcript-intelligence`, `/creating-hooks`
+- **CLI Tools** - `transcript`, `hook-events`, `sesh` for debugging and analysis
+
+After install, start Claude Code and your sessions will be automatically named (e.g., "brave-elephant").
+
 ## Features
 
 - **Documentation Tracking** - Cache and detect changes in Claude Code official docs
@@ -103,6 +118,7 @@ Skills for building Claude Code extensions (hooks, MCP servers, plugins, etc.):
 | [creating-subagents](skills/creating-subagents/SKILL.md) | Custom Task tool agents |
 | [custom-slash-commands](skills/custom-slash-commands/SKILL.md) | Create custom slash commands |
 | [headless-mode](skills/headless-mode/SKILL.md) | CLI flags and SDKs for automation |
+| [recall](skills/recall/SKILL.md) | Search past sessions for decisions and solutions |
 | [transcript-intelligence](skills/transcript-intelligence/SKILL.md) | Search session transcripts |
 | [writing-skills](skills/writing-skills/SKILL.md) | Create effective skills |
 
