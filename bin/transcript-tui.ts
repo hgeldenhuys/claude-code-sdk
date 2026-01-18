@@ -23,7 +23,6 @@
 import blessed from 'blessed';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { watch, type FSWatcher } from 'node:fs';
 import { getConversationThread } from '../src/transcripts/parser';
 import {
   getDatabase,
@@ -185,8 +184,9 @@ interface AppState {
   showHelp: boolean; // Toggle help overlay
   sessionFilter: string[]; // Session IDs to filter by
   // Live mode
-  liveMode: boolean; // Watch file for changes
-  fileWatcher: FSWatcher | null; // File watcher instance
+  liveMode: boolean; // Watch for changes via SQLite polling
+  pollInterval: ReturnType<typeof setInterval> | null; // SQLite polling interval
+  lastMaxLineId: number; // Last known max line ID for delta detection
   filterOpts: FilterOptions; // Store filter options for reapplying
 }
 
@@ -215,7 +215,8 @@ let state: AppState = {
   sessionFilter: [],
   // Live mode
   liveMode: false,
-  fileWatcher: null,
+  pollInterval: null,
+  lastMaxLineId: 0,
   filterOpts: {},
 };
 
@@ -1259,57 +1260,69 @@ async function createTUI(): Promise<void> {
     screen.render();
   });
 
-  // Live mode toggle with 'L' key
+  // Live mode toggle with 'L' key - uses SQLite polling for real-time updates
   screen.key('L', () => {
     state.liveMode = !state.liveMode;
 
-    if (state.liveMode && !state.fileWatcher) {
-      // Start watching
-      let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-      const debounceMs = 100;
+    if (state.liveMode && !state.pollInterval) {
+      // Initialize lastMaxLineId from current data
+      const db = getDb();
+      state.lastMaxLineId = getMaxLineId(db, state.sessionId);
 
-      state.fileWatcher = watch(state.filePath, async (eventType) => {
-        if (eventType !== 'change') return;
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(async () => {
-          try {
-            const previousLineCount = state.allLines.length;
-            const newAllLines = loadTranscriptLines(state.filePath);
-            if (newAllLines.length > previousLineCount) {
-              const newLinesCount = newAllLines.length - previousLineCount;
-              state.allLines = newAllLines;
-              const filteredLines = filterLines(newAllLines, state.filterOpts);
+      // Start polling SQLite every 200ms
+      state.pollInterval = setInterval(() => {
+        try {
+          const db = getDb();
+          const currentMaxId = getMaxLineId(db, state.sessionId);
+
+          if (currentMaxId > state.lastMaxLineId) {
+            // Fetch only new lines
+            const newLineResults = getLinesAfterId(db, state.lastMaxLineId, state.sessionId);
+            if (newLineResults.length > 0) {
+              const newLinesCount = newLineResults.length;
+              const newLines = newLineResults.map(lineResultToTranscriptLine);
+
+              // Append to allLines
+              state.allLines = [...state.allLines, ...newLines];
+              state.lastMaxLineId = currentMaxId;
+
+              // Reapply filters
+              const filteredLines = filterLines(state.allLines, state.filterOpts);
               const previousFilteredCount = state.lines.length;
               state.lines = filteredLines;
+
+              // Auto-scroll to end if we were at the end
               const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
               if (wasAtEnd && filteredLines.length > previousFilteredCount) {
                 state.currentIndex = filteredLines.length - 1;
               }
-              headerBox.setContent(
+
+              // Update UI
+              header.setContent(
                 `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} (+${newLinesCount}) | View: [${state.viewMode}]`
               );
               listBox.setItems(getListItems());
               listBox.select(state.currentIndex);
-              renderCurrentLine();
+              contentBox.setContent(renderCurrentLine());
               screen.render();
             }
-          } catch {
-            // Ignore errors
           }
-        }, debounceMs);
-      });
-    } else if (!state.liveMode && state.fileWatcher) {
-      // Stop watching
-      state.fileWatcher.close();
-      state.fileWatcher = null;
+        } catch {
+          // Ignore polling errors
+        }
+      }, 200);
+    } else if (!state.liveMode && state.pollInterval) {
+      // Stop polling
+      clearInterval(state.pollInterval);
+      state.pollInterval = null;
     }
 
     // Update header
     const liveIndicator = state.liveMode ? '{green-fg}[LIVE]{/green-fg} ' : '';
-    headerBox.setContent(
+    header.setContent(
       `${liveIndicator}{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
     );
-    showToast(`Live mode ${state.liveMode ? 'enabled' : 'disabled'}`);
+    showToast(`Live mode ${state.liveMode ? 'enabled (polling SQLite)' : 'disabled'}`);
     screen.render();
   });
 
@@ -1335,10 +1348,10 @@ async function createTUI(): Promise<void> {
 
   // Quit
   screen.key(['q', 'C-c'], () => {
-    // Clean up file watcher
-    if (state.fileWatcher) {
-      state.fileWatcher.close();
-      state.fileWatcher = null;
+    // Clean up polling interval
+    if (state.pollInterval) {
+      clearInterval(state.pollInterval);
+      state.pollInterval = null;
     }
     process.exit(0);
   });
@@ -1355,57 +1368,51 @@ async function createTUI(): Promise<void> {
   // Focus list by default
   listBox.focus();
 
-  // Set up live mode file watching
+  // Set up live mode SQLite polling if enabled at startup
   if (state.liveMode) {
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    const debounceMs = 100;
+    const db = getDb();
+    state.lastMaxLineId = getMaxLineId(db, state.sessionId);
 
-    state.fileWatcher = watch(state.filePath, async (eventType) => {
-      if (eventType !== 'change') return;
+    // Start polling SQLite every 200ms
+    state.pollInterval = setInterval(() => {
+      try {
+        const db = getDb();
+        const currentMaxId = getMaxLineId(db, state.sessionId);
 
-      // Debounce rapid changes
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(async () => {
-        try {
-          const previousLineCount = state.allLines.length;
-          const newAllLines = loadTranscriptLines(state.filePath);
+        if (currentMaxId > state.lastMaxLineId) {
+          const newLineResults = getLinesAfterId(db, state.lastMaxLineId, state.sessionId);
+          if (newLineResults.length > 0) {
+            const newLinesCount = newLineResults.length;
+            const newLines = newLineResults.map(lineResultToTranscriptLine);
 
-          // Only update if we have new lines
-          if (newAllLines.length > previousLineCount) {
-            const newLinesCount = newAllLines.length - previousLineCount;
-            state.allLines = newAllLines;
+            state.allLines = [...state.allLines, ...newLines];
+            state.lastMaxLineId = currentMaxId;
 
-            // Reapply filters
-            const filteredLines = filterLines(newAllLines, state.filterOpts);
+            const filteredLines = filterLines(state.allLines, state.filterOpts);
             const previousFilteredCount = state.lines.length;
             state.lines = filteredLines;
 
-            // Auto-scroll to end if we were at the end
             const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
             if (wasAtEnd && filteredLines.length > previousFilteredCount) {
               state.currentIndex = filteredLines.length - 1;
             }
 
-            // Update header to show live indicator
-            const liveIndicator = '{green-fg}[LIVE]{/green-fg} ';
-            headerBox.setContent(
-              `${liveIndicator}{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} (+${newLinesCount}) | View: [${state.viewMode}]`
+            header.setContent(
+              `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} (+${newLinesCount}) | View: [${state.viewMode}]`
             );
-
-            // Refresh list and content
             listBox.setItems(getListItems());
             listBox.select(state.currentIndex);
-            renderCurrentLine();
+            contentBox.setContent(renderCurrentLine());
             screen.render();
           }
-        } catch {
-          // Ignore errors during file reload
         }
-      }, debounceMs);
-    });
+      } catch {
+        // Ignore polling errors
+      }
+    }, 200);
 
     // Show live mode indicator in header
-    headerBox.setContent(
+    header.setContent(
       `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
     );
   }
