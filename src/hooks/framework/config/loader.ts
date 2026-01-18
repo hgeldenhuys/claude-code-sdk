@@ -96,12 +96,54 @@ export function loadResolvedConfig(configPath?: string): ResolvedConfig {
 }
 
 /**
+ * Normalize settings from snake_case to camelCase
+ */
+function normalizeSettings(
+  settings: Record<string, unknown> | undefined
+): Partial<FrameworkSettings> {
+  if (!settings) return {};
+
+  const normalized: Partial<FrameworkSettings> = {};
+
+  // Handle camelCase (preferred)
+  if ('debug' in settings) normalized.debug = settings.debug as boolean;
+  if ('parallelExecution' in settings)
+    normalized.parallelExecution = settings.parallelExecution as boolean;
+  if ('defaultTimeoutMs' in settings)
+    normalized.defaultTimeoutMs = settings.defaultTimeoutMs as number;
+  if ('defaultErrorStrategy' in settings)
+    normalized.defaultErrorStrategy = settings.defaultErrorStrategy as
+      | 'continue'
+      | 'stop'
+      | 'retry';
+
+  // Handle snake_case (legacy)
+  if ('parallel_execution' in settings && !('parallelExecution' in settings)) {
+    normalized.parallelExecution = settings.parallel_execution as boolean;
+  }
+  if ('default_timeout_ms' in settings && !('defaultTimeoutMs' in settings)) {
+    normalized.defaultTimeoutMs = settings.default_timeout_ms as number;
+  }
+  if ('default_error_strategy' in settings && !('defaultErrorStrategy' in settings)) {
+    normalized.defaultErrorStrategy = settings.default_error_strategy as
+      | 'continue'
+      | 'stop'
+      | 'retry';
+  }
+
+  return normalized;
+}
+
+/**
  * Resolve a YAML config to a fully populated config with defaults
  */
 export function resolveConfig(config: YamlConfig): ResolvedConfig {
+  const normalizedSettings = normalizeSettings(
+    config.settings as Record<string, unknown> | undefined
+  );
   const settings: Required<FrameworkSettings> = {
     ...DEFAULT_SETTINGS,
-    ...config.settings,
+    ...normalizedSettings,
   };
 
   const handlers: ResolvedHandlerConfig[] = [];
@@ -139,6 +181,19 @@ export function resolveConfig(config: YamlConfig): ResolvedConfig {
       'tool-logger': { priority: 100, events: ['PostToolUse'] },
       'debug-logger': {
         priority: 999,
+        events: [
+          'SessionStart',
+          'UserPromptSubmit',
+          'PreToolUse',
+          'PostToolUse',
+          'Stop',
+          'SubagentStop',
+          'SessionEnd',
+          'PreCompact',
+        ],
+      },
+      'event-logger': {
+        priority: 998, // Run very late to capture all handler results
         events: [
           'SessionStart',
           'UserPromptSubmit',

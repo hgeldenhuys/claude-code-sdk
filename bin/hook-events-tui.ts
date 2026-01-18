@@ -224,7 +224,7 @@ function highlightJson(json: string): string {
     let i = 0;
 
     while (i < line.length) {
-      const char = line[i];
+      const char = line[i]!;
 
       // Handle whitespace (preserve indentation)
       if (char === ' ' || char === '\t') {
@@ -238,11 +238,12 @@ function highlightJson(json: string): string {
         let str = '"';
         i++;
         while (i < line.length && line[i] !== '"') {
-          if (line[i] === '\\' && i + 1 < line.length) {
-            str += line[i] + line[i + 1];
+          const c = line[i]!;
+          if (c === '\\' && i + 1 < line.length) {
+            str += c + line[i + 1]!;
             i += 2;
           } else {
-            str += line[i];
+            str += c;
             i++;
           }
         }
@@ -268,7 +269,7 @@ function highlightJson(json: string): string {
       if (char === '-' || (char >= '0' && char <= '9')) {
         let num = '';
         while (i < line.length && /[\d.eE+\-]/.test(line[i]!)) {
-          num += line[i];
+          num += line[i]!;
           i++;
         }
         result += `{yellow-fg}${num}{/yellow-fg}`;
@@ -514,11 +515,26 @@ function renderCurrentEvent(): string {
       // Header
       const toolInfo = event.toolName ? ` [{${color}-fg}${event.toolName}{/${color}-fg}]` : '';
       const decisionInfo = event.decision ? ` -> ${event.decision}` : '';
-      lines.push(`{bold}Event #{event.id}{/bold} - ${formatTime(event.timestamp)}`);
+      const turnInfo = event.turnSequence ? ` | {cyan-fg}Turn ${event.turnSequence}{/cyan-fg}` : '';
+      const sessionNameInfo = event.sessionName ? ` | {green-fg}${event.sessionName}{/green-fg}` : '';
+      lines.push(`{bold}Event #{event.id}{/bold} - ${formatTime(event.timestamp)}${turnInfo}${sessionNameInfo}`);
       lines.push(`{${color}-fg}${event.eventType}{/${color}-fg}${toolInfo}${decisionInfo}`);
       lines.push('');
 
-      // Context usage
+      // Context usage - extract from inputJson if available
+      let usage: { tokens: number; percentage: number } | null = null;
+      if (event.inputJson) {
+        try {
+          const input = JSON.parse(event.inputJson);
+          if (input.usage?.input_tokens || input.usage?.output_tokens) {
+            const tokens = (input.usage.input_tokens || 0) + (input.usage.output_tokens || 0);
+            const percentage = Math.round((tokens / 200000) * 100);
+            usage = { tokens, percentage };
+          }
+        } catch {
+          // Ignore
+        }
+      }
       if (usage) {
         const barWidth = 30;
         const filled = Math.round((usage.percentage / 100) * barWidth);
@@ -581,7 +597,8 @@ function renderCurrentEvent(): string {
       lines.push(`Type: ${event.eventType}`);
       if (event.toolName) lines.push(`Tool: ${event.toolName}`);
       if (event.decision) lines.push(`Decision: ${event.decision}`);
-      if (usage) lines.push(`Context: ${usage.percentage}%`);
+      if (event.turnSequence) lines.push(`Turn: ${event.turnSequence}`);
+      if (event.sessionName) lines.push(`Session: ${event.sessionName}`);
       return viewLabel('minimal', 'magenta') + lines.join('\n');
     }
 
@@ -831,15 +848,20 @@ async function createTUI(): Promise<void> {
 
   // Build header content
   const buildHeaderContent = (): string => {
+    const currentEvent = state.events[state.currentIndex];
+    const turnInfo = currentEvent?.turnSequence
+      ? ` | {cyan-fg}Turn {bold}${currentEvent.turnSequence}{/bold}{/cyan-fg}`
+      : '';
+    const sessionName = currentEvent?.sessionName || state.sessionId.slice(0, 8) + '...';
     const filterInfo =
-      state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
+      state.activeFilter !== 'all' ? ` | {yellow-fg}Filter: ${state.activeFilter}{/yellow-fg}` : '';
     const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
     const liveInfo = state.liveMode ? ' | {green-fg}LIVE{/green-fg}' : '';
     const searchInfo = state.searchQuery
-      ? ` | Search: "${state.searchQuery}" (${state.searchResults.length})`
+      ? ` | {blue-fg}Search: "${state.searchQuery}" (${state.searchResults.length}){/blue-fg}`
       : '';
 
-    return `{bold}Hook Events{/bold} | Session: {green-fg}${state.sessionId.slice(0, 8)}...{/green-fg} | Events: ${state.events.length}${filterInfo} | ${state.currentIndex + 1}/${state.events.length} | [${state.viewMode}]${fullscreenInfo}${liveInfo}${searchInfo}`;
+    return `{bold}{cyan-fg}Hook Events{/cyan-fg}{/bold} | Session: {green-fg}${sessionName}{/green-fg}${turnInfo} | {yellow-fg}Events: ${state.events.length}{/yellow-fg} | {magenta-fg}${state.currentIndex + 1}/${state.events.length}{/magenta-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}${filterInfo}${fullscreenInfo}${liveInfo}${searchInfo}`;
   };
 
   // Header

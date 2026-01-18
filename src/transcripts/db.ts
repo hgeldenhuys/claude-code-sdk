@@ -845,9 +845,20 @@ export function indexHookFile(
         if (timestamp) lastTimestamp = timestamp;
 
         // Extract turn info from handler results
+        // Handler keys include event type suffix (e.g., turn-tracker-PreToolUse, turn-tracker-PostToolUse)
         const handlerResults = parsed.handlerResults || {};
-        const turnTracker = handlerResults['turn-tracker']?.data;
-        const sessionNaming = handlerResults['session-naming']?.data;
+        let turnTracker = null;
+        let sessionNaming = null;
+
+        // Find turn-tracker and session-naming results with any event suffix
+        for (const key of Object.keys(handlerResults)) {
+          if (key.startsWith('turn-tracker') && handlerResults[key]?.data) {
+            turnTracker = handlerResults[key].data;
+          }
+          if (key.startsWith('session-naming') && handlerResults[key]?.data) {
+            sessionNaming = handlerResults[key].data;
+          }
+        }
 
         const turnId = turnTracker?.turnId || parsed.turnId || null;
         const turnSequence =
@@ -1272,7 +1283,68 @@ export function correlateLinesToTurns(db: Database): { updated: number; sessions
       .all(session_id) as { timestamp: string; turn_id: string; turn_sequence: number }[];
 
     if (stopEvents.length === 0) {
-      // No Stop events - just update session_name if we have it
+      // No Stop events with turn_id - try using tool events instead
+      // Get distinct turns from tool events (PreToolUse/PostToolUse)
+      const toolTurns = db
+        .query(
+          `
+        SELECT DISTINCT turn_id, turn_sequence,
+               MIN(timestamp) as start_time, MAX(timestamp) as end_time
+        FROM hook_events
+        WHERE session_id = ? AND turn_id IS NOT NULL
+          AND event_type IN ('PreToolUse', 'PostToolUse')
+        GROUP BY turn_id, turn_sequence
+        ORDER BY turn_sequence ASC
+      `
+        )
+        .all(session_id) as {
+        turn_id: string;
+        turn_sequence: number;
+        start_time: string;
+        end_time: string;
+      }[];
+
+      if (toolTurns.length > 0) {
+        // Use tool event timestamps to correlate lines to turns
+        for (let i = 0; i < toolTurns.length; i++) {
+          const turn = toolTurns[i]!;
+          const nextTurn = i + 1 < toolTurns.length ? toolTurns[i + 1] : null;
+
+          // Update lines from this turn's start to next turn's start (or end of session)
+          if (nextTurn) {
+            const result = db.run(
+              `
+              UPDATE lines SET turn_id = ?, turn_sequence = ?, session_name = ?
+              WHERE session_id = ? AND timestamp >= ? AND timestamp < ?
+              AND turn_id IS NULL
+            `,
+              [
+                turn.turn_id,
+                turn.turn_sequence,
+                sessionName,
+                session_id,
+                turn.start_time,
+                nextTurn.start_time,
+              ]
+            );
+            totalUpdated += result.changes;
+          } else {
+            // Last turn - update all remaining lines
+            const result = db.run(
+              `
+              UPDATE lines SET turn_id = ?, turn_sequence = ?, session_name = ?
+              WHERE session_id = ? AND timestamp >= ?
+              AND turn_id IS NULL
+            `,
+              [turn.turn_id, turn.turn_sequence, sessionName, session_id, turn.start_time]
+            );
+            totalUpdated += result.changes;
+          }
+        }
+        continue;
+      }
+
+      // No turn info at all - just update session_name if we have it
       if (sessionName) {
         db.run(
           `
@@ -1875,7 +1947,10 @@ export function getHookEvents(db: Database, options: GetHookEventsOptions = {}):
       input_json,
       context_json,
       file_path,
-      line_number
+      line_number,
+      turn_id,
+      turn_sequence,
+      session_name
     FROM hook_events
     WHERE 1=1
   `;
@@ -1934,6 +2009,9 @@ export function getHookEvents(db: Database, options: GetHookEventsOptions = {}):
     context_json: string | null;
     file_path: string;
     line_number: number;
+    turn_id: string | null;
+    turn_sequence: number | null;
+    session_name: string | null;
   }>;
 
   return rows.map((row) => ({
@@ -1949,6 +2027,9 @@ export function getHookEvents(db: Database, options: GetHookEventsOptions = {}):
     contextJson: row.context_json,
     filePath: row.file_path,
     lineNumber: row.line_number,
+    turnId: row.turn_id,
+    turnSequence: row.turn_sequence,
+    sessionName: row.session_name,
   }));
 }
 
@@ -2040,7 +2121,10 @@ export function getHookEventsAfterId(
       input_json,
       context_json,
       file_path,
-      line_number
+      line_number,
+      turn_id,
+      turn_sequence,
+      session_name
     FROM hook_events
     WHERE id > ?
   `;
@@ -2079,6 +2163,9 @@ export function getHookEventsAfterId(
     context_json: string | null;
     file_path: string;
     line_number: number;
+    turn_id: string | null;
+    turn_sequence: number | null;
+    session_name: string | null;
   }>;
 
   return rows.map((row) => ({
@@ -2094,6 +2181,9 @@ export function getHookEventsAfterId(
     contextJson: row.context_json,
     filePath: row.file_path,
     lineNumber: row.line_number,
+    turnId: row.turn_id,
+    turnSequence: row.turn_sequence,
+    sessionName: row.session_name,
   }));
 }
 

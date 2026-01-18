@@ -5,10 +5,10 @@
 version: 1
 
 settings:
-  debug: false
-  parallel_execution: true
-  default_timeout_ms: 30000
-  default_error_strategy: continue
+  debug: true
+  parallelExecution: false
+  defaultTimeoutMs: 30000
+  defaultErrorStrategy: continue
 
 builtins:
   # Performance metrics - runs first (priority 1)

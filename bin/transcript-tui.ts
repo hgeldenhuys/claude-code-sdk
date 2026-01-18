@@ -110,6 +110,10 @@ function lineResultToTranscriptLine(result: LineResult): TranscriptLine {
       ...parsed,
       lineNumber: result.lineNumber,
       raw: result.raw,
+      // Turn tracking fields from SQLite
+      turnId: result.turnId,
+      turnSequence: result.turnSequence,
+      sessionName: result.sessionName,
     };
   } catch {
     return {
@@ -119,6 +123,9 @@ function lineResultToTranscriptLine(result: LineResult): TranscriptLine {
       timestamp: result.timestamp,
       lineNumber: result.lineNumber,
       raw: result.raw,
+      turnId: result.turnId,
+      turnSequence: result.turnSequence,
+      sessionName: result.sessionName,
     } as TranscriptLine;
   }
 }
@@ -281,6 +288,117 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
  */
 function escapeBlessedMarkup(text: string): string {
   return text.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+}
+
+/**
+ * Syntax highlight JSON for blessed markup
+ * Colors: keys=cyan, strings=green, numbers=yellow, booleans/null=magenta
+ */
+function highlightJson(json: string): string {
+  // Process line by line to handle indentation properly
+  const lines = json.split('\n');
+  const highlighted: string[] = [];
+
+  for (const line of lines) {
+    let result = '';
+    let i = 0;
+
+    while (i < line.length) {
+      const char = line[i]!;
+
+      // Handle whitespace (preserve indentation)
+      if (char === ' ' || char === '\t') {
+        result += char;
+        i++;
+        continue;
+      }
+
+      // Handle strings (keys or values)
+      if (char === '"') {
+        let str = '"';
+        i++;
+        while (i < line.length && line[i] !== '"') {
+          const c = line[i]!;
+          if (c === '\\' && i + 1 < line.length) {
+            str += c + line[i + 1]!;
+            i += 2;
+          } else {
+            str += c;
+            i++;
+          }
+        }
+        if (i < line.length) {
+          str += '"';
+          i++;
+        }
+
+        // Escape braces in the string content
+        const escapedStr = str.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+
+        // Check if this is a key (followed by colon)
+        const remaining = line.slice(i).trim();
+        if (remaining.startsWith(':')) {
+          result += `{cyan-fg}${escapedStr}{/cyan-fg}`;
+        } else {
+          result += `{green-fg}${escapedStr}{/green-fg}`;
+        }
+        continue;
+      }
+
+      // Handle numbers
+      if (char === '-' || (char >= '0' && char <= '9')) {
+        let num = '';
+        while (i < line.length && /[\d.eE+\-]/.test(line[i]!)) {
+          num += line[i]!;
+          i++;
+        }
+        result += `{yellow-fg}${num}{/yellow-fg}`;
+        continue;
+      }
+
+      // Handle booleans and null
+      if (line.slice(i, i + 4) === 'true') {
+        result += '{magenta-fg}true{/magenta-fg}';
+        i += 4;
+        continue;
+      }
+      if (line.slice(i, i + 5) === 'false') {
+        result += '{magenta-fg}false{/magenta-fg}';
+        i += 5;
+        continue;
+      }
+      if (line.slice(i, i + 4) === 'null') {
+        result += '{magenta-fg}null{/magenta-fg}';
+        i += 4;
+        continue;
+      }
+
+      // Handle structural characters
+      if (char === '{') {
+        result += '{open}';
+        i++;
+        continue;
+      }
+      if (char === '}') {
+        result += '{close}';
+        i++;
+        continue;
+      }
+      if (char === '[' || char === ']' || char === ':' || char === ',') {
+        result += char;
+        i++;
+        continue;
+      }
+
+      // Default: pass through
+      result += char;
+      i++;
+    }
+
+    highlighted.push(result);
+  }
+
+  return highlighted.join('\n');
 }
 
 function formatTimestamp(timestamp: string): string {
@@ -584,8 +702,8 @@ function renderCurrentLine(): string {
 
   switch (state.viewMode) {
     case 'raw':
-      // Raw JSON - escape curly braces so blessed doesn't interpret them as tags
-      return viewLabel('raw', 'yellow') + escapeBlessedMarkup(formatJson(line, true));
+      // Raw JSON with syntax highlighting
+      return viewLabel('raw', 'yellow') + highlightJson(formatJson(line, true));
 
     case 'human': {
       const content = escapeBlessedMarkup(renderLine(line).fullContent);
@@ -772,7 +890,7 @@ async function createTUI(): Promise<void> {
       border: { fg: 'blue' },
       fg: 'white',
     },
-    content: `{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`,
+    content: `{bold}{cyan-fg}Transcript Viewer{/cyan-fg}{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | {yellow-fg}Lines: ${state.lines.length}{/yellow-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}`,
     tags: true,
   });
 
@@ -961,16 +1079,29 @@ async function createTUI(): Promise<void> {
     }, duration);
   };
 
+  // Build header content helper
+  const buildHeaderContent = (): string => {
+    const currentLine = state.lines[state.currentIndex];
+    const turnInfo = currentLine?.turnSequence
+      ? ` | {cyan-fg}Turn {bold}${currentLine.turnSequence}{/bold}{/cyan-fg}`
+      : '';
+    const sessionDisplay = currentLine?.sessionName || state.sessionName || state.sessionId;
+    const filterInfo =
+      state.activeFilter !== 'all' ? ` | {yellow-fg}Filter: ${state.activeFilter}{/yellow-fg}` : '';
+    const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
+    const liveInfo = state.liveMode ? ' | {green-fg}LIVE{/green-fg}' : '';
+    const searchInfo = state.searchQuery
+      ? ` | {blue-fg}Search: "${state.searchQuery}" (${state.searchResults.length}){/blue-fg}`
+      : '';
+
+    return `{bold}{cyan-fg}Transcript Viewer{/cyan-fg}{/bold} | Session: {green-fg}${sessionDisplay}{/green-fg}${turnInfo} | {yellow-fg}Lines: ${state.lines.length}{/yellow-fg} | {magenta-fg}${state.currentIndex + 1}/${state.lines.length}{/magenta-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}${filterInfo}${fullscreenInfo}${liveInfo}${searchInfo}`;
+  };
+
   // Lightweight selection update - only updates selection and content, no list regeneration
   // This is the fast path for navigation (j/k, up/down, etc.)
   const updateSelection = () => {
     // Update header with current position
-    const filterInfo =
-      state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
-    const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
-    header.setContent(
-      `{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length}${filterInfo} | Line: ${state.currentIndex + 1}/${state.lines.length} | View: [${state.viewMode}]${fullscreenInfo}${state.searchQuery ? ` | Search: "${state.searchQuery}" (${state.searchResults.length})` : ''}`
-    );
+    header.setContent(buildHeaderContent());
 
     // Update fullscreen label if in fullscreen
     if (state.fullscreen) {
@@ -996,12 +1127,7 @@ async function createTUI(): Promise<void> {
   // Use this for filter changes, search, bookmarks, fullscreen toggle
   const updateUI = () => {
     // Update header
-    const filterInfo =
-      state.activeFilter !== 'all' ? ` | Filter: {yellow-fg}${state.activeFilter}{/yellow-fg}` : '';
-    const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
-    header.setContent(
-      `{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length}${filterInfo} | Line: ${state.currentIndex + 1}/${state.lines.length} | View: [${state.viewMode}]${fullscreenInfo}${state.searchQuery ? ` | Search: "${state.searchQuery}" (${state.searchResults.length})` : ''}`
-    );
+    header.setContent(buildHeaderContent());
 
     // Handle fullscreen mode
     if (state.fullscreen) {
@@ -1389,9 +1515,7 @@ async function createTUI(): Promise<void> {
               }
 
               // Update UI
-              header.setContent(
-                `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} (+${newLinesCount}) | View: [${state.viewMode}]`
-              );
+              header.setContent(buildHeaderContent());
               listBox.setItems(getListItems());
               listBox.select(state.currentIndex);
               contentBox.setContent(renderCurrentLine());
@@ -1409,10 +1533,7 @@ async function createTUI(): Promise<void> {
     }
 
     // Update header
-    const liveIndicator = state.liveMode ? '{green-fg}[LIVE]{/green-fg} ' : '';
-    header.setContent(
-      `${liveIndicator}{bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
-    );
+    header.setContent(buildHeaderContent());
     showToast(`Live mode ${state.liveMode ? 'enabled (polling SQLite)' : 'disabled'}`);
     screen.render();
   });
@@ -1495,9 +1616,7 @@ async function createTUI(): Promise<void> {
               state.currentIndex = filteredLines.length - 1;
             }
 
-            header.setContent(
-              `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} (+${newLinesCount}) | View: [${state.viewMode}]`
-            );
+            header.setContent(buildHeaderContent());
             listBox.setItems(getListItems());
             listBox.select(state.currentIndex);
             contentBox.setContent(renderCurrentLine());
@@ -1511,9 +1630,7 @@ async function createTUI(): Promise<void> {
 
     // Show live mode indicator in header
     if (state.liveMode) {
-      header.setContent(
-        `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
-      );
+      header.setContent(buildHeaderContent());
     }
   }
 

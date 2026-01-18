@@ -208,13 +208,60 @@ function validateSettings(
     }
   }
 
-  // Check for unknown settings fields
-  const validSettings = ['debug', 'parallelExecution', 'defaultTimeoutMs', 'defaultErrorStrategy'];
+  // Check for unknown settings fields (accept both camelCase and snake_case)
+  const validSettings = [
+    'debug',
+    'parallelExecution',
+    'parallel_execution', // Both formats accepted
+    'defaultTimeoutMs',
+    'default_timeout_ms',
+    'defaultErrorStrategy',
+    'default_error_strategy',
+  ];
   for (const key of Object.keys(s)) {
     if (!validSettings.includes(key)) {
       warnings.push({
         path: `${path}.${key}`,
         message: `Unknown setting: ${key}`,
+      });
+    }
+  }
+
+  // Validate snake_case versions if present
+  if (s.parallel_execution !== undefined && typeof s.parallel_execution !== 'boolean') {
+    errors.push({
+      path: `${path}.parallel_execution`,
+      message: 'parallel_execution must be a boolean',
+      expected: 'boolean',
+      actual: typeof s.parallel_execution,
+    });
+  }
+
+  if (s.default_timeout_ms !== undefined) {
+    if (typeof s.default_timeout_ms !== 'number') {
+      errors.push({
+        path: `${path}.default_timeout_ms`,
+        message: 'default_timeout_ms must be a number',
+        expected: 'number',
+        actual: typeof s.default_timeout_ms,
+      });
+    } else if ((s.default_timeout_ms as number) < 0) {
+      errors.push({
+        path: `${path}.default_timeout_ms`,
+        message: 'default_timeout_ms must be non-negative',
+        expected: '>= 0',
+        actual: s.default_timeout_ms,
+      });
+    }
+  }
+
+  if (s.default_error_strategy !== undefined) {
+    if (!VALID_ERROR_STRATEGIES.includes(s.default_error_strategy as ErrorStrategy)) {
+      errors.push({
+        path: `${path}.default_error_strategy`,
+        message: `Invalid error strategy: ${s.default_error_strategy}`,
+        expected: VALID_ERROR_STRATEGIES.join(' | '),
+        actual: s.default_error_strategy,
       });
     }
   }

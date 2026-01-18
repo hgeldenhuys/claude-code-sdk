@@ -59,6 +59,10 @@ export interface TranscriptLine {
   hookInfos?: Array<{ command: string }>;
   hookErrors?: string[];
   hookCount?: number;
+  // Turn tracking fields (from SQLite v5 schema)
+  turnId?: string | null;
+  turnSequence?: number | null;
+  sessionName?: string | null;
 }
 
 /**

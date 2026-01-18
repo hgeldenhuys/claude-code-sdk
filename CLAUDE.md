@@ -276,14 +276,21 @@ The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execut
 
 **Turn tracking (v5 schema):**
 - Both `lines` and `hook_events` tables have `turn_id`, `turn_sequence`, `session_name` columns
-- `correlateLinesToTurns(db)` - Updates transcript lines with turn info from Stop events
+- `correlateLinesToTurns(db)` - Updates transcript lines with turn info from hook events
 - `getSessionTurns(db, sessionId)` - Get turn summary for a session
 - `getTurnLines(db, turnId)` - Get all lines for a specific turn
-- Turn boundaries are marked by `Stop` hook events from turn-tracker handler
+- Turn data comes from `turn-tracker` handler results in hook events
+- Correlation uses Stop events for turn boundaries, or falls back to tool events (PreToolUse/PostToolUse) timestamps
+
+**Handler results in hook events:**
+- Events include `handlerResults` with data from all handlers that ran
+- Turn tracker data: `handlerResults['turn-tracker-{EventType}'].data.turnId/sequence`
+- Session naming data: `handlerResults['session-naming-SessionStart'].data.sessionName`
+- Requires `parallelExecution: false` in hooks.yaml for proper result accumulation
 
 **Hook event JSONL format:**
 ```json
-{"timestamp":"2024-01-18T14:00:00Z","sessionId":"abc-123","eventType":"PreToolUse","toolName":"Bash","toolUseId":"xyz","input":{...},"context":{...}}
+{"timestamp":"2024-01-18T14:00:00Z","sessionId":"abc-123","eventType":"PreToolUse","toolName":"Bash","toolUseId":"xyz","handlerResults":{"turn-tracker-PreToolUse":{"data":{"turnId":"abc:1","sequence":1}}},"input":{...},"context":{...}}
 ```
 
 **Context usage calculation:**

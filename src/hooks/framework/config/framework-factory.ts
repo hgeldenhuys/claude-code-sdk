@@ -47,6 +47,7 @@ export function createFrameworkFromResolvedConfig(config: ResolvedConfig): HookF
     debug: config.settings.debug,
     defaultTimeoutMs: config.settings.defaultTimeoutMs,
     defaultErrorStrategy: config.settings.defaultErrorStrategy,
+    parallelExecution: config.settings.parallelExecution,
   });
 
   // Register handlers from config

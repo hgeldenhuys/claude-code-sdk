@@ -62,6 +62,9 @@ export interface FrameworkConfig<TState = Record<string, unknown>> {
   /** Default error strategy */
   defaultErrorStrategy?: 'continue' | 'stop' | 'retry';
 
+  /** Enable parallel execution of handlers (default: true) */
+  parallelExecution?: boolean;
+
   /** Initial state factory */
   initialState?: () => TState;
 
@@ -86,6 +89,7 @@ export class HookFramework<TState = Record<string, unknown>> {
       debug: false,
       defaultTimeoutMs: 30000,
       defaultErrorStrategy: 'continue',
+      parallelExecution: true,
       ...config,
     };
 
@@ -103,6 +107,7 @@ export class HookFramework<TState = Record<string, unknown>> {
           handlers: [],
           defaultTimeoutMs: this.config.defaultTimeoutMs,
           defaultErrorStrategy: this.config.defaultErrorStrategy,
+          parallelExecution: this.config.parallelExecution,
           initialState: this.config.initialState,
         })
       );

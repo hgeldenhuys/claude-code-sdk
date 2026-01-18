@@ -33,6 +33,7 @@ import {
   getMaxLineId,
   getSession,
   getSessions,
+  correlateLinesToTurns,
   indexAllHookFiles,
   indexAllTranscripts,
   initSchema,
@@ -1503,6 +1504,13 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
           `\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`
         );
 
+        // Correlate transcript lines with turn info from hook events
+        console.log('\nCorrelating turns...');
+        const correlation = correlateLinesToTurns(db);
+        console.log(
+          `  Updated ${correlation.updated.toLocaleString()} lines across ${correlation.sessions} sessions`
+        );
+
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`\nTotal time: ${elapsed}s`);
 
@@ -1553,6 +1561,13 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         );
         console.log(
           `\n  Indexed ${hookResult.filesIndexed} files, ${hookResult.eventsIndexed.toLocaleString()} events`
+        );
+
+        // Correlate transcript lines with turn info from hook events
+        console.log('\nCorrelating turns...');
+        const correlation = correlateLinesToTurns(db);
+        console.log(
+          `  Updated ${correlation.updated.toLocaleString()} lines across ${correlation.sessions} sessions`
         );
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

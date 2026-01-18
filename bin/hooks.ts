@@ -20,6 +20,7 @@
  */
 
 import { loadResolvedConfig, configExists, getConfigPath } from '../src/hooks/framework/config';
+import { createFrameworkFromResolvedConfig } from '../src/hooks/framework/config/framework-factory';
 import { createFramework, type HookEventType } from '../src/hooks/framework';
 import {
   builtinHandlers,
@@ -1052,49 +1053,24 @@ async function main(): Promise<void> {
   if (debug) {
     console.error(`[hooks] Loading config from: ${configPath}`);
     console.error(`[hooks] Handlers: ${config.handlers.map((h) => h.id).join(', ')}`);
+    console.error(`[hooks] parallelExecution: ${config.settings.parallelExecution}`);
   }
 
-  // Create framework
-  const framework = createFramework({
-    debug,
-    defaultTimeoutMs: config.settings.defaultTimeoutMs,
-    defaultErrorStrategy: config.settings.defaultErrorStrategy,
-  });
+  // Create framework using the shared factory (handles handler registration)
+  const framework = createFrameworkFromResolvedConfig(config);
 
-  // Register handlers from config
-  for (const handlerConfig of config.handlers) {
-    if (!handlerConfig.enabled) {
-      if (debug) {
+  if (debug) {
+    for (const handlerConfig of config.handlers) {
+      if (handlerConfig.enabled) {
+        const events = handlerConfig.events.length > 0
+          ? handlerConfig.events
+          : (isBuiltinHandler(handlerConfig.type)
+            ? getDefaultEvents(handlerConfig.type)
+            : []);
+        console.error(`[hooks] Registered handler: ${handlerConfig.id} (priority=${handlerConfig.priority}) for events: ${events.join(', ')}`);
+      } else {
         console.error(`[hooks] Skipping disabled handler: ${handlerConfig.id}`);
       }
-      continue;
-    }
-
-    // Create handler from config
-    const handler = createHandlerFromConfig(handlerConfig);
-    if (!handler) {
-      if (debug) {
-        console.error(`[hooks] Could not create handler: ${handlerConfig.id}`);
-      }
-      continue;
-    }
-
-    // Register handler for each configured event
-    const events = handlerConfig.events.length > 0
-      ? handlerConfig.events
-      : (isBuiltinHandler(handlerConfig.type)
-        ? getDefaultEvents(handlerConfig.type)
-        : []);
-
-    for (const event of events) {
-      framework.on(event as HookEventType, {
-        ...handler,
-        id: `${handlerConfig.id}-${event}`, // Unique ID per event type
-      });
-    }
-
-    if (debug) {
-      console.error(`[hooks] Registered handler: ${handlerConfig.id} for events: ${events.join(', ')}`);
     }
   }
 
