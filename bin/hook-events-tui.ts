@@ -34,6 +34,7 @@ import {
   DEFAULT_DB_PATH,
   type HookEventResult,
 } from '../src/transcripts/db';
+import { getSessionStore } from '../src/hooks/sessions/store';
 
 // ============================================================================
 // Constants
@@ -229,6 +230,116 @@ let state: AppState = {
  */
 function escapeBlessedMarkup(text: string): string {
   return text.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+}
+
+/**
+ * Syntax highlight JSON for blessed markup
+ * Colors: keys=cyan, strings=green, numbers=yellow, booleans/null=magenta
+ */
+function highlightJson(json: string): string {
+  // Process line by line to handle indentation properly
+  const lines = json.split('\n');
+  const highlighted: string[] = [];
+
+  for (const line of lines) {
+    let result = '';
+    let i = 0;
+
+    while (i < line.length) {
+      const char = line[i];
+
+      // Handle whitespace (preserve indentation)
+      if (char === ' ' || char === '\t') {
+        result += char;
+        i++;
+        continue;
+      }
+
+      // Handle strings (keys or values)
+      if (char === '"') {
+        let str = '"';
+        i++;
+        while (i < line.length && line[i] !== '"') {
+          if (line[i] === '\\' && i + 1 < line.length) {
+            str += line[i] + line[i + 1];
+            i += 2;
+          } else {
+            str += line[i];
+            i++;
+          }
+        }
+        if (i < line.length) {
+          str += '"';
+          i++;
+        }
+
+        // Escape braces in the string content
+        const escapedStr = str.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+
+        // Check if this is a key (followed by colon)
+        const remaining = line.slice(i).trim();
+        if (remaining.startsWith(':')) {
+          result += `{cyan-fg}${escapedStr}{/cyan-fg}`;
+        } else {
+          result += `{green-fg}${escapedStr}{/green-fg}`;
+        }
+        continue;
+      }
+
+      // Handle numbers
+      if (char === '-' || (char >= '0' && char <= '9')) {
+        let num = '';
+        while (i < line.length && /[\d.eE+\-]/.test(line[i]!)) {
+          num += line[i];
+          i++;
+        }
+        result += `{yellow-fg}${num}{/yellow-fg}`;
+        continue;
+      }
+
+      // Handle booleans and null
+      if (line.slice(i, i + 4) === 'true') {
+        result += '{magenta-fg}true{/magenta-fg}';
+        i += 4;
+        continue;
+      }
+      if (line.slice(i, i + 5) === 'false') {
+        result += '{magenta-fg}false{/magenta-fg}';
+        i += 5;
+        continue;
+      }
+      if (line.slice(i, i + 4) === 'null') {
+        result += '{magenta-fg}null{/magenta-fg}';
+        i += 4;
+        continue;
+      }
+
+      // Handle structural characters
+      if (char === '{') {
+        result += '{open}';
+        i++;
+        continue;
+      }
+      if (char === '}') {
+        result += '{close}';
+        i++;
+        continue;
+      }
+      if (char === '[' || char === ']' || char === ':' || char === ',') {
+        result += char;
+        i++;
+        continue;
+      }
+
+      // Default: pass through
+      result += char;
+      i++;
+    }
+
+    highlighted.push(result);
+  }
+
+  return highlighted.join('\n');
 }
 
 function formatTime(isoString: string): string {
@@ -439,7 +550,7 @@ function renderCurrentEvent(): string {
           obj.handlerResults = event.handlerResults;
         }
       }
-      return viewLabel('raw', 'yellow') + escapeBlessedMarkup(JSON.stringify(obj, null, 2)) + usageStr;
+      return viewLabel('raw', 'yellow') + highlightJson(JSON.stringify(obj, null, 2)) + usageStr;
     }
 
     case 'human': {
@@ -469,7 +580,7 @@ function renderCurrentEvent(): string {
           const input = JSON.parse(event.inputJson);
           if (input.tool_input) {
             lines.push('{bold}Tool Input:{/bold}');
-            lines.push(escapeBlessedMarkup(JSON.stringify(input.tool_input, null, 2)));
+            lines.push(highlightJson(JSON.stringify(input.tool_input, null, 2)));
             lines.push('');
           }
           if (input.prompt) {
@@ -485,12 +596,12 @@ function renderCurrentEvent(): string {
             } else if (resp.content) {
               lines.push(escapeBlessedMarkup(String(resp.content).slice(0, 1000)));
             } else {
-              lines.push(escapeBlessedMarkup(JSON.stringify(resp, null, 2).slice(0, 1000)));
+              lines.push(highlightJson(JSON.stringify(resp, null, 2).slice(0, 1000)));
             }
           }
         } catch {
           lines.push('{bold}Input JSON:{/bold}');
-          lines.push(escapeBlessedMarkup(event.inputJson.slice(0, 500)));
+          lines.push(highlightJson(event.inputJson.slice(0, 500)));
         }
       }
 
@@ -500,7 +611,7 @@ function renderCurrentEvent(): string {
           const results = JSON.parse(event.handlerResults);
           lines.push('');
           lines.push('{bold}Handler Results:{/bold}');
-          lines.push(escapeBlessedMarkup(JSON.stringify(results, null, 2)));
+          lines.push(highlightJson(JSON.stringify(results, null, 2)));
         } catch {
           // Ignore
         }
@@ -534,7 +645,7 @@ function renderCurrentEvent(): string {
 
             if (event.eventType === 'PreToolUse' && input.tool_input) {
               lines.push('{bold}INPUT:{/bold}');
-              lines.push(escapeBlessedMarkup(JSON.stringify(input.tool_input, null, 2)));
+              lines.push(highlightJson(JSON.stringify(input.tool_input, null, 2)));
             }
 
             if (event.eventType === 'PostToolUse' && input.tool_response) {
@@ -545,13 +656,13 @@ function renderCurrentEvent(): string {
               } else if (resp.content) {
                 lines.push(escapeBlessedMarkup(String(resp.content)));
               } else if (resp.filenames) {
-                lines.push(escapeBlessedMarkup(JSON.stringify(resp.filenames, null, 2)));
+                lines.push(highlightJson(JSON.stringify(resp.filenames, null, 2)));
               } else {
-                lines.push(escapeBlessedMarkup(JSON.stringify(resp, null, 2)));
+                lines.push(highlightJson(JSON.stringify(resp, null, 2)));
               }
             }
           } catch {
-            lines.push(escapeBlessedMarkup(event.inputJson.slice(0, 2000)));
+            lines.push(highlightJson(event.inputJson.slice(0, 2000)));
           }
         }
       } else {
@@ -1308,12 +1419,28 @@ Examples:
       return 1;
     }
     sessionId = sessions[0]!.sessionId;
+  } else {
+    // Try to resolve session name to session ID
+    // Session names are like "peaceful-osprey", IDs are UUIDs
+    const isLikelyName = !sessionId.includes('-') || sessionId.split('-').length <= 3;
+    if (isLikelyName) {
+      try {
+        const store = getSessionStore();
+        const resolvedId = store.getSessionId(sessionId);
+        if (resolvedId) {
+          sessionId = resolvedId;
+        }
+      } catch {
+        // Ignore - will try as literal session ID
+      }
+    }
   }
 
   // Load events
   const allEvents = getHookEvents(db, { sessionId });
   if (allEvents.length === 0) {
     console.error(`Error: No hook events found for session: ${sessionId}`);
+    console.error('Tip: Use "." for most recent session, or provide a full session ID');
     return 1;
   }
 

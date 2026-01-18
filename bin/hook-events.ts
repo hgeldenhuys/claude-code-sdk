@@ -30,6 +30,7 @@ import {
   type HookEventResult,
   type HookSessionInfo,
 } from '../src/transcripts/db';
+import { getSessionStore } from '../src/hooks/sessions/store';
 
 // ============================================================================
 // Constants
@@ -426,6 +427,21 @@ async function cmdView(args: ViewArgs): Promise<number> {
       return 1;
     }
     sessionId = sessions[0]!.sessionId;
+  } else {
+    // Try to resolve session name to session ID
+    // Session names are like "peaceful-osprey", IDs are UUIDs
+    const isLikelyName = !sessionId.includes('-') || sessionId.split('-').length <= 3;
+    if (isLikelyName) {
+      try {
+        const store = getSessionStore();
+        const resolvedId = store.getSessionId(sessionId);
+        if (resolvedId) {
+          sessionId = resolvedId;
+        }
+      } catch {
+        // Ignore - will try as literal session ID
+      }
+    }
   }
 
   // Parse timestamp filters
@@ -687,11 +703,26 @@ async function cmdInfo(sessionId: string): Promise<number> {
       return 1;
     }
     sessionId = sessions[0]!.sessionId;
+  } else {
+    // Try to resolve session name to session ID
+    const isLikelyName = !sessionId.includes('-') || sessionId.split('-').length <= 3;
+    if (isLikelyName) {
+      try {
+        const store = getSessionStore();
+        const resolvedId = store.getSessionId(sessionId);
+        if (resolvedId) {
+          sessionId = resolvedId;
+        }
+      } catch {
+        // Ignore - will try as literal session ID
+      }
+    }
   }
 
   const events = getHookEvents(db, { sessionId });
   if (events.length === 0) {
     printError(`No hook events found for session: ${sessionId}`);
+    printError('Tip: Use "." for most recent session, or provide a full session ID');
     return 1;
   }
 
