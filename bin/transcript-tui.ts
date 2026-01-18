@@ -24,8 +24,19 @@ import blessed from 'blessed';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { watch, type FSWatcher } from 'node:fs';
-import { parseTranscriptFile, getConversationThread } from '../src/transcripts/parser';
-import { findTranscriptFiles, getSessionInfo } from '../src/transcripts/indexer';
+import { getConversationThread } from '../src/transcripts/parser';
+import {
+  getDatabase,
+  getSessions,
+  getSession,
+  getLines,
+  getMaxLineId,
+  getLinesAfterId,
+  DEFAULT_DB_PATH,
+  type SessionInfo,
+  type LineResult,
+} from '../src/transcripts/db';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   renderLine,
   formatJson,
@@ -47,6 +58,92 @@ import type { TranscriptLine } from '../src/transcripts/types';
 
 const VERSION = '1.0.0';
 const PROJECTS_DIR = join(process.env.HOME || '~', '.claude', 'projects');
+const DAEMON_DIR = join(process.env.HOME || '~', '.claude-code-sdk');
+const PID_FILE = join(DAEMON_DIR, 'transcript-daemon.pid');
+
+// ============================================================================
+// Database Access
+// ============================================================================
+
+let _db: ReturnType<typeof getDatabase> | null = null;
+
+function getDb(): ReturnType<typeof getDatabase> {
+  if (_db) return _db;
+
+  if (!existsSync(DEFAULT_DB_PATH)) {
+    console.error('error: Index not built. Run: transcript index build');
+    process.exit(1);
+  }
+
+  _db = getDatabase(DEFAULT_DB_PATH);
+
+  // Check if daemon is running and warn if not
+  let daemonRunning = false;
+  if (existsSync(PID_FILE)) {
+    try {
+      const pid = parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      try {
+        process.kill(pid, 0);
+        daemonRunning = true;
+      } catch {
+        // Not running
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
+  if (!daemonRunning) {
+    console.error('\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m');
+    // Give user a moment to see warning
+    setTimeout(() => {}, 2000);
+  }
+
+  return _db;
+}
+
+function lineResultToTranscriptLine(result: LineResult): TranscriptLine {
+  try {
+    const parsed = JSON.parse(result.raw);
+    return {
+      ...parsed,
+      lineNumber: result.lineNumber,
+      raw: result.raw,
+    };
+  } catch {
+    return {
+      uuid: result.uuid,
+      parentUuid: result.parentUuid || undefined,
+      type: result.type as TranscriptLine['type'],
+      timestamp: result.timestamp,
+      lineNumber: result.lineNumber,
+      raw: result.raw,
+    } as TranscriptLine;
+  }
+}
+
+/**
+ * Load transcript lines from SQLite
+ */
+function loadTranscriptLines(sessionIdOrPath: string): TranscriptLine[] {
+  const db = getDb();
+
+  // Extract session ID from file path if needed
+  let sessionId = sessionIdOrPath;
+  const match = sessionIdOrPath.match(/([a-f0-9-]{36})\.jsonl/);
+  if (match) {
+    sessionId = match[1]!;
+  }
+
+  // Get session to verify it exists
+  const session = getSession(db, sessionId);
+  if (!session) {
+    return [];
+  }
+
+  const results = getLines(db, { sessionId: session.sessionId });
+  return results.map(lineResultToTranscriptLine);
+}
 
 // View modes
 type ViewMode = 'raw' | 'human' | 'minimal' | 'context' | 'markdown';
@@ -127,6 +224,7 @@ let state: AppState = {
 // ============================================================================
 
 async function resolveTranscriptPath(input: string): Promise<string | null> {
+  // Direct file path
   const file = Bun.file(input);
   if (await file.exists()) {
     return input;
@@ -136,40 +234,29 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
     return null;
   }
 
+  // Relative path
   const relativePath = join(process.cwd(), input);
   const relativeFile = Bun.file(relativePath);
   if (await relativeFile.exists()) {
     return relativePath;
   }
 
-  const files = await findTranscriptFiles(PROJECTS_DIR);
-
-  for (const filePath of files) {
-    if (filePath.includes(input)) {
-      return filePath;
-    }
+  // Use SQLite to lookup by session ID or slug
+  const db = getDb();
+  const session = getSession(db, input);
+  if (session) {
+    return session.filePath;
   }
 
-  for (const filePath of files) {
-    try {
-      const info = await getSessionInfo(filePath);
-      if (info.slug === input || info.sessionId === input) {
-        return filePath;
-      }
-    } catch {
-      continue;
-    }
-  }
-
+  // Try session store for name lookup
   try {
     const { getSessionStore } = await import('../src/hooks/sessions');
     const store = getSessionStore();
     const sessionId = store.getSessionId(input);
     if (sessionId) {
-      for (const filePath of files) {
-        if (filePath.includes(sessionId)) {
-          return filePath;
-        }
+      const session2 = getSession(db, sessionId);
+      if (session2) {
+        return session2.filePath;
       }
     }
   } catch {
@@ -1187,7 +1274,7 @@ async function createTUI(): Promise<void> {
         debounceTimer = setTimeout(async () => {
           try {
             const previousLineCount = state.allLines.length;
-            const newAllLines = await parseTranscriptFile(state.filePath);
+            const newAllLines = loadTranscriptLines(state.filePath);
             if (newAllLines.length > previousLineCount) {
               const newLinesCount = newAllLines.length - previousLineCount;
               state.allLines = newAllLines;
@@ -1281,7 +1368,7 @@ async function createTUI(): Promise<void> {
       debounceTimer = setTimeout(async () => {
         try {
           const previousLineCount = state.allLines.length;
-          const newAllLines = await parseTranscriptFile(state.filePath);
+          const newAllLines = loadTranscriptLines(state.filePath);
 
           // Only update if we have new lines
           if (newAllLines.length > previousLineCount) {
@@ -1472,8 +1559,8 @@ Examples:
   }
 
   try {
-    // Load transcript
-    const allLines = await parseTranscriptFile(filePath);
+    // Load transcript from SQLite
+    const allLines = loadTranscriptLines(filePath);
     const metadata = getSessionMetadata(allLines);
 
     // Apply filters
