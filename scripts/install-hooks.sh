@@ -269,13 +269,9 @@ EOF
 
   # Symlink skills directory so Claude can discover them
   info "Linking skills directory..."
-  if [ -d ".claude/skills" ] && [ ! -L ".claude/skills" ]; then
-    warn ".claude/skills/ already exists (not a symlink), skipping"
-  else
-    rm -f .claude/skills 2>/dev/null
-    ln -sf claude-code-sdk/skills .claude/skills
-    success "Linked .claude/skills -> claude-code-sdk/skills"
-  fi
+  rm -rf .claude/skills 2>/dev/null
+  ln -sf claude-code-sdk/skills .claude/skills
+  success "Linked .claude/skills -> claude-code-sdk/skills"
 
   echo ""
   echo -e "${GREEN}Installation complete!${NC}"
