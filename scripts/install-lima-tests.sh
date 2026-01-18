@@ -40,6 +40,11 @@ curl -fsSL "$REPO_URL/integration-tests/lib/test-utils.sh" -o "$INSTALL_DIR/lib/
 # Download example test
 curl -fsSL "$REPO_URL/integration-tests/tests/session-survival.sh" -o "$INSTALL_DIR/tests/session-survival.sh" 2>/dev/null || true
 
+# Install skill for Claude
+echo "[INFO] Installing lima-sandbox-testing skill..."
+mkdir -p ".claude/skills/lima-sandbox-testing"
+curl -fsSL "$REPO_URL/skills/lima-sandbox-testing/SKILL.md" -o ".claude/skills/lima-sandbox-testing/SKILL.md"
+
 # Make scripts executable
 chmod +x "$INSTALL_DIR/setup-lima.sh"
 chmod +x "$INSTALL_DIR/run-tests.sh"
@@ -47,6 +52,10 @@ chmod +x "$INSTALL_DIR/tests/"*.sh 2>/dev/null || true
 
 echo ""
 echo "[SUCCESS] Installation complete!"
+echo ""
+echo "Installed:"
+echo "  - $INSTALL_DIR/          Test framework"
+echo "  - .claude/skills/lima-sandbox-testing/  Skill for Claude"
 echo ""
 echo "Next steps:"
 echo ""
