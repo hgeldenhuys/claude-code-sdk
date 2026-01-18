@@ -138,7 +138,24 @@ handlers: {}
 HOOKS_YAML
   success "Created hooks.yaml"
 
-  # Create .claude/settings.json
+  # Clone or update claude-code-sdk in .claude/
+  REPO_URL="https://github.com/hgeldenhuys/claude-code-sdk.git"
+  SDK_DIR=".claude/claude-code-sdk"
+
+  if [ -d "$SDK_DIR" ]; then
+    info "Updating claude-code-sdk..."
+    (cd "$SDK_DIR" && git pull --quiet 2>/dev/null) || warn "Could not update SDK"
+  else
+    info "Cloning claude-code-sdk..."
+    git clone --depth 1 --quiet "$REPO_URL" "$SDK_DIR" 2>/dev/null || error "Failed to clone SDK"
+  fi
+  success "SDK ready at $SDK_DIR"
+
+  # Install SDK dependencies
+  info "Installing SDK dependencies..."
+  (cd "$SDK_DIR" && bun install --silent 2>/dev/null) || warn "Could not install dependencies"
+
+  # Create .claude/settings.json with local SDK path
   info "Creating .claude/settings.json..."
   cat > .claude/settings.json << 'SETTINGS_JSON'
 {
@@ -149,7 +166,7 @@ HOOKS_YAML
         "hooks": [
           {
             "type": "command",
-            "command": "bunx claude-code-sdk hooks --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/claude-code-sdk/bin/hooks.ts --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
           }
         ]
       }
@@ -160,7 +177,7 @@ HOOKS_YAML
         "hooks": [
           {
             "type": "command",
-            "command": "bunx claude-code-sdk hooks --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/claude-code-sdk/bin/hooks.ts --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
           }
         ]
       }
@@ -171,7 +188,7 @@ HOOKS_YAML
         "hooks": [
           {
             "type": "command",
-            "command": "bunx claude-code-sdk hooks --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/claude-code-sdk/bin/hooks.ts --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
           }
         ]
       }
@@ -182,7 +199,7 @@ HOOKS_YAML
         "hooks": [
           {
             "type": "command",
-            "command": "bunx claude-code-sdk hooks --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/claude-code-sdk/bin/hooks.ts --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
           }
         ]
       }
@@ -193,7 +210,7 @@ HOOKS_YAML
         "hooks": [
           {
             "type": "command",
-            "command": "bunx claude-code-sdk hooks --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/claude-code-sdk/bin/hooks.ts --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
           }
         ]
       }
@@ -204,7 +221,7 @@ HOOKS_YAML
         "hooks": [
           {
             "type": "command",
-            "command": "bunx claude-code-sdk hooks --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/claude-code-sdk/bin/hooks.ts --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
           }
         ]
       }
@@ -215,7 +232,7 @@ HOOKS_YAML
         "hooks": [
           {
             "type": "command",
-            "command": "bunx claude-code-sdk hooks --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/claude-code-sdk/bin/hooks.ts --config \"$CLAUDE_PROJECT_DIR\"/hooks.yaml"
           }
         ]
       }
@@ -225,54 +242,39 @@ HOOKS_YAML
 SETTINGS_JSON
   success "Created .claude/settings.json"
 
-  # Install claude-code-sdk if package.json exists
-  PM=$(detect_pm)
-  if [ -f "package.json" ] && [ -n "$PM" ]; then
-    info "Installing claude-code-sdk as dev dependency..."
-    case $PM in
-      bun)
-        bun add -d claude-code-sdk 2>/dev/null || warn "Could not install - package may not be published yet"
-        ;;
-      pnpm)
-        pnpm add -D claude-code-sdk 2>/dev/null || warn "Could not install - package may not be published yet"
-        ;;
-      yarn)
-        yarn add -D claude-code-sdk 2>/dev/null || warn "Could not install - package may not be published yet"
-        ;;
-      npm)
-        npm install -D claude-code-sdk 2>/dev/null || warn "Could not install - package may not be published yet"
-        ;;
-    esac
-
-    # Update settings.json to use local install instead of bunx
-    if [ -d "node_modules/claude-code-sdk" ]; then
-      info "Updating settings.json to use local install..."
-      if command -v sed &> /dev/null; then
-        sed -i.bak 's/bunx claude-code-sdk hooks/bun node_modules\/claude-code-sdk\/bin\/hooks.ts/g' .claude/settings.json
-        rm -f .claude/settings.json.bak
-        success "Updated to use local claude-code-sdk"
-      fi
-    fi
-  else
-    info "No package.json found - hooks will use bunx (slower first run)"
-  fi
-
   # Add to .gitignore if needed
   if [ -f ".gitignore" ]; then
-    if ! grep -q "\.claude/settings\.local\.json" .gitignore 2>/dev/null; then
+    if ! grep -q "\.claude/claude-code-sdk" .gitignore 2>/dev/null; then
       echo "" >> .gitignore
-      echo "# Claude Code local settings" >> .gitignore
+      echo "# Claude Code hooks SDK and local settings" >> .gitignore
+      echo ".claude/claude-code-sdk/" >> .gitignore
+      echo ".claude/bin/" >> .gitignore
       echo ".claude/settings.local.json" >> .gitignore
       success "Updated .gitignore"
     fi
   fi
 
+  # Create CLI wrapper scripts
+  info "Creating CLI wrapper scripts..."
+  mkdir -p .claude/bin
+
+  for cli in sesh transcript transcript-tui hook-events hook-events-tui; do
+    cat > ".claude/bin/$cli" << EOF
+#!/usr/bin/env bash
+exec bun "\$(dirname "\$0")/../claude-code-sdk/bin/${cli}.ts" "\$@"
+EOF
+    chmod +x ".claude/bin/$cli"
+  done
+  success "Created CLI wrappers in .claude/bin/"
+
   echo ""
   echo -e "${GREEN}Installation complete!${NC}"
   echo ""
   echo "Files created:"
-  echo "  - hooks.yaml              - Handler configuration"
-  echo "  - .claude/settings.json   - Hook registrations"
+  echo "  - hooks.yaml                  - Handler configuration"
+  echo "  - .claude/settings.json       - Hook registrations"
+  echo "  - .claude/claude-code-sdk/    - SDK (cloned from GitHub)"
+  echo "  - .claude/bin/                - CLI wrapper scripts"
   echo ""
   echo "Enabled handlers:"
   echo "  - session-naming     : Human-friendly session names"
@@ -280,10 +282,22 @@ SETTINGS_JSON
   echo "  - context-injection  : Inject session context"
   echo "  - event-logger       : Log events for indexing"
   echo ""
+  echo "Available CLIs (run from project root):"
+  echo "  .claude/bin/sesh            - Session name manager"
+  echo "  .claude/bin/transcript      - Transcript search/view"
+  echo "  .claude/bin/transcript-tui  - Transcript TUI viewer"
+  echo "  .claude/bin/hook-events     - Hook event logs"
+  echo ""
+  echo "Or add to PATH:"
+  echo "  export PATH=\"\$PWD/.claude/bin:\$PATH\""
+  echo ""
   echo "Next steps:"
   echo "  1. Start Claude Code in this directory"
   echo "  2. Your session will be named automatically"
   echo "  3. Edit hooks.yaml to customize handlers"
+  echo ""
+  echo "To update the SDK later:"
+  echo "  cd .claude/claude-code-sdk && git pull && bun install"
   echo ""
 }
 
