@@ -183,7 +183,7 @@ beforeAll(async () => {
   // Create and initialize database
   db = new Database(dbPath);
 
-  // Create hook_events table (matching the schema in db.ts)
+  // Create hook_events table (matching the schema in db.ts - v5 schema)
   db.run(`
     CREATE TABLE IF NOT EXISTS hook_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -198,6 +198,9 @@ beforeAll(async () => {
       context_json TEXT,
       file_path TEXT NOT NULL,
       line_number INTEGER NOT NULL,
+      turn_id TEXT,
+      turn_sequence INTEGER,
+      session_name TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -207,6 +210,8 @@ beforeAll(async () => {
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_events_type ON hook_events(event_type)');
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_events_tool ON hook_events(tool_name)');
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_events_timestamp ON hook_events(timestamp)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_events_turn_id ON hook_events(turn_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_events_session_name ON hook_events(session_name)');
 
   // Create hook_files table (used by getHookSessions)
   db.run(`
