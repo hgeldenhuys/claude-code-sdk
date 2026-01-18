@@ -1047,6 +1047,365 @@ export function isDatabaseReady(dbPath: string = DEFAULT_DB_PATH): boolean {
   }
 }
 
+// ============================================================================
+// Query Functions for CLI/TUI
+// ============================================================================
+
+export interface SessionInfo {
+  sessionId: string;
+  slug: string | null;
+  filePath: string;
+  lineCount: number;
+  firstTimestamp: string | null;
+  lastTimestamp: string | null;
+  indexedAt: string;
+}
+
+export interface LineResult {
+  id: number;
+  sessionId: string;
+  uuid: string;
+  parentUuid: string | null;
+  lineNumber: number;
+  type: string;
+  subtype: string | null;
+  timestamp: string;
+  slug: string | null;
+  role: string | null;
+  model: string | null;
+  cwd: string | null;
+  content: string | null;
+  raw: string;
+  filePath: string;
+}
+
+export interface GetLinesOptions {
+  sessionId?: string;
+  types?: string[];
+  limit?: number;
+  offset?: number;
+  fromLine?: number;
+  toLine?: number;
+  fromTime?: string;
+  toTime?: string;
+  search?: string;
+  order?: 'asc' | 'desc';
+}
+
+/**
+ * Get all sessions with metadata
+ */
+export function getSessions(db: Database, options?: { recentDays?: number; projectPath?: string }): SessionInfo[] {
+  let sql = `
+    SELECT
+      session_id,
+      slug,
+      file_path,
+      line_count,
+      first_timestamp,
+      last_timestamp,
+      indexed_at
+    FROM sessions
+    WHERE 1=1
+  `;
+  const params: (string | number)[] = [];
+
+  if (options?.recentDays) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - options.recentDays);
+    sql += ` AND last_timestamp >= ?`;
+    params.push(cutoff.toISOString());
+  }
+
+  if (options?.projectPath) {
+    sql += ` AND file_path LIKE ?`;
+    params.push(`%${options.projectPath}%`);
+  }
+
+  sql += ` ORDER BY last_timestamp DESC`;
+
+  const rows = db.prepare(sql).all(...params) as Array<{
+    session_id: string;
+    slug: string | null;
+    file_path: string;
+    line_count: number;
+    first_timestamp: string | null;
+    last_timestamp: string | null;
+    indexed_at: string;
+  }>;
+
+  return rows.map(row => ({
+    sessionId: row.session_id,
+    slug: row.slug,
+    filePath: row.file_path,
+    lineCount: row.line_count,
+    firstTimestamp: row.first_timestamp,
+    lastTimestamp: row.last_timestamp,
+    indexedAt: row.indexed_at,
+  }));
+}
+
+/**
+ * Get a single session by ID or slug
+ */
+export function getSession(db: Database, idOrSlug: string): SessionInfo | null {
+  const sql = `
+    SELECT
+      session_id,
+      slug,
+      file_path,
+      line_count,
+      first_timestamp,
+      last_timestamp,
+      indexed_at
+    FROM sessions
+    WHERE session_id = ? OR slug = ?
+    LIMIT 1
+  `;
+
+  const row = db.prepare(sql).get(idOrSlug, idOrSlug) as {
+    session_id: string;
+    slug: string | null;
+    file_path: string;
+    line_count: number;
+    first_timestamp: string | null;
+    last_timestamp: string | null;
+    indexed_at: string;
+  } | null;
+
+  if (!row) return null;
+
+  return {
+    sessionId: row.session_id,
+    slug: row.slug,
+    filePath: row.file_path,
+    lineCount: row.line_count,
+    firstTimestamp: row.first_timestamp,
+    lastTimestamp: row.last_timestamp,
+    indexedAt: row.indexed_at,
+  };
+}
+
+/**
+ * Get lines for a session with filtering and pagination
+ */
+export function getLines(db: Database, options: GetLinesOptions = {}): LineResult[] {
+  let sql = `
+    SELECT
+      id,
+      session_id,
+      uuid,
+      parent_uuid,
+      line_number,
+      type,
+      subtype,
+      timestamp,
+      slug,
+      role,
+      model,
+      cwd,
+      content,
+      raw,
+      file_path
+    FROM lines
+    WHERE 1=1
+  `;
+  const params: (string | number)[] = [];
+
+  if (options.sessionId) {
+    // Check if it's a slug or session ID
+    const session = getSession(db, options.sessionId);
+    if (session) {
+      sql += ` AND session_id = ?`;
+      params.push(session.sessionId);
+    } else {
+      sql += ` AND session_id = ?`;
+      params.push(options.sessionId);
+    }
+  }
+
+  if (options.types && options.types.length > 0) {
+    sql += ` AND type IN (${options.types.map(() => '?').join(', ')})`;
+    params.push(...options.types);
+  }
+
+  if (options.fromLine !== undefined) {
+    sql += ` AND line_number >= ?`;
+    params.push(options.fromLine);
+  }
+
+  if (options.toLine !== undefined) {
+    sql += ` AND line_number <= ?`;
+    params.push(options.toLine);
+  }
+
+  if (options.fromTime) {
+    sql += ` AND timestamp >= ?`;
+    params.push(options.fromTime);
+  }
+
+  if (options.toTime) {
+    sql += ` AND timestamp <= ?`;
+    params.push(options.toTime);
+  }
+
+  if (options.search) {
+    sql += ` AND content LIKE ?`;
+    params.push(`%${options.search}%`);
+  }
+
+  const order = options.order || 'asc';
+  sql += ` ORDER BY line_number ${order === 'desc' ? 'DESC' : 'ASC'}`;
+
+  if (options.limit) {
+    sql += ` LIMIT ?`;
+    params.push(options.limit);
+  }
+
+  if (options.offset) {
+    sql += ` OFFSET ?`;
+    params.push(options.offset);
+  }
+
+  const rows = db.prepare(sql).all(...params) as Array<{
+    id: number;
+    session_id: string;
+    uuid: string;
+    parent_uuid: string | null;
+    line_number: number;
+    type: string;
+    subtype: string | null;
+    timestamp: string;
+    slug: string | null;
+    role: string | null;
+    model: string | null;
+    cwd: string | null;
+    content: string | null;
+    raw: string;
+    file_path: string;
+  }>;
+
+  return rows.map(row => ({
+    id: row.id,
+    sessionId: row.session_id,
+    uuid: row.uuid,
+    parentUuid: row.parent_uuid,
+    lineNumber: row.line_number,
+    type: row.type,
+    subtype: row.subtype,
+    timestamp: row.timestamp,
+    slug: row.slug,
+    role: row.role,
+    model: row.model,
+    cwd: row.cwd,
+    content: row.content,
+    raw: row.raw,
+    filePath: row.file_path,
+  }));
+}
+
+/**
+ * Get the maximum line ID for a session (for polling new lines)
+ */
+export function getMaxLineId(db: Database, sessionId?: string): number {
+  let sql = `SELECT MAX(id) as max_id FROM lines`;
+  const params: string[] = [];
+
+  if (sessionId) {
+    sql += ` WHERE session_id = ?`;
+    params.push(sessionId);
+  }
+
+  const row = db.prepare(sql).get(...params) as { max_id: number | null };
+  return row?.max_id || 0;
+}
+
+/**
+ * Get lines after a specific ID (for tail mode polling)
+ */
+export function getLinesAfterId(db: Database, afterId: number, sessionId?: string, types?: string[]): LineResult[] {
+  let sql = `
+    SELECT
+      id,
+      session_id,
+      uuid,
+      parent_uuid,
+      line_number,
+      type,
+      subtype,
+      timestamp,
+      slug,
+      role,
+      model,
+      cwd,
+      content,
+      raw,
+      file_path
+    FROM lines
+    WHERE id > ?
+  `;
+  const params: (string | number)[] = [afterId];
+
+  if (sessionId) {
+    sql += ` AND session_id = ?`;
+    params.push(sessionId);
+  }
+
+  if (types && types.length > 0) {
+    sql += ` AND type IN (${types.map(() => '?').join(', ')})`;
+    params.push(...types);
+  }
+
+  sql += ` ORDER BY id ASC`;
+
+  const rows = db.prepare(sql).all(...params) as Array<{
+    id: number;
+    session_id: string;
+    uuid: string;
+    parent_uuid: string | null;
+    line_number: number;
+    type: string;
+    subtype: string | null;
+    timestamp: string;
+    slug: string | null;
+    role: string | null;
+    model: string | null;
+    cwd: string | null;
+    content: string | null;
+    raw: string;
+    file_path: string;
+  }>;
+
+  return rows.map(row => ({
+    id: row.id,
+    sessionId: row.session_id,
+    uuid: row.uuid,
+    parentUuid: row.parent_uuid,
+    lineNumber: row.line_number,
+    type: row.type,
+    subtype: row.subtype,
+    timestamp: row.timestamp,
+    slug: row.slug,
+    role: row.role,
+    model: row.model,
+    cwd: row.cwd,
+    content: row.content,
+    raw: row.raw,
+    filePath: row.file_path,
+  }));
+}
+
+/**
+ * Get line count for a session
+ */
+export function getLineCount(db: Database, sessionId: string): number {
+  const session = getSession(db, sessionId);
+  if (!session) return 0;
+
+  const row = db.prepare('SELECT COUNT(*) as count FROM lines WHERE session_id = ?').get(session.sessionId) as { count: number };
+  return row?.count || 0;
+}
+
 /**
  * Clear and rebuild the entire index
  * Also drops and recreates the sessions and hook tables to ensure schema is current

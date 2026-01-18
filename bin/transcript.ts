@@ -43,6 +43,14 @@ import {
   updateHookIndex,
   watchHookFiles,
   DEFAULT_DB_PATH,
+  getSessions,
+  getSession,
+  getLines,
+  getMaxLineId,
+  getLinesAfterId,
+  getLineCount,
+  type SessionInfo,
+  type LineResult,
 } from '../src/transcripts/db';
 import {
   filterLines,
@@ -85,6 +93,79 @@ const VALID_TYPES: ExtendedLineType[] = [
   'update',
   'queue-operation',
 ];
+
+// ============================================================================
+// Database Access
+// ============================================================================
+
+let _db: ReturnType<typeof getDatabase> | null = null;
+
+/**
+ * Get the shared database connection, initializing if needed.
+ * Checks for database existence and daemon status.
+ */
+function getDb(): ReturnType<typeof getDatabase> {
+  if (_db) return _db;
+
+  if (!existsSync(DEFAULT_DB_PATH)) {
+    console.error('error: Index not built. Run: transcript index build');
+    process.exit(1);
+  }
+
+  _db = getDatabase(DEFAULT_DB_PATH);
+
+  // Check if daemon is running and warn if not
+  if (existsSync(PID_FILE)) {
+    try {
+      const pid = parseInt(readFileSync(PID_FILE, 'utf-8').trim(), 10);
+      try {
+        process.kill(pid, 0); // Check if process exists
+      } catch {
+        console.error('\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m\n');
+      }
+    } catch {
+      // Ignore PID file read errors
+    }
+  } else {
+    console.error('\x1b[33mwarning: Daemon not running. Data may be stale. Run: transcript index daemon start\x1b[0m\n');
+  }
+
+  return _db;
+}
+
+/**
+ * Close the database connection if open
+ */
+function closeDb(): void {
+  if (_db) {
+    _db.close();
+    _db = null;
+  }
+}
+
+/**
+ * Convert LineResult to TranscriptLine by parsing the raw JSON
+ */
+function lineResultToTranscriptLine(result: LineResult): TranscriptLine {
+  try {
+    const parsed = JSON.parse(result.raw);
+    return {
+      ...parsed,
+      lineNumber: result.lineNumber,
+      raw: result.raw,
+    };
+  } catch {
+    // Fallback to minimal TranscriptLine
+    return {
+      uuid: result.uuid,
+      parentUuid: result.parentUuid || undefined,
+      type: result.type as TranscriptLine['type'],
+      timestamp: result.timestamp,
+      lineNumber: result.lineNumber,
+      raw: result.raw,
+    } as TranscriptLine;
+  }
+}
 
 // ============================================================================
 // Helpers
@@ -308,97 +389,54 @@ interface ViewArgs {
 }
 
 async function cmdView(args: ViewArgs): Promise<number> {
-  let filePath: string | null = null;
-
-  // If we have a session name but no file, resolve the transcript from session name
-  if (!args.file && args.sessionNameLookup) {
-    try {
-      const { getSessionStore } = await import('../src/hooks/sessions');
-      const store = getSessionStore();
-      const session = store.getByName(args.sessionNameLookup);
-      if (session?.transcriptPath) {
-        filePath = session.transcriptPath;
-      } else {
-        // Try to find by session ID lookup
-        const sessionId = store.getSessionId(args.sessionNameLookup);
-        if (sessionId) {
-          // Search for transcript with this session ID
-          const files = await findTranscriptFiles(PROJECTS_DIR);
-          for (const fp of files) {
-            if (fp.includes(sessionId)) {
-              filePath = fp;
-              break;
-            }
-          }
-        }
-      }
-    } catch {
-      // Session store not available
-    }
-  } else if (args.file) {
-    filePath = await resolveTranscriptPath(args.file);
-  }
-
-  if (!filePath) {
-    printError(`transcript not found: ${args.sessionNameLookup || args.file}`);
-    return 1;
-  }
-
   try {
-    // Build filter options
-    const filterOpts: FilterOptions = {
-      last: args.last,
-      first: args.first,
-      fromLine: args.from,
-      toLine: args.to,
-      offset: args.offset,
-      limit: args.limit,
-      userPrompts: args.userPrompts,
-      assistant: args.assistant,
-      tools: args.tools,
-      thinking: args.thinking,
-      search: args.search,
-      sessionIds: args.sessionIds,
-    };
+    const db = getDb();
+    let sessionId: string | null = null;
 
-    // Handle session name lookup
+    // Resolve session ID from various input types
     if (args.sessionNameLookup) {
-      try {
-        const { getSessionStore } = await import('../src/hooks/sessions');
-        const store = getSessionStore();
-        const sessionId = store.getSessionId(args.sessionNameLookup);
-        if (sessionId) {
-          filterOpts.sessionIds = filterOpts.sessionIds || [];
-          filterOpts.sessionIds.push(sessionId);
-        } else {
-          printError(`Session name not found: ${args.sessionNameLookup}`);
-          return 1;
+      // Try to find by session name/slug first
+      const session = getSession(db, args.sessionNameLookup);
+      if (session) {
+        sessionId = session.sessionId;
+      } else {
+        // Try session store for name lookup
+        try {
+          const { getSessionStore } = await import('../src/hooks/sessions');
+          const store = getSessionStore();
+          const resolvedId = store.getSessionId(args.sessionNameLookup);
+          if (resolvedId) {
+            sessionId = resolvedId;
+          }
+        } catch {
+          // Session store not available
         }
-      } catch {
-        printError(`Session name lookup failed: ${args.sessionNameLookup}`);
-        return 1;
+      }
+    } else if (args.file) {
+      // Input could be: session ID, slug, or file path
+      // Try as session ID or slug first
+      const session = getSession(db, args.file);
+      if (session) {
+        sessionId = session.sessionId;
+      } else {
+        // Try extracting session ID from file path
+        const match = args.file.match(/([a-f0-9-]{36})\.jsonl/);
+        if (match) {
+          sessionId = match[1]!;
+        } else {
+          // Assume it's a session ID directly
+          sessionId = args.file;
+        }
       }
     }
 
-    // Parse timestamp filters
-    if (args.fromTime) {
-      try {
-        filterOpts.fromTime = parseTimestamp(args.fromTime);
-      } catch (err) {
-        printError(`invalid --from-time: ${args.fromTime}`);
-        return 1;
-      }
-    }
-    if (args.toTime) {
-      try {
-        filterOpts.toTime = parseTimestamp(args.toTime);
-      } catch (err) {
-        printError(`invalid --to-time: ${args.toTime}`);
-        return 1;
-      }
+    if (!sessionId) {
+      printError(`transcript not found: ${args.sessionNameLookup || args.file}`);
+      return 1;
     }
 
     // Parse types
+    let types: string[] | undefined;
     if (args.types) {
       const typeList = args.types.split(',').map((t) => t.trim()) as ExtendedLineType[];
       const invalidTypes = typeList.filter((t) => !VALID_TYPES.includes(t));
@@ -406,33 +444,91 @@ async function cmdView(args: ViewArgs): Promise<number> {
         printError(`invalid types: ${invalidTypes.join(', ')}`);
         return 1;
       }
-      filterOpts.types = typeList;
+      types = typeList;
     }
 
-    // Handle --tail mode (live streaming)
+    // Build types from convenience flags
+    if (args.userPrompts) {
+      types = ['user'];
+    } else if (args.assistant) {
+      types = ['assistant'];
+    } else if (args.tools) {
+      types = ['tool_use', 'tool_result'];
+    } else if (args.thinking) {
+      types = ['thinking'];
+    }
+
+    // Parse timestamp filters
+    let fromTime: string | undefined;
+    let toTime: string | undefined;
+    if (args.fromTime) {
+      try {
+        fromTime = parseTimestamp(args.fromTime).toISOString();
+      } catch (err) {
+        printError(`invalid --from-time: ${args.fromTime}`);
+        return 1;
+      }
+    }
+    if (args.toTime) {
+      try {
+        toTime = parseTimestamp(args.toTime).toISOString();
+      } catch (err) {
+        printError(`invalid --to-time: ${args.toTime}`);
+        return 1;
+      }
+    }
+
+    // Handle --tail mode (live streaming via polling)
     if (args.tail) {
-      return tailMode(filePath, filterOpts, args.format, args.pretty);
+      return tailModeSql(db, sessionId, types, args.format, args.pretty);
     }
 
     // Handle --watch mode (live update last entry)
     if (args.watch) {
-      return watchMode(filePath, filterOpts, args.format, args.pretty);
+      return watchModeSql(db, sessionId, types, args.format, args.pretty);
     }
 
-    // Standard view mode
-    const lines = await parseTranscriptFile(filePath);
+    // Standard view mode - query SQLite
+    let queryLimit = args.limit;
+    let queryOffset = args.offset;
+    let order: 'asc' | 'desc' = 'asc';
 
-    // Filter lines
-    const filtered = filterLines(lines, filterOpts);
+    // Handle --last (get last N lines)
+    if (args.last) {
+      order = 'desc';
+      queryLimit = args.last;
+    }
 
-    if (filtered.length === 0) {
+    // Handle --first (get first N lines)
+    if (args.first) {
+      queryLimit = args.first;
+    }
+
+    const results = getLines(db, {
+      sessionId,
+      types,
+      limit: queryLimit,
+      offset: queryOffset,
+      fromLine: args.from,
+      toLine: args.to,
+      fromTime,
+      toTime,
+      search: args.search,
+      order,
+    });
+
+    // Reverse if we used desc order for --last
+    const lines = order === 'desc' ? results.reverse() : results;
+
+    if (lines.length === 0) {
       console.log('No matching lines found.');
       return 0;
     }
 
     // Build output
     const outputLines: string[] = [];
-    for (const line of filtered) {
+    for (const result of lines) {
+      const line = lineResultToTranscriptLine(result);
       switch (args.format) {
         case 'json':
           outputLines.push(formatJson(line, args.pretty));
@@ -470,16 +566,15 @@ async function cmdView(args: ViewArgs): Promise<number> {
 }
 
 /**
- * Tail mode: stream new entries as they are added
+ * Tail mode: stream new entries as they are added (SQLite polling)
  */
-async function tailMode(
-  filePath: string,
-  filterOpts: FilterOptions,
+async function tailModeSql(
+  db: ReturnType<typeof getDatabase>,
+  sessionId: string,
+  types: string[] | undefined,
   format: OutputFormat,
   pretty?: boolean
 ): Promise<number> {
-  let lastLineCount = 0;
-
   // Helper to format a line based on the selected format
   const formatLine = (line: TranscriptLine): string | null => {
     switch (format) {
@@ -496,42 +591,46 @@ async function tailMode(
     }
   };
 
-  // Print existing last few lines
-  const initialLines = await parseTranscriptFile(filePath);
-  const initialFiltered = filterLines(initialLines, { ...filterOpts, last: 10 });
-  for (const line of initialFiltered) {
+  // Print existing last 10 lines
+  const initialResults = getLines(db, {
+    sessionId,
+    types,
+    limit: 10,
+    order: 'desc',
+  });
+  const initialLines = initialResults.reverse();
+  for (const result of initialLines) {
+    const line = lineResultToTranscriptLine(result);
     const formatted = formatLine(line);
     if (formatted) console.log(formatted);
   }
-  lastLineCount = initialLines.length;
 
-  // Watch for changes
+  // Get current max ID to poll from
+  let lastId = getMaxLineId(db, sessionId);
+
   console.log('\n--- Watching for new entries (Ctrl+C to stop) ---\n');
 
-  let debounce: ReturnType<typeof setTimeout> | null = null;
-
-  watch(filePath, async (event) => {
-    if (event === 'change') {
-      // Debounce rapid changes (macOS can fire multiple events)
-      if (debounce) clearTimeout(debounce);
-      debounce = setTimeout(async () => {
-        try {
-          const allLines = await parseTranscriptFile(filePath);
-          if (allLines.length > lastLineCount) {
-            // Get only new lines
-            const newLines = allLines.slice(lastLineCount);
-            const filtered = filterLines(newLines, filterOpts);
-            for (const line of filtered) {
-              const formatted = formatLine(line);
-              if (formatted) console.log(formatted);
-            }
-            lastLineCount = allLines.length;
-          }
-        } catch (err) {
-          // Ignore transient read errors during writes
+  // Poll for new lines every 500ms
+  const pollInterval = setInterval(() => {
+    try {
+      const newLines = getLinesAfterId(db, lastId, sessionId, types);
+      for (const result of newLines) {
+        const line = lineResultToTranscriptLine(result);
+        const formatted = formatLine(line);
+        if (formatted) console.log(formatted);
+        if (result.id > lastId) {
+          lastId = result.id;
         }
-      }, 100);
+      }
+    } catch {
+      // Ignore transient errors
     }
+  }, 500);
+
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    clearInterval(pollInterval);
+    process.exit(0);
   });
 
   // Keep process alive
@@ -540,49 +639,66 @@ async function tailMode(
 }
 
 /**
- * Watch mode: show last entry, update on change
+ * Watch mode: show last entry, update on change (SQLite polling)
  */
-async function watchMode(
-  filePath: string,
-  filterOpts: FilterOptions,
+async function watchModeSql(
+  db: ReturnType<typeof getDatabase>,
+  sessionId: string,
+  types: string[] | undefined,
   format: OutputFormat,
   pretty?: boolean
 ): Promise<number> {
-  const renderLast = async () => {
-    // Clear screen
-    process.stdout.write('\x1b[2J\x1b[H');
+  let lastContent = '';
 
-    const lines = await parseTranscriptFile(filePath);
-    const filtered = filterLines(lines, filterOpts);
+  const renderLast = () => {
+    const results = getLines(db, {
+      sessionId,
+      types,
+      limit: 1,
+      order: 'desc',
+    });
 
-    if (filtered.length > 0) {
-      const last = filtered[filtered.length - 1]!;
+    if (results.length > 0) {
+      const result = results[0]!;
+      const line = lineResultToTranscriptLine(result);
+      let content = '';
+
       if (format === 'json') {
-        console.log(formatJson(last, pretty));
+        content = formatJson(line, pretty);
       } else if (format === 'minimal') {
-        const minimal = formatMinimal(last);
-        if (minimal) console.log(minimal);
+        content = formatMinimal(line) || '';
       } else if (format === 'human') {
-        const rendered = renderLine(last);
-        console.log(rendered.fullContent);
+        const rendered = renderLine(line);
+        content = rendered.fullContent;
       } else {
-        // Raw/default
-        console.log(last.raw);
+        content = line.raw;
       }
-      console.log('\n--- Watching for updates (Ctrl+C to stop) ---');
-    } else {
+
+      // Only redraw if content changed
+      if (content !== lastContent) {
+        lastContent = content;
+        // Clear screen
+        process.stdout.write('\x1b[2J\x1b[H');
+        console.log(content);
+        console.log('\n--- Watching for updates (Ctrl+C to stop) ---');
+      }
+    } else if (lastContent === '') {
+      process.stdout.write('\x1b[2J\x1b[H');
       console.log('No matching entries found.');
       console.log('\n--- Watching for updates (Ctrl+C to stop) ---');
+      lastContent = '__empty__';
     }
   };
 
-  await renderLast();
+  renderLast();
 
-  let debounce: ReturnType<typeof setTimeout> | null = null;
+  // Poll for changes every 500ms
+  const pollInterval = setInterval(renderLast, 500);
 
-  watch(filePath, () => {
-    if (debounce) clearTimeout(debounce);
-    debounce = setTimeout(renderLast, 100); // Debounce for macOS
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    clearInterval(pollInterval);
+    process.exit(0);
   });
 
   // Keep process alive
@@ -599,38 +715,25 @@ interface ListArgs {
 
 async function cmdList(args: ListArgs): Promise<number> {
   try {
-    const index = await indexTranscripts(PROJECTS_DIR);
+    const db = getDb();
+    const sessions = getSessions(db, {
+      recentDays: args.recent,
+      projectPath: args.project,
+    });
 
-    let files = index.files;
-
-    // Filter by recent days
-    if (args.recent) {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - args.recent);
-      files = files.filter((f) => {
-        const date = new Date(f.lastTimestamp);
-        return date >= cutoff;
-      });
-    }
-
-    // Filter by project
-    if (args.project) {
-      files = files.filter((f) => f.path.includes(args.project!));
-    }
-
-    if (files.length === 0) {
+    if (sessions.length === 0) {
       console.log('No transcripts found.');
       return 0;
     }
 
     if (args.json) {
-      console.log(JSON.stringify(files, null, 2));
+      console.log(JSON.stringify(sessions, null, 2));
       return 0;
     }
 
     if (args.names) {
-      for (const file of files) {
-        console.log(file.slug || file.sessionId);
+      for (const session of sessions) {
+        console.log(session.slug || session.sessionId);
       }
       return 0;
     }
@@ -639,14 +742,14 @@ async function cmdList(args: ListArgs): Promise<number> {
     console.log('SESSION                   LINES   LAST MODIFIED');
     console.log('-'.repeat(60));
 
-    for (const file of files) {
-      const name = (file.slug || file.sessionId.slice(0, 8)).padEnd(24).slice(0, 24);
-      const lines = String(file.lineCount).padStart(6);
-      const date = formatDate(file.lastTimestamp);
+    for (const session of sessions) {
+      const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(24).slice(0, 24);
+      const lines = String(session.lineCount).padStart(6);
+      const date = formatDate(session.lastTimestamp || '');
       console.log(`${name} ${lines}   ${date}`);
     }
 
-    console.log(`\nTotal: ${files.length} transcript(s)`);
+    console.log(`\nTotal: ${sessions.length} transcript(s)`);
 
     return 0;
   } catch (error) {
@@ -666,16 +769,40 @@ interface SearchArgs {
 
 async function cmdSearch(args: SearchArgs): Promise<number> {
   try {
+    const db = getDb();
+
     const types = args.types
-      ? (args.types.split(',').map((t) => t.trim()) as ExtendedLineType[])
+      ? args.types.split(',').map((t) => t.trim())
       : undefined;
 
-    const results = await searchTranscripts({
+    // Resolve session name to ID if provided
+    let sessionIds = args.sessionIds;
+    if (args.sessionName) {
+      const session = getSession(db, args.sessionName);
+      if (session) {
+        sessionIds = sessionIds || [];
+        sessionIds.push(session.sessionId);
+      } else {
+        // Try session store
+        try {
+          const { getSessionStore } = await import('../src/hooks/sessions');
+          const store = getSessionStore();
+          const resolvedId = store.getSessionId(args.sessionName);
+          if (resolvedId) {
+            sessionIds = sessionIds || [];
+            sessionIds.push(resolvedId);
+          }
+        } catch {
+          // Session store not available
+        }
+      }
+    }
+
+    const results = searchDb(db, {
       query: args.query,
       limit: args.limit || 50,
-      types: types as any,
-      sessionIds: args.sessionIds,
-      sessionName: args.sessionName,
+      types,
+      sessionIds,
     });
 
     if (results.length === 0) {
@@ -691,9 +818,9 @@ async function cmdSearch(args: SearchArgs): Promise<number> {
     console.log(`Found ${results.length} result(s) for "${args.query}":\n`);
 
     for (const result of results) {
-      const slug = result.line.slug || result.sessionId.slice(0, 8);
-      const date = formatDate(result.line.timestamp);
-      console.log(`[${slug}] Line ${result.line.lineNumber} (${result.line.type}) - ${date}`);
+      const slug = result.slug || result.sessionId.slice(0, 8);
+      const date = formatDate(result.timestamp);
+      console.log(`[${slug}] Line ${result.lineNumber} (${result.type}) - ${date}`);
       console.log(`  ${result.matchedText}`);
       console.log('');
     }
@@ -706,31 +833,70 @@ async function cmdSearch(args: SearchArgs): Promise<number> {
 }
 
 async function cmdInfo(input: string): Promise<number> {
-  const filePath = await resolveTranscriptPath(input);
-  if (!filePath) {
-    printError(`transcript not found: ${input}`);
-    return 1;
-  }
-
   try {
-    const lines = await parseTranscriptFile(filePath);
-    const metadata = getSessionMetadata(lines);
-    const info = await getSessionInfo(filePath);
+    const db = getDb();
+
+    // Try to find session by ID, slug, or file path
+    let session = getSession(db, input);
+    if (!session) {
+      // Try extracting session ID from file path
+      const match = input.match(/([a-f0-9-]{36})\.jsonl/);
+      if (match) {
+        session = getSession(db, match[1]!);
+      }
+    }
+
+    if (!session) {
+      printError(`transcript not found: ${input}`);
+      return 1;
+    }
+
+    // Get type counts from SQLite
+    const typeCounts = db.prepare(`
+      SELECT type, COUNT(*) as count
+      FROM lines
+      WHERE session_id = ?
+      GROUP BY type
+      ORDER BY count DESC
+    `).all(session.sessionId) as Array<{ type: string; count: number }>;
+
+    // Get some metadata from the first few lines
+    const firstLines = getLines(db, {
+      sessionId: session.sessionId,
+      limit: 10,
+      order: 'asc',
+    });
+
+    let version: string | undefined;
+    let cwd: string | undefined;
+    let gitBranch: string | undefined;
+
+    for (const result of firstLines) {
+      if (result.cwd && !cwd) cwd = result.cwd;
+      try {
+        const parsed = JSON.parse(result.raw);
+        if (parsed.version && !version) version = parsed.version;
+        if (parsed.gitBranch && !gitBranch) gitBranch = parsed.gitBranch;
+      } catch {
+        // Ignore parse errors
+      }
+      if (version && cwd && gitBranch) break;
+    }
 
     console.log('Transcript Information\n');
-    console.log(`File:           ${filePath}`);
-    console.log(`Session ID:     ${info.sessionId}`);
-    if (info.slug) console.log(`Session Name:   ${info.slug}`);
-    console.log(`Line Count:     ${info.lineCount}`);
-    console.log(`First Entry:    ${formatDate(info.firstTimestamp)}`);
-    console.log(`Last Entry:     ${formatDate(info.lastTimestamp)}`);
+    console.log(`File:           ${session.filePath}`);
+    console.log(`Session ID:     ${session.sessionId}`);
+    if (session.slug) console.log(`Session Name:   ${session.slug}`);
+    console.log(`Line Count:     ${session.lineCount}`);
+    console.log(`First Entry:    ${formatDate(session.firstTimestamp || '')}`);
+    console.log(`Last Entry:     ${formatDate(session.lastTimestamp || '')}`);
 
-    if (metadata.version) console.log(`Version:        ${metadata.version}`);
-    if (metadata.cwd) console.log(`Working Dir:    ${metadata.cwd}`);
-    if (metadata.gitBranch) console.log(`Git Branch:     ${metadata.gitBranch}`);
+    if (version) console.log(`Version:        ${version}`);
+    if (cwd) console.log(`Working Dir:    ${cwd}`);
+    if (gitBranch) console.log(`Git Branch:     ${gitBranch}`);
 
     console.log('\nMessage Types:');
-    for (const [type, count] of Object.entries(info.messageTypes)) {
+    for (const { type, count } of typeCounts) {
       console.log(`  ${type.padEnd(20)} ${count}`);
     }
 
