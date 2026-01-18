@@ -212,6 +212,8 @@ Output Formats:
   --human, -h             Human-readable format
   --minimal, -m           Just the text content
   --pretty                Pretty-print JSON
+  --color                 Syntax highlight JSON output (auto-detected for TTY)
+  --no-color              Disable syntax highlighting
   --output, -o <file>     Write output to file instead of stdout
 
 Live Modes:
@@ -383,6 +385,7 @@ interface ViewArgs {
   sessionNameLookup?: string;
   format: OutputFormat;
   pretty?: boolean;
+  color?: boolean;
   output?: string;
   tail?: boolean;
   watch?: boolean;
@@ -449,16 +452,18 @@ async function cmdViewDirect(args: ViewArgs): Promise<number> {
 
     // Handle watch mode
     if (args.watch) {
-      return await watchModeDirect(filePath, types, args.format);
+      return await watchModeDirect(filePath, types, args.format, args.color);
     }
 
     // Format and output
     const format = args.format || 'human';
+    // Auto-detect color: use color if TTY and not writing to file, unless explicitly set
+    const useColor = args.color ?? (process.stdout.isTTY && !args.output);
     let output = '';
 
     for (const line of lines) {
       if (format === 'json') {
-        output += `${formatJson(line, args.pretty)}\n`;
+        output += `${formatJson(line, args.pretty, useColor)}\n`;
       } else if (format === 'minimal') {
         output += `${formatMinimal(line)}\n`;
       } else {
@@ -561,8 +566,10 @@ async function tailModeDirect(
 async function watchModeDirect(
   filePath: string,
   types?: string[],
-  format?: string
+  format?: string,
+  color?: boolean
 ): Promise<number> {
+  const useColor = color ?? process.stdout.isTTY;
   let lastLineCount = 0;
 
   // Initial load
@@ -587,7 +594,7 @@ async function watchModeDirect(
           if (types && !types.includes(displayType)) continue;
 
           if (format === 'json') {
-            console.log(formatJson(line));
+            console.log(formatJson(line, false, useColor));
           } else {
             const time = line.timestamp
               ? new Date(line.timestamp).toLocaleTimeString('en-US', { hour12: false })
@@ -723,12 +730,12 @@ async function cmdView(args: ViewArgs): Promise<number> {
 
     // Handle --tail mode (live streaming via polling)
     if (args.tail) {
-      return tailModeSql(db, sessionId, types, args.format, args.pretty);
+      return tailModeSql(db, sessionId, types, args.format, args.pretty, args.color);
     }
 
     // Handle --watch mode (live update last entry)
     if (args.watch) {
-      return watchModeSql(db, sessionId, types, args.format, args.pretty);
+      return watchModeSql(db, sessionId, types, args.format, args.pretty, args.color);
     }
 
     // Standard view mode - query SQLite
@@ -769,12 +776,13 @@ async function cmdView(args: ViewArgs): Promise<number> {
     }
 
     // Build output
+    const useColor = args.color ?? (process.stdout.isTTY && !args.output);
     const outputLines: string[] = [];
     for (const result of lines) {
       const line = lineResultToTranscriptLine(result);
       switch (args.format) {
         case 'json':
-          outputLines.push(formatJson(line, args.pretty));
+          outputLines.push(formatJson(line, args.pretty, useColor));
           break;
         case 'minimal': {
           const minimal = formatMinimal(line);
@@ -818,13 +826,16 @@ async function tailModeSql(
   sessionId: string,
   types: string[] | undefined,
   format: OutputFormat,
-  pretty?: boolean
+  pretty?: boolean,
+  color?: boolean
 ): Promise<number> {
+  const useColor = color ?? process.stdout.isTTY;
+
   // Helper to format a line based on the selected format
   const formatLine = (line: TranscriptLine): string | null => {
     switch (format) {
       case 'json':
-        return formatJson(line, pretty);
+        return formatJson(line, pretty, useColor);
       case 'minimal':
         return formatMinimal(line);
       case 'human': {
@@ -891,8 +902,10 @@ async function watchModeSql(
   sessionId: string,
   types: string[] | undefined,
   format: OutputFormat,
-  pretty?: boolean
+  pretty?: boolean,
+  color?: boolean
 ): Promise<number> {
+  const useColor = color ?? process.stdout.isTTY;
   let lastContent = '';
 
   const renderLast = () => {
@@ -909,7 +922,7 @@ async function watchModeSql(
       let content = '';
 
       if (format === 'json') {
-        content = formatJson(line, pretty);
+        content = formatJson(line, pretty, useColor);
       } else if (format === 'minimal') {
         content = formatMinimal(line) || '';
       } else if (format === 'human') {
@@ -1846,6 +1859,14 @@ function parseArgs(args: string[]): {
       flags.pretty = true;
       continue;
     }
+    if (arg === '--color') {
+      flags.color = true;
+      continue;
+    }
+    if (arg === '--no-color') {
+      flags.color = false;
+      continue;
+    }
     if (arg === '--names') {
       flags.names = true;
       continue;
@@ -2249,6 +2270,7 @@ async function main(): Promise<number> {
         sessionNameLookup: flags.sessionNameLookup as string | undefined,
         format: (flags.format as OutputFormat) || 'raw',
         pretty: flags.pretty as boolean | undefined,
+        color: flags.color as boolean | undefined,
         output: flags.output as string | undefined,
         tail: flags.tail as boolean | undefined,
         watch: flags.watch as boolean | undefined,

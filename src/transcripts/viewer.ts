@@ -629,8 +629,137 @@ export function formatMinimal(line: TranscriptLine): string {
 /**
  * Format line for JSON output
  */
-export function formatJson(line: TranscriptLine, pretty = false): string {
-  return pretty ? JSON.stringify(JSON.parse(line.raw), null, 2) : line.raw;
+export function formatJson(line: TranscriptLine, pretty = false, colorize = false): string {
+  const json = pretty ? JSON.stringify(JSON.parse(line.raw), null, 2) : line.raw;
+  return colorize ? highlightJson(json) : json;
+}
+
+/**
+ * Syntax highlight JSON with ANSI colors
+ */
+export function highlightJson(json: string): string {
+  // ANSI color codes
+  const colors = {
+    key: '\x1b[36m', // cyan
+    string: '\x1b[32m', // green
+    number: '\x1b[33m', // yellow
+    boolean: '\x1b[35m', // magenta
+    null: '\x1b[35m', // magenta
+    brace: '\x1b[37m', // white
+    reset: '\x1b[0m',
+  };
+
+  // Process character by character to handle nested structures
+  let result = '';
+  let inString = false;
+  let inKey = false;
+  let escaped = false;
+  let i = 0;
+
+  while (i < json.length) {
+    const char = json[i];
+    const nextChar = json[i + 1];
+
+    if (escaped) {
+      result += char;
+      escaped = false;
+      i++;
+      continue;
+    }
+
+    if (char === '\\' && inString) {
+      escaped = true;
+      result += char;
+      i++;
+      continue;
+    }
+
+    if (char === '"') {
+      if (!inString) {
+        // Starting a string - check if it's a key (followed eventually by :)
+        inString = true;
+        // Look ahead to see if this is a key (followed by colon after the closing quote)
+        let j = i + 1;
+        let isKey = false;
+        while (j < json.length) {
+          if (json[j] === '\\') {
+            j += 2;
+            continue;
+          }
+          if (json[j] === '"') {
+            // Found end of string, check what follows
+            let k = j + 1;
+            while (k < json.length && /\s/.test(json[k])) k++;
+            isKey = json[k] === ':';
+            break;
+          }
+          j++;
+        }
+        inKey = isKey;
+        result += (inKey ? colors.key : colors.string) + char;
+      } else {
+        // Ending a string
+        result += char + colors.reset;
+        inString = false;
+        inKey = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (inString) {
+      result += char;
+      i++;
+      continue;
+    }
+
+    // Not in string - check for other tokens
+    if (char === '{' || char === '}' || char === '[' || char === ']') {
+      result += colors.brace + char + colors.reset;
+      i++;
+      continue;
+    }
+
+    if (char === ':' || char === ',') {
+      result += char;
+      i++;
+      continue;
+    }
+
+    // Check for numbers
+    if (/[\d.-]/.test(char)) {
+      let num = '';
+      while (i < json.length && /[\d.eE+-]/.test(json[i])) {
+        num += json[i];
+        i++;
+      }
+      result += colors.number + num + colors.reset;
+      continue;
+    }
+
+    // Check for true/false/null
+    if (json.slice(i, i + 4) === 'true') {
+      result += `${colors.boolean}true${colors.reset}`;
+      i += 4;
+      continue;
+    }
+    if (json.slice(i, i + 5) === 'false') {
+      result += `${colors.boolean}false${colors.reset}`;
+      i += 5;
+      continue;
+    }
+    if (json.slice(i, i + 4) === 'null') {
+      result += `${colors.null}null${colors.reset}`;
+      i += 4;
+      continue;
+    }
+
+    // Whitespace and other characters
+    result += char;
+    i++;
+  }
+
+  return result;
 }
 
 /**
