@@ -1461,11 +1461,17 @@ async function createTUI(): Promise<void> {
 
   // Set up live mode SQLite polling if enabled at startup
   if (state.liveMode) {
-    const db = getDb();
-    state.lastMaxLineId = getMaxLineId(db, state.sessionId);
+    try {
+      const db = getDb();
+      state.lastMaxLineId = getMaxLineId(db, state.sessionId);
+    } catch (err) {
+      // If we can't initialize live mode, disable it but don't crash
+      state.liveMode = false;
+      showToast(`Live mode error: ${err instanceof Error ? err.message : String(err)}`);
+    }
 
     // Start polling SQLite every 200ms
-    state.pollInterval = setInterval(() => {
+    if (state.liveMode) state.pollInterval = setInterval(() => {
       try {
         const db = getDb();
         const currentMaxId = getMaxLineId(db, state.sessionId);
@@ -1504,9 +1510,11 @@ async function createTUI(): Promise<void> {
     }, 200);
 
     // Show live mode indicator in header
-    header.setContent(
-      `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
-    );
+    if (state.liveMode) {
+      header.setContent(
+        `{green-fg}[LIVE]{/green-fg} {bold}Transcript Viewer{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | Lines: ${state.lines.length} | View: [${state.viewMode}]`
+      );
+    }
   }
 
   screen.render();
@@ -1518,6 +1526,11 @@ async function createTUI(): Promise<void> {
 
 async function main(): Promise<number> {
   const args = process.argv.slice(2);
+
+  if (args[0] === '--version' || args[0] === '-v') {
+    console.log(`transcript-tui v${VERSION}`);
+    return 0;
+  }
 
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     console.log(`transcript-tui v${VERSION} - Interactive Transcript Viewer

@@ -1376,6 +1376,11 @@ async function createTUI(): Promise<void> {
 async function main(): Promise<number> {
   const args = process.argv.slice(2);
 
+  if (args[0] === '--version' || args[0] === '-v') {
+    console.log(`hook-events-tui v${VERSION}`);
+    return 0;
+  }
+
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     console.log(`hook-events-tui v${VERSION} - Interactive Hook Events Viewer
 

@@ -1454,6 +1454,10 @@ export interface LineResult {
   content: string | null;
   raw: string;
   filePath: string;
+  // Turn tracking (v5 schema)
+  turnId: string | null;
+  turnSequence: number | null;
+  sessionName: string | null;
 }
 
 export interface GetLinesOptions {
@@ -1586,7 +1590,10 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
       cwd,
       content,
       raw,
-      file_path
+      file_path,
+      turn_id,
+      turn_sequence,
+      session_name
     FROM lines
     WHERE 1=1
   `;
@@ -1663,6 +1670,9 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
     content: string | null;
     raw: string;
     file_path: string;
+    turn_id: string | null;
+    turn_sequence: number | null;
+    session_name: string | null;
   }>;
 
   return rows.map((row) => ({
@@ -1681,6 +1691,9 @@ export function getLines(db: Database, options: GetLinesOptions = {}): LineResul
     content: row.content,
     raw: row.raw,
     filePath: row.file_path,
+    turnId: row.turn_id,
+    turnSequence: row.turn_sequence,
+    sessionName: row.session_name,
   }));
 }
 
@@ -1725,7 +1738,10 @@ export function getLinesAfterId(
       cwd,
       content,
       raw,
-      file_path
+      file_path,
+      turn_id,
+      turn_sequence,
+      session_name
     FROM lines
     WHERE id > ?
   `;
@@ -1759,6 +1775,9 @@ export function getLinesAfterId(
     content: string | null;
     raw: string;
     file_path: string;
+    turn_id: string | null;
+    turn_sequence: number | null;
+    session_name: string | null;
   }>;
 
   return rows.map((row) => ({
@@ -1777,6 +1796,9 @@ export function getLinesAfterId(
     content: row.content,
     raw: row.raw,
     filePath: row.file_path,
+    turnId: row.turn_id,
+    turnSequence: row.turn_sequence,
+    sessionName: row.session_name,
   }));
 }
 
@@ -1810,6 +1832,10 @@ export interface HookEventResult {
   contextJson: string | null;
   filePath: string;
   lineNumber: number;
+  // Turn tracking (v5 schema)
+  turnId: string | null;
+  turnSequence: number | null;
+  sessionName: string | null;
 }
 
 export interface HookSessionInfo {
