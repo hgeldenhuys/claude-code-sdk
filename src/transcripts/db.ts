@@ -14,9 +14,9 @@ import {
   statSync,
 } from 'node:fs';
 import { join } from 'node:path';
+import type { SearchableTable, UnifiedSearchResult } from './adapters/types';
 import { findTranscriptFiles } from './indexer';
 import type { SearchResult, TranscriptLine } from './types';
-import type { SearchableTable, UnifiedSearchResult } from './adapters/types';
 
 const DB_VERSION = 7;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
@@ -1315,9 +1315,7 @@ export function searchUnified(
     try {
       // Check if the FTS table exists
       const tableExists = db
-        .query(
-          `SELECT name FROM sqlite_master WHERE type='table' AND name=?`
-        )
+        .query(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`)
         .get(table.ftsTable);
 
       if (!tableExists) {
