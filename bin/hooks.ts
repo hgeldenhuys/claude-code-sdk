@@ -690,6 +690,99 @@ async function runDoctor(fix: boolean): Promise<void> {
     });
   }
 
+  // 7. Check transcript daemon
+  const daemonPidFile = path.join(os.homedir(), '.claude-code-sdk', 'transcript-daemon.pid');
+  if (fs.existsSync(daemonPidFile)) {
+    try {
+      const pid = parseInt(fs.readFileSync(daemonPidFile, 'utf-8').trim(), 10);
+      // Check if process is running
+      try {
+        process.kill(pid, 0); // Signal 0 tests if process exists
+        results.push({
+          name: 'Transcript daemon',
+          status: 'pass',
+          message: `Running (PID: ${pid})`,
+        });
+      } catch {
+        results.push({
+          name: 'Transcript daemon',
+          status: 'warn',
+          message: `PID file exists but process not running. Run: .claude/bin/transcript index daemon start`,
+        });
+      }
+    } catch {
+      results.push({
+        name: 'Transcript daemon',
+        status: 'warn',
+        message: 'Could not read PID file',
+      });
+    }
+  } else {
+    results.push({
+      name: 'Transcript daemon',
+      status: 'warn',
+      message: 'Not running. Run: .claude/bin/transcript index daemon start',
+    });
+  }
+
+  // 8. Check transcript database
+  const dbPath = path.join(os.homedir(), '.claude-code-sdk', 'transcripts.db');
+  if (fs.existsSync(dbPath)) {
+    const stats = fs.statSync(dbPath);
+    const sizeMB = (stats.size / (1024 * 1024)).toFixed(1);
+    results.push({
+      name: 'Transcript database',
+      status: 'pass',
+      message: `${sizeMB} MB at ~/.claude-code-sdk/transcripts.db`,
+    });
+  } else {
+    results.push({
+      name: 'Transcript database',
+      status: 'warn',
+      message: 'Not found. Run: .claude/bin/transcript index build',
+    });
+  }
+
+  // 9. Check external adapters directory
+  const adaptersDir = path.join(os.homedir(), '.claude-code-sdk', 'adapters');
+  if (fs.existsSync(adaptersDir)) {
+    const adapterFiles = fs.readdirSync(adaptersDir);
+    const adapterCount = adapterFiles.filter(f => {
+      const fullPath = path.join(adaptersDir, f);
+      const stat = fs.statSync(fullPath);
+      // Count .ts files or directories with index.ts
+      if (stat.isFile() && f.endsWith('.ts')) return true;
+      if (stat.isDirectory()) {
+        const indexPath = path.join(fullPath, 'index.ts');
+        return fs.existsSync(indexPath);
+      }
+      return false;
+    }).length;
+
+    if (adapterCount > 0) {
+      results.push({
+        name: 'External adapters',
+        status: 'pass',
+        message: `${adapterCount} adapter(s) in ~/.claude-code-sdk/adapters/`,
+      });
+    } else {
+      results.push({
+        name: 'External adapters',
+        status: 'pass',
+        message: 'Directory exists (no external adapters installed)',
+      });
+    }
+  } else {
+    results.push({
+      name: 'External adapters',
+      status: 'warn',
+      message: 'Directory not found. Run install script or: mkdir -p ~/.claude-code-sdk/adapters',
+      fix: async () => {
+        fs.mkdirSync(adaptersDir, { recursive: true });
+      },
+    });
+  }
+
   // Print results
   console.log('Results:\n');
 

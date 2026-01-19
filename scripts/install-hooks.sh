@@ -311,6 +311,17 @@ EOF
   .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
   success "Transcript daemon started"
 
+  # Create external adapters directory
+  info "Setting up external adapters directory..."
+  local adapters_dir="$HOME/.claude-code-sdk/adapters"
+  mkdir -p "$adapters_dir"
+  success "Created $adapters_dir"
+
+  # Check for registered adapters
+  info "Checking registered adapters..."
+  local adapter_count=$(.claude/bin/transcript adapter list --json 2>/dev/null | grep -c '"name"' || echo "0")
+  success "Found $adapter_count registered adapters"
+
   echo ""
   echo -e "${GREEN}Installation complete!${NC}"
   echo ""
@@ -321,6 +332,7 @@ EOF
   echo "  - .claude/bin/                - CLI wrapper scripts"
   echo "  - .claude/skills/             - Skills (SDK skills symlinked)"
   echo "  - ~/.claude-code-sdk/         - Transcript index and daemon"
+  echo "  - ~/.claude-code-sdk/adapters/ - External adapter plugins"
   echo ""
   echo "Enabled handlers:"
   echo "  - session-naming     : Human-friendly session names"
