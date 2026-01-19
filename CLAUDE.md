@@ -297,6 +297,12 @@ The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execut
 - Turn data comes from `turn-tracker` handler results in hook events
 - Correlation uses Stop events for turn boundaries, or falls back to tool events (PreToolUse/PostToolUse) timestamps
 
+**Real-time turn correlation:**
+- Daemon automatically runs `correlateLinesToTurns` when new hook events are indexed
+- `update` command always runs correlation (catches previously uncorrelated lines)
+- TUI live mode refreshes turn data every ~1 second for lines missing it
+- Turn-session column format: `{turn}-{session-name}` (e.g., `19-misty-mongoose`)
+
 **Handler results in hook events:**
 - Events include `handlerResults` with data from all handlers that ran
 - Turn tracker data: `handlerResults['turn-tracker-{EventType}'].data.turnId/sequence`
