@@ -64,6 +64,14 @@ import {
   parseTimestamp,
   renderLine,
 } from '../src/transcripts/viewer';
+import {
+  cmdAdapterList,
+  cmdAdapterStatus,
+  cmdAdapterProcess,
+  cmdAdapterReplay,
+  cmdAdapterDaemon,
+  printAdapterHelp,
+} from '../src/transcripts/adapters/cli';
 
 // ============================================================================
 // Constants
@@ -188,6 +196,7 @@ Usage:
   transcript search <query> [options]     Search across transcripts
   transcript recall <query> [options]     Memory retrieval - find past discussions
   transcript index [build|status|rebuild] Manage SQLite search index
+  transcript adapter [list|status|process] Manage indexing adapters
   transcript info <file|session>          Show transcript metadata
   transcript doctor                       Diagnose transcript indexing configuration
   transcript help                         Show this help
@@ -2275,6 +2284,90 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
 }
 
 // ============================================================================
+// Adapter Commands
+// ============================================================================
+
+interface AdapterArgs {
+  subcommand: string;
+  adapterName?: string;
+  json?: boolean;
+  verbose?: boolean;
+  delta?: boolean;
+  enabledOnly?: boolean;
+  file?: string;
+}
+
+async function cmdAdapter(args: AdapterArgs): Promise<number> {
+  const { subcommand } = args;
+
+  try {
+    // Get database - create if needed for some commands
+    const db = (() => {
+      if (existsSync(DEFAULT_DB_PATH)) {
+        return getDatabase(DEFAULT_DB_PATH);
+      }
+      // For list command, create a new db
+      const newDb = getDatabase(DEFAULT_DB_PATH);
+      initSchema(newDb);
+      return newDb;
+    })();
+
+    switch (subcommand) {
+      case 'list':
+        return cmdAdapterList(db, {
+          enabledOnly: args.enabledOnly,
+          json: args.json,
+        });
+
+      case 'status':
+        return cmdAdapterStatus(db, {
+          adapterName: args.adapterName,
+          json: args.json,
+        });
+
+      case 'process':
+        if (!args.adapterName) {
+          console.log('Usage: transcript adapter process <adapter-name> [options]');
+          console.log('\nOptions:');
+          console.log('  --file <path>   Process a specific file');
+          console.log('  --delta         Only process new content');
+          console.log('  --verbose, -v   Show verbose output');
+          return 1;
+        }
+        return cmdAdapterProcess(db, {
+          adapterName: args.adapterName,
+          filePath: args.file,
+          delta: args.delta,
+          verbose: args.verbose,
+        });
+
+      case 'replay':
+        if (!args.adapterName) {
+          console.log('Usage: transcript adapter replay <adapter-name> [options]');
+          return 1;
+        }
+        return cmdAdapterReplay(db, {
+          adapterName: args.adapterName,
+          verbose: args.verbose,
+        });
+
+      case 'daemon':
+        // Run adapter daemon in foreground
+        return cmdAdapterDaemon(db, {
+          verbose: args.verbose,
+        });
+
+      default:
+        printAdapterHelp();
+        return 0;
+    }
+  } catch (error) {
+    printError(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
+}
+
+// ============================================================================
 // Argument Parsing
 // ============================================================================
 
@@ -2290,44 +2383,52 @@ function parseArgs(args: string[]): {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
 
-    if (arg === 'help' || arg === '--help' || arg === '-h') {
-      command = 'help';
-      continue;
-    }
+    // Only check command keywords if we haven't set a command yet
+    if (!command) {
+      if (arg === 'help' || arg === '--help' || arg === '-h') {
+        command = 'help';
+        continue;
+      }
 
-    if (arg === 'version' || arg === '--version' || arg === '-v') {
-      command = 'version';
-      continue;
-    }
+      if (arg === 'version' || arg === '--version' || arg === '-v') {
+        command = 'version';
+        continue;
+      }
 
-    if (arg === 'list' || arg === 'ls') {
-      command = 'list';
-      continue;
-    }
+      if (arg === 'list' || arg === 'ls') {
+        command = 'list';
+        continue;
+      }
 
-    if (arg === 'search') {
-      command = 'search';
-      continue;
-    }
+      if (arg === 'search') {
+        command = 'search';
+        continue;
+      }
 
-    if (arg === 'recall') {
-      command = 'recall';
-      continue;
-    }
+      if (arg === 'recall') {
+        command = 'recall';
+        continue;
+      }
 
-    if (arg === 'info') {
-      command = 'info';
-      continue;
-    }
+      if (arg === 'info') {
+        command = 'info';
+        continue;
+      }
 
-    if (arg === 'index') {
-      command = 'index';
-      continue;
-    }
+      if (arg === 'index') {
+        command = 'index';
+        continue;
+      }
 
-    if (arg === 'doctor') {
-      command = 'doctor';
-      continue;
+      if (arg === 'doctor') {
+        command = 'doctor';
+        continue;
+      }
+
+      if (arg === 'adapter') {
+        command = 'adapter';
+        continue;
+      }
     }
 
     // Flags with values
@@ -2448,6 +2549,22 @@ function parseArgs(args: string[]): {
     }
     if (arg === '--watch') {
       flags.watch = true;
+      continue;
+    }
+    if (arg === '--verbose' || arg === '-v') {
+      flags.verbose = true;
+      continue;
+    }
+    if (arg === '--delta') {
+      flags.delta = true;
+      continue;
+    }
+    if (arg === '--enabled-only') {
+      flags.enabledOnly = true;
+      continue;
+    }
+    if (arg === '--file') {
+      flags.file = args[++i] || '';
       continue;
     }
     if (arg === '--use-index') {
@@ -2907,6 +3024,17 @@ async function main(): Promise<number> {
 
     case 'doctor':
       return cmdDoctor();
+
+    case 'adapter':
+      return cmdAdapter({
+        subcommand: positional[0] || '',
+        adapterName: positional[1],
+        json: flags.json as boolean | undefined,
+        verbose: flags.verbose as boolean | undefined,
+        delta: flags.delta as boolean | undefined,
+        enabledOnly: flags.enabledOnly as boolean | undefined,
+        file: flags.file as string | undefined,
+      });
 
     default:
       printHelp();
