@@ -2020,6 +2020,11 @@ async function runDaemonProcess(): Promise<number> {
   const cleanupHooks = watchHookFiles(db, undefined, (file, newEvents) => {
     const fileName = file.split('/').pop() || file;
     appendLog(`[hooks] ${fileName}: +${newEvents} events indexed`);
+    // Correlate turns when new hook events arrive (they contain turn data)
+    const correlation = correlateLinesToTurns(db);
+    if (correlation.updated > 0) {
+      appendLog(`[correlate] ${correlation.updated} lines updated with turn data`);
+    }
   });
 
   // Handle shutdown signals
