@@ -17,6 +17,7 @@ import { createContextInjectionHandler } from './context-injection';
 import { createDangerousCommandGuardHandler } from './dangerous-command-guard';
 import { createDebugLoggerHandler } from './debug-logger';
 import { createEventLoggerHandler } from './event-logger';
+import { createGitTrackerHandler } from './git-tracker';
 import { createMetricsHandler } from './metrics';
 // Handler factories
 import { createSessionNamingHandler } from './session-naming';
@@ -153,6 +154,14 @@ export const builtinHandlers: Record<BuiltinHandlerType, HandlerMeta> = {
     ],
     defaultPriority: 998, // Run very late to capture all handler results
     factory: createEventLoggerHandler as HandlerFactory,
+  },
+  'git-tracker': {
+    id: 'git-tracker',
+    name: 'Git Tracker',
+    description: 'Tracks git repository state (hash, branch, dirty) during sessions',
+    defaultEvents: ['SessionStart', 'PreToolUse'],
+    defaultPriority: 6,
+    factory: createGitTrackerHandler as HandlerFactory,
   },
 };
 
@@ -316,6 +325,10 @@ export {
   DEFAULT_OUTPUT_DIR as DEFAULT_HOOKS_DIR,
 } from './event-logger';
 export type { EventLoggerOptions, HookEventLogEntry } from './event-logger';
+
+// Git Tracker
+export { createGitTrackerHandler, DEFAULT_TRACKED_TOOLS } from './git-tracker';
+export type { GitTrackerOptions, GitTrackerData } from './git-tracker';
 
 // Types for external factory usage
 export type { BuiltinHandlerFactory, BuiltinHandlerMeta } from './turn-tracker';

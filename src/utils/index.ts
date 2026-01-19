@@ -6,6 +6,10 @@ import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
+// Re-export git utilities
+export { getGitState, isGitRepository, getGitRoot } from './git';
+export type { GitState } from './git';
+
 /**
  * Get the default Claude Code configuration directory
  */

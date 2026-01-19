@@ -23,7 +23,8 @@ export type BuiltinHandlerType =
   | 'turn-tracker'
   | 'debug-logger'
   | 'metrics'
-  | 'event-logger';
+  | 'event-logger'
+  | 'git-tracker';
 
 /**
  * Options for session-naming handler
@@ -146,6 +147,14 @@ export interface EventLoggerOptions {
 }
 
 /**
+ * Options for git-tracker handler
+ */
+export interface GitTrackerOptions {
+  /** Tools that trigger git state capture (default: ['Edit', 'Write', 'Bash']) */
+  trackOnTools?: string[];
+}
+
+/**
  * Map of built-in handler types to their options
  */
 export interface BuiltinHandlerOptions {
@@ -157,6 +166,7 @@ export interface BuiltinHandlerOptions {
   'debug-logger': DebugLoggerOptions;
   metrics: MetricsOptions;
   'event-logger': EventLoggerOptions;
+  'git-tracker': GitTrackerOptions;
 }
 
 // ============================================================================
@@ -197,6 +207,7 @@ export interface BuiltinsConfig {
   'debug-logger'?: HandlerConfig<'debug-logger'>;
   metrics?: HandlerConfig<'metrics'>;
   'event-logger'?: HandlerConfig<'event-logger'>;
+  'git-tracker'?: HandlerConfig<'git-tracker'>;
 }
 
 /**

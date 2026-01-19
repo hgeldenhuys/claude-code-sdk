@@ -18,7 +18,7 @@ import type { SearchableTable, UnifiedSearchResult } from './adapters/types';
 import { findTranscriptFiles } from './indexer';
 import type { SearchResult, TranscriptLine } from './types';
 
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
 
 export interface DbStats {
@@ -362,6 +362,42 @@ function migrateSchema(db: Database): void {
     `);
 
     console.error('[db] Migration v6→v7 complete');
+    currentVersion = 7;
+  }
+
+  // Migration from v7 to v8: Add git tracking columns
+  if (currentVersion === 7) {
+    console.error('[db] Migrating schema from v7 to v8...');
+
+    // Add git columns to lines table (use try/catch for idempotency)
+    const linesGitColumns = ['git_hash TEXT', 'git_branch TEXT', 'git_dirty INTEGER'];
+    for (const col of linesGitColumns) {
+      try {
+        db.run(`ALTER TABLE lines ADD COLUMN ${col}`);
+      } catch {
+        // Column might already exist
+      }
+    }
+
+    // Add git columns to hook_events table
+    const hookGitColumns = ['git_hash TEXT', 'git_branch TEXT', 'git_dirty INTEGER'];
+    for (const col of hookGitColumns) {
+      try {
+        db.run(`ALTER TABLE hook_events ADD COLUMN ${col}`);
+      } catch {
+        // Column might already exist
+      }
+    }
+
+    // Add indexes for git columns
+    try {
+      db.run('CREATE INDEX IF NOT EXISTS idx_lines_git_hash ON lines(git_hash)');
+      db.run('CREATE INDEX IF NOT EXISTS idx_hook_git_hash ON hook_events(git_hash)');
+    } catch {
+      // Indexes might already exist
+    }
+
+    console.error('[db] Migration v7→v8 complete');
   }
 }
 
@@ -921,8 +957,8 @@ export function indexHookFile(
 
   const insertEvent = db.prepare(`
     INSERT INTO hook_events
-    (session_id, timestamp, event_type, tool_use_id, tool_name, decision, handler_results, input_json, context_json, file_path, line_number, turn_id, turn_sequence, session_name)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (session_id, timestamp, event_type, tool_use_id, tool_name, decision, handler_results, input_json, context_json, file_path, line_number, turn_id, turn_sequence, session_name, git_hash, git_branch, git_dirty)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const transaction = db.transaction(() => {
@@ -943,8 +979,9 @@ export function indexHookFile(
         const handlerResults = parsed.handlerResults || {};
         let turnTracker = null;
         let sessionNaming = null;
+        let gitTracker = null;
 
-        // Find turn-tracker and session-naming results with any event suffix
+        // Find turn-tracker, session-naming, and git-tracker results with any event suffix
         for (const key of Object.keys(handlerResults)) {
           if (key.startsWith('turn-tracker') && handlerResults[key]?.data) {
             turnTracker = handlerResults[key].data;
@@ -952,12 +989,21 @@ export function indexHookFile(
           if (key.startsWith('session-naming') && handlerResults[key]?.data) {
             sessionNaming = handlerResults[key].data;
           }
+          if (key.startsWith('git-tracker') && handlerResults[key]?.data) {
+            gitTracker = handlerResults[key].data;
+          }
         }
 
         const turnId = turnTracker?.turnId || parsed.turnId || null;
         const turnSequence =
           turnTracker?.sequence ?? turnTracker?.turnSequence ?? parsed.turnSequence ?? null;
         const sessionName = sessionNaming?.sessionName || parsed.sessionName || null;
+
+        // Extract git state from git-tracker handler results
+        const gitState = gitTracker?.gitState;
+        const gitHash = gitState?.hash || null;
+        const gitBranch = gitState?.branch || null;
+        const gitDirty = gitState?.isDirty != null ? (gitState.isDirty ? 1 : 0) : null;
 
         insertEvent.run(
           parsed.sessionId || '',
@@ -973,7 +1019,10 @@ export function indexHookFile(
           lineNumber,
           turnId,
           turnSequence,
-          sessionName
+          sessionName,
+          gitHash,
+          gitBranch,
+          gitDirty
         );
 
         indexedCount++;
@@ -2215,6 +2264,10 @@ export interface HookEventResult {
   turnId: string | null;
   turnSequence: number | null;
   sessionName: string | null;
+  // Git tracking (v8 schema)
+  gitHash: string | null;
+  gitBranch: string | null;
+  gitDirty: boolean | null;
 }
 
 export interface HookSessionInfo {
@@ -2257,7 +2310,10 @@ export function getHookEvents(db: Database, options: GetHookEventsOptions = {}):
       line_number,
       turn_id,
       turn_sequence,
-      session_name
+      session_name,
+      git_hash,
+      git_branch,
+      git_dirty
     FROM hook_events
     WHERE 1=1
   `;
@@ -2319,6 +2375,9 @@ export function getHookEvents(db: Database, options: GetHookEventsOptions = {}):
     turn_id: string | null;
     turn_sequence: number | null;
     session_name: string | null;
+    git_hash: string | null;
+    git_branch: string | null;
+    git_dirty: number | null;
   }>;
 
   return rows.map((row) => ({
@@ -2337,6 +2396,9 @@ export function getHookEvents(db: Database, options: GetHookEventsOptions = {}):
     turnId: row.turn_id,
     turnSequence: row.turn_sequence,
     sessionName: row.session_name,
+    gitHash: row.git_hash,
+    gitBranch: row.git_branch,
+    gitDirty: row.git_dirty != null ? row.git_dirty === 1 : null,
   }));
 }
 
@@ -2431,7 +2493,10 @@ export function getHookEventsAfterId(
       line_number,
       turn_id,
       turn_sequence,
-      session_name
+      session_name,
+      git_hash,
+      git_branch,
+      git_dirty
     FROM hook_events
     WHERE id > ?
   `;
@@ -2473,6 +2538,9 @@ export function getHookEventsAfterId(
     turn_id: string | null;
     turn_sequence: number | null;
     session_name: string | null;
+    git_hash: string | null;
+    git_branch: string | null;
+    git_dirty: number | null;
   }>;
 
   return rows.map((row) => ({
@@ -2491,6 +2559,9 @@ export function getHookEventsAfterId(
     turnId: row.turn_id,
     turnSequence: row.turn_sequence,
     sessionName: row.session_name,
+    gitHash: row.git_hash,
+    gitBranch: row.git_branch,
+    gitDirty: row.git_dirty != null ? row.git_dirty === 1 : null,
   }));
 }
 
