@@ -138,6 +138,13 @@ createSessionStartHook(({ sessionName }) => {
 - Hook creators with automatic session tracking
 - Common patterns (blockTool, injectContext, etc.)
 
+**Hook Framework Documentation:** See `src/hooks/framework/README.md` for:
+- Handler pipeline and priority system
+- Cross-handler communication via `context.results`
+- Turn ID calculation and access patterns
+- Built-in handlers (turn-tracker, session-naming, event-logger)
+- Environment variables for external hooks
+
 ### CLI Utilities
 
 **sesh** - Session name manager for easy session resumption:
