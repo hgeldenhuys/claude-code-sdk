@@ -1079,14 +1079,16 @@ async function cmdList(args: ListArgs): Promise<number> {
         console.log(`${name} ${lines}   ${date}  ${projectName}`);
       }
     } else {
-      console.log('SESSION                          LINES   LAST MODIFIED');
-      console.log('-'.repeat(65));
+      console.log('SESSION                          LINES   LAST MODIFIED     FILE');
+      console.log('-'.repeat(120));
 
       for (const session of sessions) {
         const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(30).slice(0, 30);
         const lines = String(session.lineCount).padStart(6);
-        const date = formatDate(session.lastTimestamp || '');
-        console.log(`${name} ${lines}   ${date}`);
+        const date = formatDate(session.lastTimestamp || '').padEnd(18);
+        // Show just the filename (UUID.jsonl)
+        const filename = session.filePath.split('/').pop() || '';
+        console.log(`${name} ${lines}   ${date} ${filename}`);
       }
     }
 
