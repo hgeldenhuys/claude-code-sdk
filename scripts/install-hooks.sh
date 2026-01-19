@@ -284,6 +284,33 @@ EOF
   done
   success "Linked $linked SDK skills ($skipped already exist)"
 
+  # Manage transcript index and daemon
+  info "Setting up transcript index..."
+  local db_path="$HOME/.claude-code-sdk/transcripts.db"
+
+  # Stop existing daemon if running
+  .claude/bin/transcript index daemon stop 2>/dev/null || true
+
+  if [ -f "$db_path" ]; then
+    # Database exists - rebuild to pick up any schema changes
+    info "Rebuilding transcript index (schema may have changed)..."
+    .claude/bin/transcript index rebuild 2>/dev/null || {
+      warn "Index rebuild failed, will try fresh build..."
+      rm -f "$db_path"
+      .claude/bin/transcript index build
+    }
+  else
+    # First time - build index
+    info "Building transcript index (first time)..."
+    .claude/bin/transcript index build
+  fi
+  success "Transcript index ready"
+
+  # Start daemon in background
+  info "Starting transcript daemon..."
+  .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
+  success "Transcript daemon started"
+
   echo ""
   echo -e "${GREEN}Installation complete!${NC}"
   echo ""
@@ -293,6 +320,7 @@ EOF
   echo "  - .claude/claude-code-sdk/    - SDK (cloned from GitHub)"
   echo "  - .claude/bin/                - CLI wrapper scripts"
   echo "  - .claude/skills/             - Skills (SDK skills symlinked)"
+  echo "  - ~/.claude-code-sdk/         - Transcript index and daemon"
   echo ""
   echo "Enabled handlers:"
   echo "  - session-naming     : Human-friendly session names"
