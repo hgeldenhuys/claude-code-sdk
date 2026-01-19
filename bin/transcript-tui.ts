@@ -1377,7 +1377,7 @@ async function createTUI(): Promise<void> {
     }
   });
 
-  screen.key('G', () => {
+  screen.key(['G', 'S-g'], () => {
     if (shouldNavigateLines()) {
       state.currentIndex = state.lines.length - 1;
       updateSelection();
@@ -1487,7 +1487,7 @@ async function createTUI(): Promise<void> {
     updateSelection();
   });
 
-  screen.key('N', () => {
+  screen.key(['N', 'S-n'], () => {
     jumpToPrevSearchResult();
     updateSelection();
   });
@@ -1598,7 +1598,7 @@ async function createTUI(): Promise<void> {
   });
 
   // Live mode toggle with 'L' key - uses SQLite polling for real-time updates
-  screen.key('L', () => {
+  screen.key(['L', 'S-l'], () => {
     state.liveMode = !state.liveMode;
 
     if (state.liveMode && !state.pollInterval) {
