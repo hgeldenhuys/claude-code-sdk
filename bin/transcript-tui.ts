@@ -825,8 +825,8 @@ function getListItems(): string[] {
     const type = getDisplayType(line).slice(0, 6).padEnd(6);
     const typeColor = getTypeColor(line.type);
     const contextUsage = getContextUsage(line);
-    // Reduce preview width to make room for context usage
-    const previewWidth = contextUsage ? 40 : 50;
+    // Preview width adjusted for 40% pane (wider now)
+    const previewWidth = contextUsage ? 50 : 60;
     const preview = getPreview(line, previewWidth);
     const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(line.lineNumber) ? '{yellow-fg}★{/yellow-fg}' : ' ';
@@ -932,12 +932,12 @@ async function createTUI(): Promise<void> {
     tags: true,
   });
 
-  // Left pane - Line list
+  // Left pane - Line list (40% width to accommodate context usage %)
   const listBox = blessed.list({
     parent: screen,
     top: 3,
     left: 0,
-    width: '30%',
+    width: '40%',
     height: '100%-6',
     border: 'line',
     label: ' Lines ',
@@ -961,8 +961,8 @@ async function createTUI(): Promise<void> {
   const contentBox = blessed.box({
     parent: screen,
     top: 3,
-    left: '30%',
-    width: '70%',
+    left: '40%',
+    width: '60%',
     height: '100%-6',
     border: 'line',
     label: ` Content [${state.viewMode}] `,
@@ -1193,8 +1193,8 @@ async function createTUI(): Promise<void> {
       header.show();
       footer.show();
       contentBox.top = 3;
-      contentBox.left = '30%';
-      contentBox.width = '70%';
+      contentBox.left = '40%';
+      contentBox.width = '60%';
       contentBox.height = '100%-6';
       contentBox.border = 'line';
       state.scrollMode = false; // Reset scroll mode when exiting fullscreen
