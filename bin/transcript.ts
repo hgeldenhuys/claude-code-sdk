@@ -2246,13 +2246,12 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         );
 
         // Correlate transcript lines with turn info from hook events
-        if (transcriptResult.newLines > 0 || hookResult.newEvents > 0) {
-          const correlation = correlateLinesToTurns(db);
-          if (correlation.updated > 0) {
-            console.log(
-              `\nCorrelated ${correlation.updated.toLocaleString()} lines with turn data`
-            );
-          }
+        // Always run - may have uncorrelated lines from previous indexing
+        const correlation = correlateLinesToTurns(db);
+        if (correlation.updated > 0) {
+          console.log(
+            `\nCorrelated ${correlation.updated.toLocaleString()} lines with turn data`
+          );
         }
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
