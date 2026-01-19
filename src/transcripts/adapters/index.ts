@@ -74,6 +74,16 @@ export {
   runDaemonForeground,
 } from './daemon';
 
+// Export discovery
+export {
+  ADAPTERS_DIR,
+  discoverAdapterFiles,
+  ensureAdaptersDir,
+  loadAdapterFromFile,
+  loadExternalAdapters,
+  type AdapterLoadResult,
+} from './discovery';
+
 // Import for registration function
 import type { Database } from 'bun:sqlite';
 import { HookEventsAdapter } from './hook-events';

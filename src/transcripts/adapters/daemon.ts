@@ -8,7 +8,9 @@
 import type { Database } from 'bun:sqlite';
 import { type FSWatcher, existsSync, watch } from 'node:fs';
 import { join } from 'node:path';
-import { getAdapterRegistry, registerBuiltinAdapters } from './index';
+import { AdapterRegistry, getAdapterRegistry } from './registry';
+import { registerBuiltinAdapters } from './index';
+import { loadExternalAdapters } from './discovery';
 import type { DaemonConfig, DaemonState, TranscriptAdapter } from './types';
 
 const DEFAULT_DEBOUNCE_MS = 100;
@@ -57,6 +59,7 @@ export class AdapterDaemon {
     const registry = getAdapterRegistry();
     registry.setDatabase(this.db);
     registerBuiltinAdapters(registry, this.db);
+    await loadExternalAdapters(registry, this.db);
 
     // Get adapters to run
     const adapterNames =

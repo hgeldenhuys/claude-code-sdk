@@ -12,6 +12,7 @@
 import type { Database } from 'bun:sqlite';
 import { existsSync } from 'node:fs';
 import { getAdapterRegistry, registerBuiltinAdapters, runDaemonForeground } from './index';
+import { loadExternalAdapters } from './discovery';
 import type { TranscriptAdapter } from './types';
 
 /**
@@ -44,6 +45,7 @@ export async function cmdAdapterList(db: Database, args: AdapterListArgs = {}): 
   const registry = getAdapterRegistry();
   registry.setDatabase(db);
   registerBuiltinAdapters(registry, db);
+  await loadExternalAdapters(registry, db);
 
   const status = registry.getStatus();
 
@@ -83,6 +85,7 @@ export async function cmdAdapterStatus(
   const registry = getAdapterRegistry();
   registry.setDatabase(db);
   registerBuiltinAdapters(registry, db);
+  await loadExternalAdapters(registry, db);
 
   if (args.adapterName) {
     // Show status for specific adapter
@@ -185,6 +188,7 @@ export async function cmdAdapterProcess(db: Database, args: AdapterProcessArgs):
   const registry = getAdapterRegistry();
   registry.setDatabase(db);
   registerBuiltinAdapters(registry, db);
+  await loadExternalAdapters(registry, db);
 
   const adapter = registry.get(args.adapterName);
   if (!adapter) {
@@ -283,6 +287,7 @@ export async function cmdAdapterReplay(db: Database, args: AdapterReplayArgs): P
   const registry = getAdapterRegistry();
   registry.setDatabase(db);
   registerBuiltinAdapters(registry, db);
+  await loadExternalAdapters(registry, db);
 
   const adapter = registry.get(args.adapterName);
   if (!adapter) {
