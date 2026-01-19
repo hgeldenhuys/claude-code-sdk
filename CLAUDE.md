@@ -68,6 +68,17 @@ src/
 │       ├── namer.ts   # NameGenerator - adjective-animal names
 │       ├── cli.ts     # CLI command implementations
 │       └── types.ts   # Session types
+├── transcripts/       # Transcript indexing system
+│   ├── db.ts          # SQLite database operations
+│   ├── index.ts       # Transcript CLI entry point
+│   └── adapters/      # Pluggable adapter architecture
+│       ├── index.ts   # Barrel exports
+│       ├── types.ts   # TranscriptAdapter interface
+│       ├── base.ts    # BaseAdapter abstract class
+│       ├── registry.ts # AdapterRegistry singleton
+│       ├── discovery.ts # External adapter auto-discovery
+│       ├── daemon.ts  # File watching daemon
+│       └── cli.ts     # Adapter CLI commands
 ├── cli/
 │   └── docs.ts        # CLI for documentation management
 └── utils/index.ts     # Shared utilities (version comparison, file ops)
@@ -301,6 +312,115 @@ The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execut
 - Extracts `usage.input_tokens` + `usage.output_tokens` from event input
 - Calculates percentage against 200K context window
 - Displayed as `[XX%]` at end of each line
+
+### Transcript Adapters
+
+The transcript daemon uses a pluggable adapter architecture to index different data sources into SQLite.
+
+**Built-in adapters:**
+- `transcript-lines` - Indexes `~/.claude/projects/**/transcript.jsonl`
+- `hook-events` - Indexes `~/.claude/hooks/**/*.hooks.jsonl`
+
+**Adapter commands:**
+```bash
+# List all registered adapters
+transcript adapter list
+
+# Show adapter status and metrics
+transcript adapter status [adapter-name]
+
+# Process files with a specific adapter
+transcript adapter process <adapter-name> [--file <path>]
+
+# Replay (re-index) all files for an adapter
+transcript adapter replay <adapter-name>
+
+# Run adapter daemon in foreground
+transcript adapter daemon
+```
+
+**Architecture:**
+```
+src/transcripts/adapters/
+├── index.ts           # Barrel exports and registration
+├── types.ts           # TranscriptAdapter interface
+├── base.ts            # BaseAdapter abstract class
+├── registry.ts        # AdapterRegistry singleton
+├── discovery.ts       # External adapter auto-discovery
+├── daemon.ts          # AdapterDaemon for file watching
+├── cli.ts             # CLI commands
+├── transcript-lines.ts # Built-in transcript adapter
+└── hook-events.ts     # Built-in hook events adapter
+```
+
+### External Adapter Auto-Discovery
+
+External adapters are automatically discovered from `~/.claude-code-sdk/adapters/`:
+
+**Supported patterns:**
+- `~/.claude-code-sdk/adapters/*.ts` - Direct TypeScript files
+- `~/.claude-code-sdk/adapters/*/index.ts` - Subdirectory with index.ts
+
+**Creating an external adapter:**
+
+1. Create adapter file extending `BaseAdapter`:
+```typescript
+// ~/.claude-code-sdk/adapters/my-adapter.ts
+import { BaseAdapter } from 'claude-code-sdk/transcripts/adapters';
+import type { Database } from 'bun:sqlite';
+
+export class MyAdapter extends BaseAdapter {
+  readonly name = 'my-adapter';
+  readonly description = 'Indexes my custom data';
+  readonly watchPath = '.agent/my-data/*.jsonl';
+  readonly fileExtensions = ['.jsonl'];
+
+  override initSchema(db: Database): void {
+    super.initSchema(db);
+    db.exec(`CREATE TABLE IF NOT EXISTS my_entries (...)`);
+  }
+
+  processEntry(entry: Record<string, unknown>, db: Database, context: EntryContext) {
+    // Process each JSONL entry
+    return { success: true, entryType: entry.type as string };
+  }
+}
+
+export default MyAdapter;
+```
+
+2. Symlink or copy to adapters directory:
+```bash
+mkdir -p ~/.claude-code-sdk/adapters
+ln -s /path/to/my-adapter ~/.claude-code-sdk/adapters/my-adapter
+```
+
+3. Verify registration:
+```bash
+transcript adapter list
+# Should show: my-adapter
+```
+
+**Example: Weave adapter setup:**
+```bash
+# Symlink weave adapter from claude-weave project
+ln -s /path/to/claude-weave/weave/adapters ~/.claude-code-sdk/adapters/weave
+
+# Verify
+transcript adapter list
+# Output: weave - Indexes Weave knowledge from JSONL to SQLite
+```
+
+**Key exports from discovery module:**
+```typescript
+import {
+  ADAPTERS_DIR,           // ~/.claude-code-sdk/adapters
+  discoverAdapterFiles,   // Find adapter files in directory
+  loadAdapterFromFile,    // Load single adapter
+  loadExternalAdapters,   // Load and register all external adapters
+  ensureAdaptersDir,      // Create adapters directory
+} from 'claude-code-sdk/transcripts/adapters';
+```
 
 ### Documentation Tracking
 
