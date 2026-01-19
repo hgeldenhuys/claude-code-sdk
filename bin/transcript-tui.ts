@@ -435,6 +435,66 @@ function getTypeColor(type: string): string {
 }
 
 /**
+ * Get the display width of a string in terminal columns.
+ * Accounts for wide characters (emojis, CJK, etc.) that take 2 columns.
+ */
+function getDisplayWidth(str: string): number {
+  let width = 0;
+  for (const char of str) {
+    const code = char.codePointAt(0) || 0;
+    // Wide characters: emojis, CJK, fullwidth forms
+    if (
+      code >= 0x1F300 && code <= 0x1FAFF || // Emojis
+      code >= 0x2600 && code <= 0x27BF ||   // Misc symbols
+      code >= 0x3000 && code <= 0x9FFF ||   // CJK
+      code >= 0xF900 && code <= 0xFAFF ||   // CJK compatibility
+      code >= 0xFF00 && code <= 0xFFEF      // Fullwidth forms
+    ) {
+      width += 2;
+    } else {
+      width += 1;
+    }
+  }
+  return width;
+}
+
+/**
+ * Truncate a string to a target display width, accounting for wide characters.
+ */
+function truncateDisplay(str: string, targetWidth: number): string {
+  let width = 0;
+  let result = '';
+  for (const char of str) {
+    const code = char.codePointAt(0) || 0;
+    const charWidth = (
+      code >= 0x1F300 && code <= 0x1FAFF || // Emojis
+      code >= 0x2600 && code <= 0x27BF ||   // Misc symbols
+      code >= 0x3000 && code <= 0x9FFF ||   // CJK
+      code >= 0xF900 && code <= 0xFAFF ||   // CJK compatibility
+      code >= 0xFF00 && code <= 0xFFEF      // Fullwidth forms
+    ) ? 2 : 1;
+    if (width + charWidth > targetWidth) {
+      break;
+    }
+    result += char;
+    width += charWidth;
+  }
+  return result;
+}
+
+/**
+ * Pad a string to a target display width, accounting for wide characters.
+ */
+function padEndDisplay(str: string, targetWidth: number): string {
+  const truncated = truncateDisplay(str, targetWidth);
+  const currentWidth = getDisplayWidth(truncated);
+  if (currentWidth >= targetWidth) {
+    return truncated;
+  }
+  return truncated + ' '.repeat(targetWidth - currentWidth);
+}
+
+/**
  * Calculate context usage percentage from a transcript line
  * Returns formatted string with color based on usage level
  * 0-50% = green, 51-70% = orange, 71%+ = red
@@ -465,7 +525,9 @@ function getContextUsage(line: TranscriptLine): string {
     color = 'red';
   }
 
-  return `{${color}-fg}[${percentage}%]{/${color}-fg}`;
+  // Right-align percentage to 4 chars (e.g., "  5%" or "100%") for consistent column width
+  const percentStr = `${percentage}%`.padStart(4);
+  return `{${color}-fg}[${percentStr}]{/${color}-fg}`;
 }
 
 /**
@@ -821,18 +883,29 @@ function getListItems(): string[] {
   const searchResultSet = new Set(state.searchResults);
 
   state.cachedListItems = state.lines.map((line, index) => {
-    // Compact format: lineNum type preview [usage%] (no timestamp to save space)
+    // Compact format: lineNum type preview [usage%] session-name
+    // Fixed column widths: markers(2) + lineNum(7) + type(7) + preview(40) + usage(7) + session(13) = 76 chars
     const type = getDisplayType(line).slice(0, 6).padEnd(6);
     const typeColor = getTypeColor(line.type);
     const contextUsage = getContextUsage(line);
-    // Preview width adjusted for 40% pane (wider now)
-    const previewWidth = contextUsage ? 50 : 60;
-    const preview = getPreview(line, previewWidth);
     const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(line.lineNumber) ? '{yellow-fg}★{/yellow-fg}' : ' ';
-    const usageSuffix = contextUsage ? ` ${contextUsage}` : '';
 
-    return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(6)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}${usageSuffix}`;
+    // Fixed-width preview (40 display columns, padded accounting for wide chars)
+    const PREVIEW_WIDTH = 40;
+    const rawPreview = getPreview(line, PREVIEW_WIDTH);
+    const preview = padEndDisplay(rawPreview, PREVIEW_WIDTH);
+
+    // Fixed-width usage column (7 chars: " [XXX%]" or spaces)
+    const usageCol = contextUsage ? ` ${contextUsage}` : '        ';
+
+    // Fixed-width session name (20 display columns for full adjective-animal names)
+    const SESSION_WIDTH = 20;
+    const sessionName = (line as TranscriptLine & { sessionName?: string }).sessionName;
+    const sessionStr = sessionName ? padEndDisplay(sessionName.slice(0, SESSION_WIDTH), SESSION_WIDTH) : ''.padEnd(SESSION_WIDTH);
+    const sessionSuffix = sessionName ? ` {cyan-fg}${sessionStr}{/cyan-fg}` : ` ${sessionStr}`;
+
+    return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(6)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}${usageCol}${sessionSuffix}`;
   });
 
   state.listItemsDirty = false;
