@@ -1015,12 +1015,12 @@ async function createTUI(): Promise<void> {
     tags: true,
   });
 
-  // Left pane - Line list (40% width to accommodate context usage %)
+  // Left pane - Line list (35% width)
   const listBox = blessed.list({
     parent: screen,
     top: 3,
     left: 0,
-    width: '40%',
+    width: '35%',
     height: '100%-6',
     border: 'line',
     label: ' Lines ',
@@ -1044,8 +1044,8 @@ async function createTUI(): Promise<void> {
   const contentBox = blessed.box({
     parent: screen,
     top: 3,
-    left: '40%',
-    width: '60%',
+    left: '35%',
+    width: '65%',
     height: '100%-6',
     border: 'line',
     label: ` Content [${state.viewMode}] `,
@@ -1276,8 +1276,8 @@ async function createTUI(): Promise<void> {
       header.show();
       footer.show();
       contentBox.top = 3;
-      contentBox.left = '40%';
-      contentBox.width = '60%';
+      contentBox.left = '35%';
+      contentBox.width = '65%';
       contentBox.height = '100%-6';
       contentBox.border = 'line';
       state.scrollMode = false; // Reset scroll mode when exiting fullscreen
