@@ -46,7 +46,9 @@ export type {
   ProcessFileOptions,
   ProcessFileResult,
   RegisteredAdapter,
+  SearchableTable,
   TranscriptAdapter,
+  UnifiedSearchResult,
   WatchPath,
 } from './types';
 

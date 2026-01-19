@@ -16,8 +16,9 @@ import {
 import { join } from 'node:path';
 import { findTranscriptFiles } from './indexer';
 import type { SearchResult, TranscriptLine } from './types';
+import type { SearchableTable, UnifiedSearchResult } from './adapters/types';
 
-const DB_VERSION = 5;
+const DB_VERSION = 7;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
 
 export interface DbStats {
@@ -198,6 +199,37 @@ export function initSchema(db: Database): void {
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_turn_id ON hook_events(turn_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_session_name ON hook_events(session_name)');
 
+  // FTS table for hook events (standalone - stores content directly)
+  db.run(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS hook_events_fts USING fts5(
+      content
+    )
+  `);
+
+  // Triggers to keep hook_events_fts in sync
+  db.run(`
+    CREATE TRIGGER IF NOT EXISTS hook_events_ai AFTER INSERT ON hook_events BEGIN
+      INSERT INTO hook_events_fts(rowid, content)
+      VALUES (new.id, COALESCE(new.event_type, '') || ' ' || COALESCE(new.tool_name, '') || ' ' || COALESCE(new.input_json, ''));
+    END
+  `);
+
+  db.run(`
+    CREATE TRIGGER IF NOT EXISTS hook_events_ad AFTER DELETE ON hook_events BEGIN
+      INSERT INTO hook_events_fts(hook_events_fts, rowid, content)
+      VALUES ('delete', old.id, COALESCE(old.event_type, '') || ' ' || COALESCE(old.tool_name, '') || ' ' || COALESCE(old.input_json, ''));
+    END
+  `);
+
+  db.run(`
+    CREATE TRIGGER IF NOT EXISTS hook_events_au AFTER UPDATE ON hook_events BEGIN
+      INSERT INTO hook_events_fts(hook_events_fts, rowid, content)
+      VALUES ('delete', old.id, COALESCE(old.event_type, '') || ' ' || COALESCE(old.tool_name, '') || ' ' || COALESCE(old.input_json, ''));
+      INSERT INTO hook_events_fts(rowid, content)
+      VALUES (new.id, COALESCE(new.event_type, '') || ' ' || COALESCE(new.tool_name, '') || ' ' || COALESCE(new.input_json, ''));
+    END
+  `);
+
   // Hook files tracking table (for delta updates)
   db.run(`
     CREATE TABLE IF NOT EXISTS hook_files (
@@ -268,6 +300,68 @@ function migrateSchema(db: Database): void {
     db.run('CREATE INDEX IF NOT EXISTS idx_hook_session_name ON hook_events(session_name)');
 
     console.error('[db] Migration v4→v5 complete');
+    currentVersion = 5;
+  }
+
+  // Migration from v5 to v6: Add hook_events_fts table (broken content table)
+  if (currentVersion === 5) {
+    console.error('[db] Migrating schema from v5 to v6...');
+    // This migration created a broken FTS table with content= mode
+    // The fix is in v6→v7 migration
+    console.error('[db] Migration v5→v6 complete (will be fixed in v7)');
+    currentVersion = 6;
+  }
+
+  // Migration from v6 to v7: Fix hook_events_fts table (standalone instead of content table)
+  if (currentVersion === 6) {
+    console.error('[db] Migrating schema from v6 to v7...');
+
+    // Drop the broken FTS table and triggers from v6
+    db.run('DROP TRIGGER IF EXISTS hook_events_ai');
+    db.run('DROP TRIGGER IF EXISTS hook_events_ad');
+    db.run('DROP TRIGGER IF EXISTS hook_events_au');
+    db.run('DROP TABLE IF EXISTS hook_events_fts');
+
+    // Create standalone FTS table (no content= mode)
+    db.run(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS hook_events_fts USING fts5(
+        content
+      )
+    `);
+
+    // Recreate triggers
+    db.run(`
+      CREATE TRIGGER IF NOT EXISTS hook_events_ai AFTER INSERT ON hook_events BEGIN
+        INSERT INTO hook_events_fts(rowid, content)
+        VALUES (new.id, COALESCE(new.event_type, '') || ' ' || COALESCE(new.tool_name, '') || ' ' || COALESCE(new.input_json, ''));
+      END
+    `);
+
+    db.run(`
+      CREATE TRIGGER IF NOT EXISTS hook_events_ad AFTER DELETE ON hook_events BEGIN
+        INSERT INTO hook_events_fts(hook_events_fts, rowid, content)
+        VALUES ('delete', old.id, COALESCE(old.event_type, '') || ' ' || COALESCE(old.tool_name, '') || ' ' || COALESCE(old.input_json, ''));
+      END
+    `);
+
+    db.run(`
+      CREATE TRIGGER IF NOT EXISTS hook_events_au AFTER UPDATE ON hook_events BEGIN
+        INSERT INTO hook_events_fts(hook_events_fts, rowid, content)
+        VALUES ('delete', old.id, COALESCE(old.event_type, '') || ' ' || COALESCE(old.tool_name, '') || ' ' || COALESCE(old.input_json, ''));
+        INSERT INTO hook_events_fts(rowid, content)
+        VALUES (new.id, COALESCE(new.event_type, '') || ' ' || COALESCE(new.tool_name, '') || ' ' || COALESCE(new.input_json, ''));
+      END
+    `);
+
+    // Populate FTS table from existing data
+    console.error('[db] Populating hook_events_fts from existing data...');
+    db.run(`
+      INSERT INTO hook_events_fts(rowid, content)
+      SELECT id, COALESCE(event_type, '') || ' ' || COALESCE(tool_name, '') || ' ' || COALESCE(input_json, '')
+      FROM hook_events
+    `);
+
+    console.error('[db] Migration v6→v7 complete');
   }
 }
 
@@ -1161,6 +1255,221 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
     matchedText: row.matched_text,
     raw: row.raw,
   }));
+}
+
+/**
+ * Options for unified search across all adapter sources
+ */
+export interface UnifiedSearchOptions {
+  /** Search query */
+  query: string;
+  /** Maximum results per source (default: 50) */
+  limitPerSource?: number;
+  /** Total maximum results (default: 100) */
+  totalLimit?: number;
+  /** Filter by session IDs */
+  sessionIds?: string[];
+  /** Sources to include (adapter names). If not specified, searches all */
+  sources?: string[];
+}
+
+/**
+ * Search across all adapter sources using FTS
+ *
+ * This function queries all registered adapters that have searchable tables,
+ * merges results, and returns a unified result set sorted by relevance.
+ *
+ * @param db - Database instance
+ * @param searchableTables - Array of searchable table configs from adapters
+ * @param options - Search options
+ * @returns Unified search results from all sources
+ */
+export function searchUnified(
+  db: Database,
+  searchableTables: Array<SearchableTable & { adapterName: string }>,
+  options: UnifiedSearchOptions
+): UnifiedSearchResult[] {
+  const { query, limitPerSource = 50, totalLimit = 100, sessionIds, sources } = options;
+
+  if (!query.trim()) {
+    return [];
+  }
+
+  // Build the FTS query - escape special FTS characters
+  const ftsQuery = query
+    .replace(/['"]/g, '')
+    .split(/\s+/)
+    .filter((w) => w.length > 0)
+    .map((w) => `"${w}"`)
+    .join(' OR ');
+
+  const allResults: UnifiedSearchResult[] = [];
+
+  // Query each searchable table
+  for (const table of searchableTables) {
+    // Skip if sources filter is specified and this source isn't included
+    if (sources && !sources.includes(table.adapterName)) {
+      continue;
+    }
+
+    try {
+      // Check if the FTS table exists
+      const tableExists = db
+        .query(
+          `SELECT name FROM sqlite_master WHERE type='table' AND name=?`
+        )
+        .get(table.ftsTable);
+
+      if (!tableExists) {
+        continue;
+      }
+
+      // Build query based on source table type
+      let sql: string;
+      const params: (string | number)[] = [ftsQuery];
+
+      if (table.sourceTable === 'lines') {
+        // Transcript lines query
+        sql = `
+          SELECT
+            l.session_id,
+            l.slug,
+            l.line_number,
+            l.type as entry_type,
+            l.timestamp,
+            l.content,
+            snippet(${table.ftsTable}, 0, '>>>>', '<<<<', '...', 64) as matched_text,
+            l.raw,
+            l.turn_id,
+            l.turn_sequence,
+            l.session_name
+          FROM ${table.ftsTable} fts
+          JOIN ${table.sourceTable} l ON fts.rowid = l.${table.joinColumn}
+          WHERE ${table.ftsTable} MATCH ?
+        `;
+
+        if (sessionIds && sessionIds.length > 0) {
+          sql += ` AND l.session_id IN (${sessionIds.map(() => '?').join(', ')})`;
+          params.push(...sessionIds);
+        }
+
+        sql += ` ORDER BY bm25(${table.ftsTable}) LIMIT ?`;
+        params.push(limitPerSource);
+
+        const rows = db.prepare(sql).all(...params) as Array<{
+          session_id: string;
+          slug: string | null;
+          line_number: number;
+          entry_type: string;
+          timestamp: string;
+          content: string;
+          matched_text: string;
+          raw: string;
+          turn_id: string | null;
+          turn_sequence: number | null;
+          session_name: string | null;
+        }>;
+
+        for (const row of rows) {
+          allResults.push({
+            adapterName: table.adapterName,
+            sourceName: table.sourceName,
+            sourceIcon: table.sourceIcon,
+            sessionId: row.session_id,
+            slug: row.slug || row.session_name,
+            timestamp: row.timestamp,
+            entryType: row.entry_type,
+            lineNumber: row.line_number,
+            matchedText: row.matched_text.replace(/>>>>/g, '').replace(/<<<<'/g, ''),
+            content: row.content,
+            raw: row.raw,
+            extra: {
+              turnId: row.turn_id,
+              turnSequence: row.turn_sequence,
+              sessionName: row.session_name,
+            },
+          });
+        }
+      } else if (table.sourceTable === 'hook_events') {
+        // Hook events query - use highlight() instead of snippet() for content tables
+        sql = `
+          SELECT
+            h.session_id,
+            h.timestamp,
+            h.event_type,
+            h.tool_name,
+            h.line_number,
+            h.input_json,
+            highlight(${table.ftsTable}, 0, '>>>>', '<<<<') as matched_text,
+            h.turn_id,
+            h.turn_sequence,
+            h.session_name
+          FROM ${table.ftsTable} fts
+          JOIN ${table.sourceTable} h ON fts.rowid = h.${table.joinColumn}
+          WHERE ${table.ftsTable} MATCH ?
+        `;
+
+        if (sessionIds && sessionIds.length > 0) {
+          sql += ` AND h.session_id IN (${sessionIds.map(() => '?').join(', ')})`;
+          params.push(...sessionIds);
+        }
+
+        sql += ` ORDER BY bm25(${table.ftsTable}) LIMIT ?`;
+        params.push(limitPerSource);
+
+        const rows = db.prepare(sql).all(...params) as Array<{
+          session_id: string;
+          timestamp: string;
+          event_type: string;
+          tool_name: string | null;
+          line_number: number;
+          input_json: string | null;
+          matched_text: string;
+          turn_id: string | null;
+          turn_sequence: number | null;
+          session_name: string | null;
+        }>;
+
+        for (const row of rows) {
+          // Build content from event data
+          let content = row.event_type;
+          if (row.tool_name) {
+            content += ` [${row.tool_name}]`;
+          }
+
+          allResults.push({
+            adapterName: table.adapterName,
+            sourceName: table.sourceName,
+            sourceIcon: table.sourceIcon,
+            sessionId: row.session_id,
+            slug: row.session_name,
+            timestamp: row.timestamp,
+            entryType: row.event_type,
+            lineNumber: row.line_number,
+            matchedText: row.matched_text.replace(/>>>>/g, '').replace(/<<<<'/g, ''),
+            content,
+            raw: row.input_json || undefined,
+            extra: {
+              toolName: row.tool_name,
+              turnId: row.turn_id,
+              turnSequence: row.turn_sequence,
+              sessionName: row.session_name,
+            },
+          });
+        }
+      }
+      // Additional source table types can be added here
+    } catch (err) {
+      // Skip tables that fail (might not exist or have different schema)
+      console.error(`[searchUnified] Error querying ${table.ftsTable}:`, err);
+    }
+  }
+
+  // Sort all results by timestamp (most recent first)
+  allResults.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+  // Apply total limit
+  return allResults.slice(0, totalLimit);
 }
 
 /**

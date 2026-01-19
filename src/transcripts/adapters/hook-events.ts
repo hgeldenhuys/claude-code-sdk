@@ -12,7 +12,7 @@ import type { Database } from 'bun:sqlite';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BaseAdapter, initCursorSchema } from './base';
-import type { EntryContext, ProcessEntryResult, WatchPath } from './types';
+import type { EntryContext, ProcessEntryResult, SearchableTable, WatchPath } from './types';
 
 const DEFAULT_HOOKS_DIR = join(process.env.HOME || '~', '.claude', 'hooks');
 
@@ -370,6 +370,35 @@ export class HookEventsAdapter extends BaseAdapter {
    */
   setHooksDir(dir: string): void {
     this.hooksDir = dir;
+  }
+
+  /**
+   * Get searchable tables for unified recall
+   */
+  getSearchableTables(): SearchableTable[] {
+    return [
+      {
+        ftsTable: 'hook_events_fts',
+        sourceTable: 'hook_events',
+        contentColumn: 'content',
+        joinColumn: 'id',
+        selectColumns: [
+          'session_id',
+          'timestamp',
+          'event_type',
+          'tool_use_id',
+          'tool_name',
+          'decision',
+          'input_json',
+          'line_number',
+          'turn_id',
+          'turn_sequence',
+          'session_name',
+        ],
+        sourceName: 'Hook Event',
+        sourceIcon: '🪝',
+      },
+    ];
   }
 }
 

@@ -41,11 +41,17 @@ import {
   isDatabaseReady,
   rebuildIndex,
   searchDb,
+  searchUnified,
   updateHookIndex,
   updateIndex,
   watchHookFiles,
   watchTranscripts,
 } from '../src/transcripts/db';
+import {
+  AdapterRegistry,
+  registerBuiltinAdapters,
+  type SearchableTable,
+} from '../src/transcripts/adapters';
 import { findTranscriptFiles, getSessionInfo, indexTranscripts } from '../src/transcripts/indexer';
 import { parseTranscript, parseTranscriptFile } from '../src/transcripts/parser';
 import { searchTranscripts } from '../src/transcripts/search';
@@ -1199,8 +1205,12 @@ interface RecallSession {
     type: string;
     timestamp: string;
     text: string;
+    sourceIcon?: string;
+    sourceName?: string;
   }>;
   artifacts: string[];
+  /** Source breakdown for this session */
+  sources?: Record<string, number>;
 }
 
 // ============================================================================
@@ -1493,10 +1503,27 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
     const contextLines = args.context || 3;
     const limit = args.limit || 100;
 
-    // Search with higher limit to get enough results for grouping
-    const results = searchDb(db, {
+    // Register built-in adapters to get searchable tables
+    const registry = AdapterRegistry.getInstance();
+    registerBuiltinAdapters(registry, db);
+
+    // Collect searchable tables from all adapters
+    const searchableTables: Array<SearchableTable & { adapterName: string }> = [];
+    for (const adapterName of registry.list(true)) {
+      const adapter = registry.get(adapterName);
+      if (adapter?.getSearchableTables) {
+        const tables = adapter.getSearchableTables();
+        for (const table of tables) {
+          searchableTables.push({ ...table, adapterName });
+        }
+      }
+    }
+
+    // Use unified search across all adapter sources
+    const results = searchUnified(db, searchableTables, {
       query: args.query,
-      limit,
+      totalLimit: limit,
+      limitPerSource: Math.ceil(limit / Math.max(searchableTables.length, 1)),
     });
 
     if (results.length === 0) {
@@ -1516,6 +1543,12 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
       return 0;
     }
 
+    // Count sources
+    const sourceBreakdown: Record<string, number> = {};
+    for (const result of results) {
+      sourceBreakdown[result.sourceName] = (sourceBreakdown[result.sourceName] || 0) + 1;
+    }
+
     // Group results by session
     const sessionMap = new Map<string, RecallSession>();
 
@@ -1531,11 +1564,17 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
           matchCount: 0,
           matches: [],
           artifacts: [],
+          sources: {},
         });
       }
 
       const session = sessionMap.get(key)!;
       session.matchCount++;
+
+      // Track sources per session
+      if (session.sources) {
+        session.sources[result.sourceName] = (session.sources[result.sourceName] || 0) + 1;
+      }
 
       // Track timestamp range
       if (result.timestamp < session.firstTimestamp) {
@@ -1549,9 +1588,11 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
       if (session.matches.length < contextLines) {
         session.matches.push({
           lineNumber: result.lineNumber,
-          type: result.type,
+          type: result.entryType,
           timestamp: result.timestamp,
-          text: result.matchedText.replace(/>>>>/g, '').replace(/<<<<'/g, ''),
+          text: result.matchedText,
+          sourceIcon: result.sourceIcon,
+          sourceName: result.sourceName,
         });
       }
     }
@@ -1580,6 +1621,7 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
       const output: {
         query: string;
         totalMatches: number;
+        sourceBreakdown: Record<string, number>;
         sessions: RecallSession[];
         relatedSkills: string[];
         escalation: EscalationResult;
@@ -1587,6 +1629,7 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
       } = {
         query: args.query,
         totalMatches: results.length,
+        sourceBreakdown,
         sessions,
         relatedSkills,
         escalation,
@@ -1604,6 +1647,13 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
     console.log(`\n🔍 Recall: "${args.query}"\n`);
     console.log(`Found ${results.length} matches across ${sessionMap.size} sessions`);
 
+    // Show source breakdown
+    const sourceEntries = Object.entries(sourceBreakdown);
+    if (sourceEntries.length > 1) {
+      const sourceStr = sourceEntries.map(([name, count]) => `${name}: ${count}`).join(', ');
+      console.log(`Sources: ${sourceStr}`);
+    }
+
     // Show escalation status
     if (doSynthesize) {
       const mode = args.deep ? '--deep flag' : escalation.reason;
@@ -1618,17 +1668,24 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
     for (const session of sessions) {
       const dateRange = formatDateRange(session.firstTimestamp, session.lastTimestamp);
       console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-      console.log(`📁 ${session.slug} (${session.matchCount} matches)`);
+
+      // Show session sources if multiple
+      let sessionSourceInfo = '';
+      if (session.sources && Object.keys(session.sources).length > 1) {
+        sessionSourceInfo = ' [' + Object.entries(session.sources).map(([s, c]) => `${s}:${c}`).join(', ') + ']';
+      }
+      console.log(`📁 ${session.slug} (${session.matchCount} matches)${sessionSourceInfo}`);
       console.log(`   ${dateRange}`);
       console.log('');
 
       for (const match of session.matches) {
         const time = formatTime(match.timestamp);
+        const sourceIcon = match.sourceIcon || '📝';
         const typeLabel = match.type.padEnd(10);
-        console.log(`   [${time}] ${typeLabel} Line ${match.lineNumber}`);
+        console.log(`   ${sourceIcon} [${time}] ${typeLabel} Line ${match.lineNumber}`);
         // Wrap long text
         const text = match.text.slice(0, 200);
-        console.log(`   ${text}${match.text.length > 200 ? '...' : ''}`);
+        console.log(`      ${text}${match.text.length > 200 ? '...' : ''}`);
         console.log('');
       }
 

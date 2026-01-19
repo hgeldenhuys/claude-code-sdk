@@ -194,6 +194,15 @@ export interface TranscriptAdapter {
    * @returns Cursor state or null if not tracked
    */
   getCursor?(db: Database, filePath: string): AdapterCursor | null;
+
+  /**
+   * Get searchable tables for unified recall (optional).
+   * Adapters declare their FTS tables so the recall command can
+   * search across all data sources.
+   *
+   * @returns Array of searchable table configurations
+   */
+  getSearchableTables?(): SearchableTable[];
 }
 
 /**
@@ -270,4 +279,55 @@ export interface DaemonState {
   totalEntriesIndexed: number;
   /** Total errors since start */
   totalErrors: number;
+}
+
+/**
+ * Searchable table configuration for unified recall.
+ * Adapters declare their FTS tables so recall can search across all sources.
+ */
+export interface SearchableTable {
+  /** FTS table name (e.g., 'lines_fts', 'hook_events_fts') */
+  ftsTable: string;
+  /** Source table with full data (e.g., 'lines', 'hook_events') */
+  sourceTable: string;
+  /** Column in FTS table containing searchable content */
+  contentColumn: string;
+  /** Column mapping: FTS rowid join column in source table */
+  joinColumn: string;
+  /** Columns to select from source table */
+  selectColumns: string[];
+  /** Human-readable source name for display (e.g., 'Transcript', 'Hook Event') */
+  sourceName: string;
+  /** Icon for display */
+  sourceIcon: string;
+}
+
+/**
+ * Unified search result from any adapter source
+ */
+export interface UnifiedSearchResult {
+  /** Source adapter name */
+  adapterName: string;
+  /** Human-readable source name */
+  sourceName: string;
+  /** Source icon */
+  sourceIcon: string;
+  /** Session ID */
+  sessionId: string;
+  /** Session slug/name if available */
+  slug: string | null;
+  /** Timestamp of the entry */
+  timestamp: string;
+  /** Type of entry (e.g., 'user', 'assistant', 'PreToolUse') */
+  entryType: string;
+  /** Line number or entry ID */
+  lineNumber: number;
+  /** Matched text snippet with highlights */
+  matchedText: string;
+  /** Full content */
+  content: string;
+  /** Raw JSON if available */
+  raw?: string;
+  /** Additional adapter-specific data */
+  extra?: Record<string, unknown>;
 }

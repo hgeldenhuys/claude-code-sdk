@@ -12,7 +12,7 @@ import type { Database } from 'bun:sqlite';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BaseAdapter, initCursorSchema } from './base';
-import type { EntryContext, ProcessEntryResult, WatchPath } from './types';
+import type { EntryContext, ProcessEntryResult, SearchableTable, WatchPath } from './types';
 
 const DEFAULT_PROJECTS_DIR = join(process.env.HOME || '~', '.claude', 'projects');
 
@@ -402,6 +402,34 @@ export class TranscriptLinesAdapter extends BaseAdapter {
    */
   setProjectsDir(dir: string): void {
     this.projectsDir = dir;
+  }
+
+  /**
+   * Get searchable tables for unified recall
+   */
+  getSearchableTables(): SearchableTable[] {
+    return [
+      {
+        ftsTable: 'lines_fts',
+        sourceTable: 'lines',
+        contentColumn: 'content',
+        joinColumn: 'id',
+        selectColumns: [
+          'session_id',
+          'slug',
+          'line_number',
+          'type',
+          'timestamp',
+          'content',
+          'raw',
+          'turn_id',
+          'turn_sequence',
+          'session_name',
+        ],
+        sourceName: 'Transcript',
+        sourceIcon: '📝',
+      },
+    ];
   }
 }
 
