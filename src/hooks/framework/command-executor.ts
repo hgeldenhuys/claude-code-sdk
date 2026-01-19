@@ -63,6 +63,22 @@ export interface CommandExecutionResult {
 // ============================================================================
 
 /**
+ * Find a handler result by ID prefix
+ * (Handlers are registered with event-suffixed IDs like "turn-tracker-UserPromptSubmit")
+ */
+function findResultByPrefix(
+  results: Map<string, HandlerResult>,
+  prefix: string
+): HandlerResult | undefined {
+  for (const [key, value] of results) {
+    if (key === prefix || key.startsWith(`${prefix}-`)) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Build framework environment variables from pipeline context
  */
 export function buildFrameworkEnv(context: PipelineContext): FrameworkEnvVars {
@@ -76,20 +92,22 @@ export function buildFrameworkEnv(context: PipelineContext): FrameworkEnvVars {
     env.CLAUDE_SESSION_ID = context.sessionId;
   }
 
-  // Extract turn tracker data
-  const turnTrackerResult = context.results.get('turn-tracker');
+  // Extract turn tracker data (handler ID may be event-suffixed)
+  const turnTrackerResult = findResultByPrefix(context.results, 'turn-tracker');
   if (turnTrackerResult?.data) {
     const data = turnTrackerResult.data as Record<string, unknown>;
-    if (data.turnId) {
-      env.CLAUDE_TURN_ID = String(data.turnId);
+    // For Stop events, turn-tracker returns completedTurnId instead of turnId
+    const turnId = data.turnId || data.completedTurnId;
+    if (turnId) {
+      env.CLAUDE_TURN_ID = String(turnId);
     }
     if (data.sequence !== undefined) {
       env.CLAUDE_TURN_SEQUENCE = String(data.sequence);
     }
   }
 
-  // Extract session naming data
-  const sessionNamingResult = context.results.get('session-naming');
+  // Extract session naming data (handler ID may be event-suffixed)
+  const sessionNamingResult = findResultByPrefix(context.results, 'session-naming');
   if (sessionNamingResult?.data) {
     const data = sessionNamingResult.data as Record<string, unknown>;
     if (data.sessionName) {
