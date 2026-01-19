@@ -1607,41 +1607,78 @@ async function createTUI(): Promise<void> {
       state.lastMaxLineId = getMaxLineId(db, state.sessionId);
 
       // Start polling SQLite every 200ms
+      let pollCount = 0;
       state.pollInterval = setInterval(() => {
         try {
           const db = getDb();
           const currentMaxId = getMaxLineId(db, state.sessionId);
+          let needsUpdate = false;
 
           if (currentMaxId > state.lastMaxLineId) {
             // Fetch only new lines
             const newLineResults = getLinesAfterId(db, state.lastMaxLineId, state.sessionId);
             if (newLineResults.length > 0) {
-              const newLinesCount = newLineResults.length;
               const newLines = newLineResults.map(lineResultToTranscriptLine);
 
               // Append to allLines
               state.allLines = [...state.allLines, ...newLines];
               state.lastMaxLineId = currentMaxId;
-
-              // Reapply filters
-              const filteredLines = filterLines(state.allLines, state.filterOpts);
-              const previousFilteredCount = state.lines.length;
-              state.lines = filteredLines;
-              invalidateListCache(); // Lines changed
-
-              // Auto-scroll to end if we were at the end
-              const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
-              if (wasAtEnd && filteredLines.length > previousFilteredCount) {
-                state.currentIndex = filteredLines.length - 1;
-              }
-
-              // Update UI
-              header.setContent(buildHeaderContent());
-              listBox.setItems(getListItems());
-              listBox.select(state.currentIndex);
-              contentBox.setContent(renderCurrentLine());
-              screen.render();
+              needsUpdate = true;
             }
+          }
+
+          // Every 5th poll (1 second), check for turn data updates on lines missing it
+          pollCount++;
+          if (pollCount >= 5) {
+            pollCount = 0;
+            // Find lines missing turn data
+            const linesMissingTurnData = state.allLines.filter(
+              (line) => !(line as TranscriptLine & { turnSequence?: number }).turnSequence
+            );
+            if (linesMissingTurnData.length > 0) {
+              // Re-query these lines from the database
+              const lineNumbers = linesMissingTurnData.map((l) => l.lineNumber);
+              const refreshedResults = getLines(db, { sessionId: state.sessionId });
+              const refreshedMap = new Map(
+                refreshedResults.map((r) => [r.lineNumber, lineResultToTranscriptLine(r)])
+              );
+              // Update allLines with refreshed turn data
+              let updated = 0;
+              for (let i = 0; i < state.allLines.length; i++) {
+                const line = state.allLines[i];
+                if (!(line as TranscriptLine & { turnSequence?: number }).turnSequence) {
+                  const refreshed = refreshedMap.get(line.lineNumber);
+                  if (refreshed && (refreshed as TranscriptLine & { turnSequence?: number }).turnSequence) {
+                    state.allLines[i] = refreshed;
+                    updated++;
+                  }
+                }
+              }
+              if (updated > 0) {
+                needsUpdate = true;
+              }
+            }
+          }
+
+          if (needsUpdate) {
+            // Reapply filters
+            const filteredLines = filterLines(state.allLines, state.filterOpts);
+            const previousFilteredCount = state.lines.length;
+            state.lines = filteredLines;
+            invalidateListCache(); // Lines changed
+
+            // Auto-scroll to end if we were at the end
+            const wasAtEnd = state.currentIndex >= previousFilteredCount - 1;
+            if (wasAtEnd && filteredLines.length > previousFilteredCount) {
+              state.currentIndex = filteredLines.length - 1;
+            }
+
+            // Update UI
+            header.setContent(buildHeaderContent());
+            listBox.setItems(getListItems());
+            listBox.select(state.currentIndex);
+            contentBox.setContent(renderCurrentLine());
+            screen.render();
           }
         } catch {
           // Ignore polling errors
@@ -1713,20 +1750,55 @@ async function createTUI(): Promise<void> {
     }
 
     // Start polling SQLite every 200ms
-    if (state.liveMode) state.pollInterval = setInterval(() => {
-      try {
-        const db = getDb();
-        const currentMaxId = getMaxLineId(db, state.sessionId);
+    if (state.liveMode) {
+      let pollCount = 0;
+      state.pollInterval = setInterval(() => {
+        try {
+          const db = getDb();
+          const currentMaxId = getMaxLineId(db, state.sessionId);
+          let needsUpdate = false;
 
-        if (currentMaxId > state.lastMaxLineId) {
-          const newLineResults = getLinesAfterId(db, state.lastMaxLineId, state.sessionId);
-          if (newLineResults.length > 0) {
-            const newLinesCount = newLineResults.length;
-            const newLines = newLineResults.map(lineResultToTranscriptLine);
+          if (currentMaxId > state.lastMaxLineId) {
+            const newLineResults = getLinesAfterId(db, state.lastMaxLineId, state.sessionId);
+            if (newLineResults.length > 0) {
+              const newLines = newLineResults.map(lineResultToTranscriptLine);
 
-            state.allLines = [...state.allLines, ...newLines];
-            state.lastMaxLineId = currentMaxId;
+              state.allLines = [...state.allLines, ...newLines];
+              state.lastMaxLineId = currentMaxId;
+              needsUpdate = true;
+            }
+          }
 
+          // Every 5th poll (1 second), check for turn data updates on lines missing it
+          pollCount++;
+          if (pollCount >= 5) {
+            pollCount = 0;
+            const linesMissingTurnData = state.allLines.filter(
+              (line) => !(line as TranscriptLine & { turnSequence?: number }).turnSequence
+            );
+            if (linesMissingTurnData.length > 0) {
+              const refreshedResults = getLines(db, { sessionId: state.sessionId });
+              const refreshedMap = new Map(
+                refreshedResults.map((r) => [r.lineNumber, lineResultToTranscriptLine(r)])
+              );
+              let updated = 0;
+              for (let i = 0; i < state.allLines.length; i++) {
+                const line = state.allLines[i];
+                if (!(line as TranscriptLine & { turnSequence?: number }).turnSequence) {
+                  const refreshed = refreshedMap.get(line.lineNumber);
+                  if (refreshed && (refreshed as TranscriptLine & { turnSequence?: number }).turnSequence) {
+                    state.allLines[i] = refreshed;
+                    updated++;
+                  }
+                }
+              }
+              if (updated > 0) {
+                needsUpdate = true;
+              }
+            }
+          }
+
+          if (needsUpdate) {
             const filteredLines = filterLines(state.allLines, state.filterOpts);
             const previousFilteredCount = state.lines.length;
             state.lines = filteredLines;
@@ -1743,11 +1815,11 @@ async function createTUI(): Promise<void> {
             contentBox.setContent(renderCurrentLine());
             screen.render();
           }
+        } catch {
+          // Ignore polling errors
         }
-      } catch {
-        // Ignore polling errors
-      }
-    }, 200);
+      }, 200);
+    }
 
     // Show live mode indicator in header
     if (state.liveMode) {
