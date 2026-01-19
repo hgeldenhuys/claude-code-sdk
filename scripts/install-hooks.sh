@@ -267,11 +267,22 @@ EOF
   done
   success "Created CLI wrappers in .claude/bin/"
 
-  # Symlink skills directory so Claude can discover them
-  info "Linking skills directory..."
-  rm -rf .claude/skills 2>/dev/null
-  ln -sf claude-code-sdk/skills .claude/skills
-  success "Linked .claude/skills -> claude-code-sdk/skills"
+  # Symlink individual skills (preserves project-specific skills)
+  info "Linking SDK skills..."
+  mkdir -p .claude/skills
+  local linked=0
+  local skipped=0
+  for skill_dir in .claude/claude-code-sdk/skills/*/; do
+    skill_name=$(basename "$skill_dir")
+    target=".claude/skills/$skill_name"
+    if [ -e "$target" ] || [ -L "$target" ]; then
+      ((skipped++))
+    else
+      ln -sf "../claude-code-sdk/skills/$skill_name" "$target"
+      ((linked++))
+    fi
+  done
+  success "Linked $linked SDK skills ($skipped already exist)"
 
   echo ""
   echo -e "${GREEN}Installation complete!${NC}"
@@ -281,7 +292,7 @@ EOF
   echo "  - .claude/settings.json       - Hook registrations"
   echo "  - .claude/claude-code-sdk/    - SDK (cloned from GitHub)"
   echo "  - .claude/bin/                - CLI wrapper scripts"
-  echo "  - .claude/skills/             - Skills (symlink to SDK)"
+  echo "  - .claude/skills/             - Skills (SDK skills symlinked)"
   echo ""
   echo "Enabled handlers:"
   echo "  - session-naming     : Human-friendly session names"
