@@ -88,6 +88,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@inquirer/prompts": "^8.1.0",
     "@types/blessed": "^0.1.27",
     "blessed": "^0.1.81",

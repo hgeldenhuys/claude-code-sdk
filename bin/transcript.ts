@@ -18,6 +18,7 @@
  *   transcript search "error handling" --limit 20
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, unlinkSync, watch, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -232,6 +233,14 @@ Recall Options (for memory retrieval):
   --artifacts             Include related skills (default: true)
   --no-artifacts          Exclude related skills
   --json                  Output as JSON
+  --deep, -D              Force LLM synthesis even if auto-escalation not triggered
+  --fast, -F              Skip LLM synthesis even if auto-escalation would trigger
+
+  Auto-escalation triggers LLM synthesis when:
+    - Match count > 50
+    - Results span > 7 days
+    - Query is a question (starts with what/why/how/did/do)
+    - Session count > 5
 
 Session Filters:
   --session <ids>         Filter by session ID(s) (comma-separated)
@@ -1113,6 +1122,8 @@ interface RecallArgs {
   context?: number;
   json?: boolean;
   includeArtifacts?: boolean;
+  deep?: boolean;  // Force LLM synthesis even if criteria not met
+  fast?: boolean;  // Skip LLM synthesis even if criteria met
 }
 
 interface RecallSession {
@@ -1128,6 +1139,219 @@ interface RecallSession {
     text: string;
   }>;
   artifacts: string[];
+}
+
+// ============================================================================
+// Tiered Recall - Escalation Detection
+// ============================================================================
+
+interface EscalationResult {
+  shouldEscalate: boolean;
+  reason: string;
+}
+
+/**
+ * Determines whether recall results should escalate to LLM synthesis.
+ * Uses OR logic - any single criterion triggers escalation.
+ *
+ * Criteria:
+ * 1. Match count > 50
+ * 2. Date span > 7 days
+ * 3. Query looks like a question (starts with what/why/how/did/do)
+ * 4. Session count > 5
+ */
+function shouldEscalate(
+  sessions: RecallSession[],
+  totalMatches: number,
+  query: string
+): EscalationResult {
+  // Criterion 1: Match count > 50
+  if (totalMatches > 50) {
+    return {
+      shouldEscalate: true,
+      reason: `High match count (${totalMatches} > 50)`,
+    };
+  }
+
+  // Criterion 2: Session count > 5
+  if (sessions.length > 5) {
+    return {
+      shouldEscalate: true,
+      reason: `Many sessions (${sessions.length} > 5)`,
+    };
+  }
+
+  // Criterion 3: Query is a question
+  const questionPattern = /^\s*(what|why|how|did|do|does|is|are|was|were|can|could|should|would|when|where|who)\b/i;
+  if (questionPattern.test(query)) {
+    return {
+      shouldEscalate: true,
+      reason: 'Query is a question',
+    };
+  }
+
+  // Criterion 4: Date span > 7 days
+  if (sessions.length > 0) {
+    let minDate = new Date(sessions[0]!.firstTimestamp);
+    let maxDate = new Date(sessions[0]!.lastTimestamp);
+
+    for (const session of sessions) {
+      const first = new Date(session.firstTimestamp);
+      const last = new Date(session.lastTimestamp);
+      if (first < minDate) minDate = first;
+      if (last > maxDate) maxDate = last;
+    }
+
+    const daySpan = (maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daySpan > 7) {
+      return {
+        shouldEscalate: true,
+        reason: `Results span ${Math.round(daySpan)} days (> 7)`,
+      };
+    }
+  }
+
+  return {
+    shouldEscalate: false,
+    reason: 'No escalation criteria met',
+  };
+}
+
+// ============================================================================
+// Tiered Recall - LLM Synthesis
+// ============================================================================
+
+interface SynthesisResult {
+  answer: string;
+  citations: Array<{
+    index: number;
+    sessionSlug: string;
+    sessionId: string;
+    date: string;
+    excerpt: string;
+  }>;
+}
+
+/**
+ * Synthesizes recall results using Claude API.
+ * Uses claude-3-5-haiku for speed (~5-10s response time).
+ *
+ * @param query - The user's original query
+ * @param sessions - Grouped session results from fast path
+ * @returns Synthesized answer with citations
+ */
+async function synthesizeRecallResults(
+  query: string,
+  sessions: RecallSession[]
+): Promise<SynthesisResult> {
+  // Build context from sessions
+  const contextParts: string[] = [];
+  const citations: SynthesisResult['citations'] = [];
+
+  for (let i = 0; i < sessions.length; i++) {
+    const session = sessions[i]!;
+    const sessionDate = new Date(session.firstTimestamp).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    citations.push({
+      index: i + 1,
+      sessionSlug: session.slug,
+      sessionId: session.sessionId,
+      date: sessionDate,
+      excerpt: session.matches[0]?.text.slice(0, 100) || '',
+    });
+
+    contextParts.push(`[${i + 1}] Session: ${session.slug} (${sessionDate})`);
+    contextParts.push(`Matches: ${session.matchCount}`);
+    for (const match of session.matches) {
+      contextParts.push(`- [${match.type}] ${match.text}`);
+    }
+    contextParts.push('');
+  }
+
+  const context = contextParts.join('\n');
+
+  // Initialize Anthropic client (uses ANTHROPIC_API_KEY from env)
+  const client = new Anthropic();
+
+  const systemPrompt = `You are a helpful assistant that synthesizes information from past Claude Code sessions.
+You have access to search results from the user's transcript history.
+Your job is to:
+1. Analyze the search results and extract relevant information
+2. Synthesize a clear, concise answer to the user's query
+3. Use numbered citations [1], [2] etc. to reference specific sessions
+4. Be direct and helpful - focus on answering the question
+
+Keep your response concise but complete. Use citations when referencing specific information.`;
+
+  const userPrompt = `Query: "${query}"
+
+Search Results (from ${sessions.length} sessions):
+
+${context}
+
+Please synthesize these results into a helpful answer. Use [1], [2], etc. to cite sources.`;
+
+  try {
+    const response = await client.messages.create({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 1024,
+      messages: [
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+      system: systemPrompt,
+    });
+
+    // Extract text from response
+    const textBlock = response.content.find((block) => block.type === 'text');
+    const answer = textBlock?.type === 'text' ? textBlock.text : 'No response generated.';
+
+    return { answer, citations };
+  } catch (error) {
+    // Handle API errors gracefully
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {
+      answer: `Unable to synthesize results: ${errorMessage}\n\nFalling back to fast path results above.`,
+      citations,
+    };
+  }
+}
+
+/**
+ * Formats synthesized output with citations for display.
+ */
+function formatSynthesizedOutput(
+  result: SynthesisResult,
+  query: string
+): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('🤖 Synthesized Answer');
+  lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('');
+  lines.push(result.answer);
+  lines.push('');
+
+  if (result.citations.length > 0) {
+    lines.push('───────────────────────────────────────────────────────────');
+    lines.push('📚 Sources');
+    lines.push('');
+    for (const citation of result.citations) {
+      lines.push(`  [${citation.index}] ${citation.sessionSlug} (${citation.date})`);
+      lines.push(`      → transcript ${citation.sessionSlug} --search "${query}" --human`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
 }
 
 /**
@@ -1185,6 +1409,20 @@ function findRelatedSkills(query: string): string[] {
 
 /**
  * Recall command - memory retrieval optimized for finding past discussions
+ *
+ * Supports tiered retrieval:
+ * - Fast path (default): SQLite FTS search, returns in 1-2 seconds
+ * - Deep path: Fast path + LLM synthesis for complex queries (5-10 seconds)
+ *
+ * Auto-escalation triggers synthesis when:
+ * - Match count > 50
+ * - Results span > 7 days
+ * - Query is a question (starts with what/why/how/did/do)
+ * - Session count > 5
+ *
+ * Flags:
+ * - --deep (-D): Force synthesis even if criteria not met
+ * - --fast (-F): Skip synthesis even if criteria met
  */
 async function cmdRecall(args: RecallArgs): Promise<number> {
   try {
@@ -1267,25 +1505,53 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
     // Find related skills
     const relatedSkills = args.includeArtifacts !== false ? findRelatedSkills(args.query) : [];
 
+    // Determine if we should escalate to synthesis
+    const escalation = shouldEscalate(sessions, results.length, args.query);
+
+    // Apply --deep and --fast flags
+    // --fast takes precedence (skip synthesis even if escalation criteria met)
+    // --deep forces synthesis even if no criteria met
+    const doSynthesize = args.fast ? false : (args.deep || escalation.shouldEscalate);
+
     if (args.json) {
-      console.log(
-        JSON.stringify(
-          {
-            query: args.query,
-            totalMatches: results.length,
-            sessions,
-            relatedSkills,
-          },
-          null,
-          2
-        )
-      );
+      // For JSON output, include escalation info and optionally synthesis
+      const output: {
+        query: string;
+        totalMatches: number;
+        sessions: RecallSession[];
+        relatedSkills: string[];
+        escalation: EscalationResult;
+        synthesis?: SynthesisResult;
+      } = {
+        query: args.query,
+        totalMatches: results.length,
+        sessions,
+        relatedSkills,
+        escalation,
+      };
+
+      if (doSynthesize) {
+        output.synthesis = await synthesizeRecallResults(args.query, sessions);
+      }
+
+      console.log(JSON.stringify(output, null, 2));
       return 0;
     }
 
     // Format output for human reading
     console.log(`\n🔍 Recall: "${args.query}"\n`);
-    console.log(`Found ${results.length} matches across ${sessionMap.size} sessions\n`);
+    console.log(`Found ${results.length} matches across ${sessionMap.size} sessions`);
+
+    // Show escalation status
+    if (doSynthesize) {
+      const mode = args.deep ? '--deep flag' : escalation.reason;
+      console.log(`⚡ Deep path: ${mode}`);
+    } else if (args.fast && escalation.shouldEscalate) {
+      console.log(`⏩ Fast path: --fast flag (would escalate: ${escalation.reason})`);
+    } else {
+      console.log(`⏩ Fast path: ${escalation.reason}`);
+    }
+    console.log('');
 
     for (const session of sessions) {
       const dateRange = formatDateRange(session.firstTimestamp, session.lastTimestamp);
@@ -1316,6 +1582,13 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
         console.log(`   - ${skill}`);
       }
       console.log('');
+    }
+
+    // If escalating, run synthesis and display result
+    if (doSynthesize) {
+      console.log('Synthesizing results...\n');
+      const synthesisResult = await synthesizeRecallResults(args.query, sessions);
+      console.log(formatSynthesizedOutput(synthesisResult, args.query));
     }
 
     return 0;
@@ -2181,6 +2454,14 @@ function parseArgs(args: string[]): {
       flags.useIndex = true;
       continue;
     }
+    if (arg === '--deep' || arg === '-D') {
+      flags.deep = true;
+      continue;
+    }
+    if (arg === '--fast' || arg === '-F') {
+      flags.fast = true;
+      continue;
+    }
 
     // Positional argument
     if (!arg.startsWith('-')) {
@@ -2608,6 +2889,8 @@ async function main(): Promise<number> {
         context: flags.context as number | undefined,
         json: flags.json as boolean | undefined,
         includeArtifacts: flags.artifacts as boolean | undefined,
+        deep: flags.deep as boolean | undefined,
+        fast: flags.fast as boolean | undefined,
       });
 
     case 'info':

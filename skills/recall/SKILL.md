@@ -1,7 +1,7 @@
 ---
 name: recall
 description: Deep search across all past Claude Code sessions for decisions, solutions, and discussions
-version: 0.5.0
+version: 0.6.0
 triggers:
   - "I forgot"
   - "do you remember"
@@ -40,6 +40,7 @@ The `transcript` CLI:
 - Groups results by session
 - Shows timestamps and context
 - Finds related skills automatically
+- Auto-synthesizes complex queries with LLM
 
 Raw tools like `rg` return unreadable JSON blobs and miss context. **Using them is a failure mode.**
 
@@ -51,31 +52,124 @@ transcript recall "your query"
 
 That's it. Run this command. Read the output. Done.
 
-### Options (if needed)
+## Tiered Retrieval
+
+Recall uses intelligent tiering to match retrieval strategy to query complexity:
+
+### Fast Path (default)
+- SQLite FTS search
+- Returns in 1-2 seconds
+- Best for simple keyword lookups
+
+### Deep Path (auto or --deep)
+- Fast path + LLM synthesis
+- Returns in 5-10 seconds
+- Best for complex questions requiring cross-session analysis
+
+### Auto-Escalation
+
+The command automatically escalates to deep path when:
+- **Match count > 50** - Too many results to scan manually
+- **Results span > 7 days** - Long time range suggests complex topic
+- **Query is a question** - Starts with what/why/how/did/do/etc.
+- **Session count > 5** - Information spread across many sessions
+
+### Controlling Escalation
 
 ```bash
-transcript recall "query" --max-sessions 5    # Limit sessions shown
-transcript recall "query" --context 3         # Matches per session
-transcript recall "query" --limit 100         # Total matches to search
+# Force deep path (LLM synthesis) even for simple queries
+transcript recall "caching" --deep
+transcript recall "caching" -D
+
+# Force fast path (skip synthesis) even when criteria would trigger escalation
+transcript recall "why did we choose redis" --fast
+transcript recall "why did we choose redis" -F
 ```
 
-## Example
+**Note:** `--fast` takes precedence over `--deep` if both are specified.
 
-User asks: "Do you remember the sandbox integration tests?"
+### Options
 
-You run:
 ```bash
-transcript recall "sandbox integration tests"
+transcript recall "query" --max-sessions 5    # Limit sessions shown (default: 5)
+transcript recall "query" --context 3         # Matches per session (default: 3)
+transcript recall "query" --limit 100         # Total matches to search (default: 100)
+transcript recall "query" --deep              # Force LLM synthesis
+transcript recall "query" --fast              # Skip LLM synthesis
+transcript recall "query" --json              # Output as JSON (includes synthesis if applicable)
 ```
 
-You get grouped results showing which sessions discussed it, with context snippets and drill-down commands.
+## Examples
 
-## If You Need More Detail
-
-After running `transcript recall`, you may want to drill deeper into a specific session. Use the drill-down command shown in the output:
-
+### Simple keyword lookup (fast path)
 ```bash
-transcript <session-slug> --search "query" --human
+transcript recall "caching"
+```
+Returns grouped results in 1-2 seconds.
+
+### Question query (auto-escalates to deep path)
+```bash
+transcript recall "why did we decide to use Redis?"
+```
+Auto-detects question pattern, runs synthesis, returns synthesized answer with citations.
+
+### Force deep analysis
+```bash
+transcript recall "authentication patterns" --deep
+```
+Forces LLM synthesis even if auto-escalation criteria not met.
+
+### Skip synthesis for speed
+```bash
+transcript recall "how does the login flow work" --fast
+```
+Skips synthesis despite question pattern, returns fast path results only.
+
+## Understanding the Output
+
+### Fast Path Output
+```
+🔍 Recall: "caching"
+
+Found 12 matches across 3 sessions
+⏩ Fast path: No escalation criteria met
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 happy-hippo (5 matches)
+   Jan 15, 10:30 AM - 11:45 AM
+
+   [10:32 AM] assistant   Line 245
+   Implemented Redis caching layer with 60-second TTL...
+
+   → transcript happy-hippo --search "caching" --human
+```
+
+### Deep Path Output
+```
+🔍 Recall: "why did we choose Redis?"
+
+Found 28 matches across 4 sessions
+⚡ Deep path: Query is a question
+
+[... fast path results ...]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 Synthesized Answer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Based on your past sessions, you chose Redis for caching because:
+
+1. **Performance requirements** [1] - The dashboard needed sub-100ms response times
+2. **Existing infrastructure** [2] - You already had Redis running for session storage
+3. **TTL support** [3] - Native expiration simplified cache invalidation logic
+
+───────────────────────────────────────────────────────────
+📚 Sources
+
+  [1] happy-hippo (Jan 15, 2026)
+      → transcript happy-hippo --search "why did we choose Redis?" --human
+  [2] clever-cat (Jan 10, 2026)
+      → transcript clever-cat --search "why did we choose Redis?" --human
 ```
 
 ## Workflow
@@ -85,11 +179,13 @@ User asks about past discussion
          ↓
 transcript recall "topic"     ← START HERE, ALWAYS
          ↓
-Read the grouped output
+Check path indicator (⏩ Fast or ⚡ Deep)
+         ↓
+Read the grouped output (and synthesis if deep)
          ↓
 Need more detail? → Use drill-down command from output
          ↓
-Synthesize and respond to user
+Respond to user with findings
 ```
 
 ## Common Mistakes (DO NOT DO THESE)
@@ -117,6 +213,7 @@ transcript recall "sandbox"
 
 1. **USE:** `transcript recall "query"`
 2. **DO NOT USE:** `rg`, `grep`, `find`, `cat` on transcript files
-3. Read the grouped output
-4. Drill down if needed using commands from the output
-5. Synthesize findings for the user
+3. Let auto-escalation work - it detects when synthesis is needed
+4. Use `--deep` to force synthesis, `--fast` to skip it
+5. Read the grouped output (and synthesis if provided)
+6. Drill down if needed using commands from the output
