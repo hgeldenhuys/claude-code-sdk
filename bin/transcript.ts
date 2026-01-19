@@ -256,6 +256,7 @@ Session Filters:
   --session-name <name>   Filter by session name (uses sesh lookup)
 
 List Options:
+  --all, -A               Show transcripts from all projects (default: current project only)
   --recent <days>         Show transcripts from last N days
   --project <path>        Filter by project path
   --names                 Show session names only
@@ -1001,18 +1002,40 @@ interface ListArgs {
   project?: string;
   names?: boolean;
   json?: boolean;
+  all?: boolean;
+}
+
+/**
+ * Convert a filesystem path to the Claude projects directory format
+ * e.g., /Users/foo/bar -> -Users-foo-bar
+ */
+function pathToProjectFormat(fsPath: string): string {
+  return fsPath.replace(/\//g, '-');
 }
 
 async function cmdList(args: ListArgs): Promise<number> {
   try {
     const db = getDb();
+
+    // Default to current project unless --all is specified
+    let projectPath = args.project;
+    if (!args.all && !projectPath) {
+      const cwd = process.cwd();
+      projectPath = pathToProjectFormat(cwd);
+    }
+
     const sessions = getSessions(db, {
       recentDays: args.recent,
-      projectPath: args.project,
+      projectPath,
     });
 
     if (sessions.length === 0) {
-      console.log('No transcripts found.');
+      if (args.all) {
+        console.log('No transcripts found.');
+      } else {
+        console.log(`No transcripts found for current project.`);
+        console.log(`Use --all to list all projects.`);
+      }
       return 0;
     }
 
@@ -1029,14 +1052,36 @@ async function cmdList(args: ListArgs): Promise<number> {
     }
 
     // Table format
-    console.log('SESSION                   LINES   LAST MODIFIED');
-    console.log('-'.repeat(60));
+    if (args.all) {
+      console.log('SESSION                   LINES   LAST MODIFIED  PROJECT');
+      console.log('-'.repeat(100));
 
-    for (const session of sessions) {
-      const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(24).slice(0, 24);
-      const lines = String(session.lineCount).padStart(6);
-      const date = formatDate(session.lastTimestamp || '');
-      console.log(`${name} ${lines}   ${date}`);
+      for (const session of sessions) {
+        const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(24).slice(0, 24);
+        const lines = String(session.lineCount).padStart(6);
+        const date = formatDate(session.lastTimestamp || '');
+        // Extract project name from file path (e.g., -Users-foo-bar from ~/.claude/projects/-Users-foo-bar/xxx.jsonl)
+        // Show last 30 chars of the encoded path (truncate long paths from left)
+        const pathParts = session.filePath.split('/');
+        const projectsIdx = pathParts.indexOf('projects');
+        let projectName = '';
+        if (projectsIdx >= 0 && projectsIdx + 1 < pathParts.length) {
+          const fullProject = pathParts[projectsIdx + 1]!;
+          // Show the end of the path (most meaningful part)
+          projectName = fullProject.length > 30 ? `...${fullProject.slice(-27)}` : fullProject;
+        }
+        console.log(`${name} ${lines}   ${date}  ${projectName}`);
+      }
+    } else {
+      console.log('SESSION                   LINES   LAST MODIFIED');
+      console.log('-'.repeat(60));
+
+      for (const session of sessions) {
+        const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(24).slice(0, 24);
+        const lines = String(session.lineCount).padStart(6);
+        const date = formatDate(session.lastTimestamp || '');
+        console.log(`${name} ${lines}   ${date}`);
+      }
     }
 
     console.log(`\nTotal: ${sessions.length} transcript(s)`);
@@ -2543,6 +2588,10 @@ function parseArgs(args: string[]): {
       flags.names = true;
       continue;
     }
+    if (arg === '--all' || arg === '-A') {
+      flags.all = true;
+      continue;
+    }
     if (arg === '--tail') {
       flags.tail = true;
       continue;
@@ -2978,6 +3027,7 @@ async function main(): Promise<number> {
         project: flags.project as string | undefined,
         names: flags.names as boolean | undefined,
         json: flags.json as boolean | undefined,
+        all: flags.all as boolean | undefined,
       });
 
     case 'search':
