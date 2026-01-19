@@ -899,13 +899,23 @@ function getListItems(): string[] {
     // Fixed-width usage column (7 chars: " [XXX%]" or spaces)
     const usageCol = contextUsage ? ` ${contextUsage}` : '        ';
 
-    // Fixed-width session name (20 display columns for full adjective-animal names)
+    // Combined turn-session column: "{turn}-{session}" (e.g., "22-loyal-whippet")
     const SESSION_WIDTH = 20;
     const sessionName = (line as TranscriptLine & { sessionName?: string }).sessionName;
-    const sessionStr = sessionName ? padEndDisplay(sessionName.slice(0, SESSION_WIDTH), SESSION_WIDTH) : ''.padEnd(SESSION_WIDTH);
-    const sessionSuffix = sessionName ? ` {cyan-fg}${sessionStr}{/cyan-fg}` : ` ${sessionStr}`;
+    const turnSeq = (line as TranscriptLine & { turnSequence?: number }).turnSequence;
 
-    return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(6)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}${usageCol}${sessionSuffix}`;
+    let turnSessionStr = '';
+    if (turnSeq && sessionName) {
+      turnSessionStr = `${turnSeq}-${sessionName}`;
+    } else if (sessionName) {
+      turnSessionStr = sessionName;
+    } else if (turnSeq) {
+      turnSessionStr = `${turnSeq}`;
+    }
+    const turnSessionPadded = padEndDisplay(turnSessionStr.slice(0, SESSION_WIDTH), SESSION_WIDTH);
+    const turnSessionSuffix = turnSessionStr ? ` {cyan-fg}${turnSessionPadded}{/cyan-fg}` : ` ${turnSessionPadded}`;
+
+    return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(6)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}${usageCol}${turnSessionSuffix}`;
   });
 
   state.listItemsDirty = false;
@@ -1916,7 +1926,9 @@ Examples:
     state.lines = filteredLines;
     state.currentIndex = filteredLines.length - 1; // Start at last line
     state.filePath = filePath;
-    state.sessionName = (metadata.sessionName as string) || '';
+    // Prefer session name from lines (more accurate) over metadata (may be stale)
+    const lineSessionName = allLines.find((l) => (l as TranscriptLine & { sessionName?: string }).sessionName)?.sessionName;
+    state.sessionName = lineSessionName || (metadata.sessionName as string) || '';
     state.sessionId = (metadata.sessionId as string) || '';
     state.activeFilter = filterLabel;
     state.textOnly = filterOpts.textOnly || false;
