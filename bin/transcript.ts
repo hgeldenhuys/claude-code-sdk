@@ -319,8 +319,14 @@ Examples:
 }
 
 function formatDate(isoString: string): string {
+  if (!isoString || isoString === 'null' || isoString === 'undefined') {
+    return 'N/A';
+  }
   try {
     const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) {
+      return 'N/A';
+    }
     return date.toLocaleString('en-US', {
       month: 'short',
       day: '2-digit',
@@ -328,7 +334,7 @@ function formatDate(isoString: string): string {
       minute: '2-digit',
     });
   } catch {
-    return isoString;
+    return isoString || 'N/A';
   }
 }
 
@@ -1053,11 +1059,11 @@ async function cmdList(args: ListArgs): Promise<number> {
 
     // Table format
     if (args.all) {
-      console.log('SESSION                   LINES   LAST MODIFIED  PROJECT');
-      console.log('-'.repeat(100));
+      console.log('SESSION                          LINES   LAST MODIFIED  PROJECT');
+      console.log('-'.repeat(105));
 
       for (const session of sessions) {
-        const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(24).slice(0, 24);
+        const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(30).slice(0, 30);
         const lines = String(session.lineCount).padStart(6);
         const date = formatDate(session.lastTimestamp || '');
         // Extract project name from file path (e.g., -Users-foo-bar from ~/.claude/projects/-Users-foo-bar/xxx.jsonl)
@@ -1073,11 +1079,11 @@ async function cmdList(args: ListArgs): Promise<number> {
         console.log(`${name} ${lines}   ${date}  ${projectName}`);
       }
     } else {
-      console.log('SESSION                   LINES   LAST MODIFIED');
-      console.log('-'.repeat(60));
+      console.log('SESSION                          LINES   LAST MODIFIED');
+      console.log('-'.repeat(65));
 
       for (const session of sessions) {
-        const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(24).slice(0, 24);
+        const name = (session.slug || session.sessionId.slice(0, 8)).padEnd(30).slice(0, 30);
         const lines = String(session.lineCount).padStart(6);
         const date = formatDate(session.lastTimestamp || '');
         console.log(`${name} ${lines}   ${date}`);
