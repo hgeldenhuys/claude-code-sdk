@@ -284,10 +284,10 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
 
 /**
  * Escape curly braces for blessed markup
- * In blessed, {open} = { and {close} = }
+ * Double braces {{ and }} render as literal { and }
  */
 function escapeBlessedMarkup(text: string): string {
-  return text.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+  return text.replace(/\{/g, '{{').replace(/\}/g, '}}');
 }
 
 /**
