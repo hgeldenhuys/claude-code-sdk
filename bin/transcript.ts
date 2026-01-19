@@ -2245,6 +2245,16 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
           `  Checked ${hookResult.filesChecked} files, updated ${hookResult.filesUpdated}, +${hookResult.newEvents.toLocaleString()} events`
         );
 
+        // Correlate transcript lines with turn info from hook events
+        if (transcriptResult.newLines > 0 || hookResult.newEvents > 0) {
+          const correlation = correlateLinesToTurns(db);
+          if (correlation.updated > 0) {
+            console.log(
+              `\nCorrelated ${correlation.updated.toLocaleString()} lines with turn data`
+            );
+          }
+        }
+
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`\nTotal time: ${elapsed}s`);
         db.close();
@@ -2274,6 +2284,11 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
           const shortName = fileName.length > 50 ? `${fileName.slice(0, 47)}...` : fileName;
           const time = new Date().toLocaleTimeString();
           console.log(`[${time}] [hooks] ${shortName}: +${newEvents} events indexed`);
+          // Correlate turns when new hook events arrive (they contain turn data)
+          const correlation = correlateLinesToTurns(db);
+          if (correlation.updated > 0) {
+            console.log(`[${time}] [correlate] ${correlation.updated} lines updated with turn data`);
+          }
         });
 
         // Handle Ctrl+C
