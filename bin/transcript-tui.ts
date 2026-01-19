@@ -435,6 +435,40 @@ function getTypeColor(type: string): string {
 }
 
 /**
+ * Calculate context usage percentage from a transcript line
+ * Returns formatted string with color based on usage level
+ * 0-50% = green, 51-70% = orange, 71%+ = red
+ */
+const CONTEXT_WINDOW_SIZE = 200000; // Standard tier context window
+
+function getContextUsage(line: TranscriptLine): string {
+  const usage = line.message?.usage;
+  if (!usage) return '';
+
+  // Calculate total input tokens (including cache)
+  const inputTokens =
+    (usage.input_tokens || 0) +
+    (usage.cache_creation_input_tokens || 0) +
+    (usage.cache_read_input_tokens || 0);
+
+  if (inputTokens === 0) return '';
+
+  const percentage = Math.round((inputTokens / CONTEXT_WINDOW_SIZE) * 100);
+
+  // Color based on percentage thresholds
+  let color: string;
+  if (percentage <= 50) {
+    color = 'green';
+  } else if (percentage <= 70) {
+    color = 'yellow'; // orange approximation in blessed
+  } else {
+    color = 'red';
+  }
+
+  return `{${color}-fg}[${percentage}%]{/${color}-fg}`;
+}
+
+/**
  * Copy text to system clipboard
  */
 function copyToClipboard(text: string): void {
@@ -787,14 +821,18 @@ function getListItems(): string[] {
   const searchResultSet = new Set(state.searchResults);
 
   state.cachedListItems = state.lines.map((line, index) => {
-    // Compact format: lineNum type preview (no timestamp to save space)
+    // Compact format: lineNum type preview [usage%] (no timestamp to save space)
     const type = getDisplayType(line).slice(0, 6).padEnd(6);
     const typeColor = getTypeColor(line.type);
-    const preview = getPreview(line, 50);
+    const contextUsage = getContextUsage(line);
+    // Reduce preview width to make room for context usage
+    const previewWidth = contextUsage ? 40 : 50;
+    const preview = getPreview(line, previewWidth);
     const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(line.lineNumber) ? '{yellow-fg}★{/yellow-fg}' : ' ';
+    const usageSuffix = contextUsage ? ` ${contextUsage}` : '';
 
-    return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(5)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}`;
+    return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(6)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}${usageSuffix}`;
   });
 
   state.listItemsDirty = false;
