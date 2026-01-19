@@ -216,9 +216,8 @@ export function createTurnTrackerHandler<TState = Record<string, unknown>>(
           // If subagentSeq was 0, this SubagentStop likely fired AFTER the main Stop
           // (which resets subagentSeq to 0 and increments sequence).
           // In that case, associate it with the just-completed turn (sequence - 1).
-          const effectiveSequence = wasZero && state.sequence > 1
-            ? state.sequence - 1
-            : state.sequence;
+          const effectiveSequence =
+            wasZero && state.sequence > 1 ? state.sequence - 1 : state.sequence;
 
           const subagentTurnId = getSubagentTurnId(sessionId, effectiveSequence, state.subagentSeq);
 

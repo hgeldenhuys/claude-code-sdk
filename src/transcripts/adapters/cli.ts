@@ -11,8 +11,8 @@
 
 import type { Database } from 'bun:sqlite';
 import { existsSync } from 'node:fs';
-import { getAdapterRegistry, registerBuiltinAdapters, runDaemonForeground } from './index';
 import { loadExternalAdapters } from './discovery';
+import { getAdapterRegistry, registerBuiltinAdapters, runDaemonForeground } from './index';
 import type { TranscriptAdapter } from './types';
 
 /**

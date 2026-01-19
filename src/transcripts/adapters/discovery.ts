@@ -5,11 +5,11 @@
 
 import type { Database } from 'bun:sqlite';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
 import { homedir } from 'node:os';
-import type { TranscriptAdapter } from './types';
-import { AdapterRegistry } from './registry';
+import { join } from 'node:path';
 import { BaseAdapter } from './base';
+import { AdapterRegistry } from './registry';
+import type { TranscriptAdapter } from './types';
 
 /**
  * Default directory for external adapters
@@ -44,10 +44,7 @@ function isAdapterInstance(value: unknown): value is TranscriptAdapter {
  * Check if a value is an adapter class (constructor)
  */
 function isAdapterClass(value: unknown): value is new () => TranscriptAdapter {
-  return (
-    typeof value === 'function' &&
-    value.prototype instanceof BaseAdapter
-  );
+  return typeof value === 'function' && value.prototype instanceof BaseAdapter;
 }
 
 /**

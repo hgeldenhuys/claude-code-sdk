@@ -8,9 +8,9 @@
 import type { Database } from 'bun:sqlite';
 import { type FSWatcher, existsSync, watch } from 'node:fs';
 import { join } from 'node:path';
-import { AdapterRegistry, getAdapterRegistry } from './registry';
-import { registerBuiltinAdapters } from './index';
 import { loadExternalAdapters } from './discovery';
+import { registerBuiltinAdapters } from './index';
+import { AdapterRegistry, getAdapterRegistry } from './registry';
 import type { DaemonConfig, DaemonState, TranscriptAdapter } from './types';
 
 const DEFAULT_DEBOUNCE_MS = 100;
