@@ -155,11 +155,7 @@ export interface TranscriptAdapter {
    * @param options - Processing options (byte offset, etc.)
    * @returns Result with entries indexed and new byte offset
    */
-  processFile?(
-    filePath: string,
-    db: Database,
-    options?: ProcessFileOptions
-  ): ProcessFileResult;
+  processFile?(filePath: string, db: Database, options?: ProcessFileOptions): ProcessFileResult;
 
   /**
    * Initialize adapter-specific schema (optional).
@@ -188,6 +184,16 @@ export interface TranscriptAdapter {
    * Reset metrics to initial state
    */
   resetMetrics(): void;
+
+  /**
+   * Get cursor state for a file (optional).
+   * Used by daemon for delta updates.
+   *
+   * @param db - Database instance
+   * @param filePath - Path to the file
+   * @returns Cursor state or null if not tracked
+   */
+  getCursor?(db: Database, filePath: string): AdapterCursor | null;
 }
 
 /**

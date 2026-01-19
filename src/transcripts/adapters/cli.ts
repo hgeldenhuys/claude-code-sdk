@@ -40,10 +40,7 @@ export interface AdapterListArgs {
 /**
  * List all registered adapters
  */
-export async function cmdAdapterList(
-  db: Database,
-  args: AdapterListArgs = {}
-): Promise<number> {
+export async function cmdAdapterList(db: Database, args: AdapterListArgs = {}): Promise<number> {
   const registry = getAdapterRegistry();
   registry.setDatabase(db);
   registerBuiltinAdapters(registry, db);
@@ -99,12 +96,18 @@ export async function cmdAdapterStatus(
     const registered = registry.getRegistered(args.adapterName);
 
     if (args.json) {
-      console.log(JSON.stringify({
-        name: adapter.name,
-        description: adapter.description,
-        enabled: registered?.enabled ?? false,
-        metrics,
-      }, null, 2));
+      console.log(
+        JSON.stringify(
+          {
+            name: adapter.name,
+            description: adapter.description,
+            enabled: registered?.enabled ?? false,
+            metrics,
+          },
+          null,
+          2
+        )
+      );
       return 0;
     }
 
@@ -156,7 +159,9 @@ export async function cmdAdapterStatus(
   for (const result of results) {
     const statusIcon = result.enabled ? '\x1b[32m[on]\x1b[0m' : '\x1b[90m[off]\x1b[0m';
     console.log(`${statusIcon} ${result.name}`);
-    console.log(`      Processed: ${result.metrics.entriesProcessed.toLocaleString()} entries, ${result.metrics.filesProcessed} files`);
+    console.log(
+      `      Processed: ${result.metrics.entriesProcessed.toLocaleString()} entries, ${result.metrics.filesProcessed} files`
+    );
     if (result.metrics.entriesFailed > 0) {
       console.log(`      Failed: ${result.metrics.entriesFailed.toLocaleString()} entries`);
     }
@@ -176,10 +181,7 @@ export interface AdapterProcessArgs {
 /**
  * Process files with a specific adapter
  */
-export async function cmdAdapterProcess(
-  db: Database,
-  args: AdapterProcessArgs
-): Promise<number> {
+export async function cmdAdapterProcess(db: Database, args: AdapterProcessArgs): Promise<number> {
   const registry = getAdapterRegistry();
   registry.setDatabase(db);
   registerBuiltinAdapters(registry, db);
@@ -212,7 +214,14 @@ export async function cmdAdapterProcess(
       ? adapter.processFile(args.filePath, db, {
           fromByteOffset: args.delta ? undefined : 0,
         })
-      : { entriesIndexed: 0, byteOffset: 0, sessionId: '', firstTimestamp: null, lastTimestamp: null, entriesByType: {} };
+      : {
+          entriesIndexed: 0,
+          byteOffset: 0,
+          sessionId: '',
+          firstTimestamp: null,
+          lastTimestamp: null,
+          entriesByType: {},
+        };
 
     console.log(`  Entries indexed: ${result.entriesIndexed}`);
     if (args.verbose && Object.keys(result.entriesByType).length > 0) {
@@ -242,7 +251,9 @@ export async function cmdAdapterProcess(
         });
 
         if (result.entriesIndexed > 0 || args.verbose) {
-          console.log(`  [${i + 1}/${files.length}] ${shortName}: ${result.entriesIndexed} entries`);
+          console.log(
+            `  [${i + 1}/${files.length}] ${shortName}: ${result.entriesIndexed} entries`
+          );
         }
 
         totalEntries += result.entriesIndexed;
@@ -251,7 +262,9 @@ export async function cmdAdapterProcess(
     }
 
     const elapsed = Date.now() - startTime;
-    console.log(`\nProcessed ${processedFiles} files, ${totalEntries.toLocaleString()} entries in ${formatDuration(elapsed)}`);
+    console.log(
+      `\nProcessed ${processedFiles} files, ${totalEntries.toLocaleString()} entries in ${formatDuration(elapsed)}`
+    );
   }
 
   return 0;
@@ -266,10 +279,7 @@ export interface AdapterReplayArgs {
  * Replay (re-index) all files for an adapter
  * This clears existing data and re-processes all files
  */
-export async function cmdAdapterReplay(
-  db: Database,
-  args: AdapterReplayArgs
-): Promise<number> {
+export async function cmdAdapterReplay(db: Database, args: AdapterReplayArgs): Promise<number> {
   const registry = getAdapterRegistry();
   registry.setDatabase(db);
   registerBuiltinAdapters(registry, db);
@@ -306,7 +316,9 @@ export async function cmdAdapterReplay(
       const result = adapter.processFile(file, db, { fromByteOffset: 0 });
 
       if (result.entriesIndexed > 0 || args.verbose) {
-        process.stdout.write(`\r  [${i + 1}/${files.length}] ${shortName.padEnd(40)} (${result.entriesIndexed} entries)`);
+        process.stdout.write(
+          `\r  [${i + 1}/${files.length}] ${shortName.padEnd(40)} (${result.entriesIndexed} entries)`
+        );
       }
 
       totalEntries += result.entriesIndexed;
@@ -314,7 +326,9 @@ export async function cmdAdapterReplay(
   }
 
   const elapsed = Date.now() - startTime;
-  console.log(`\n\nReplayed ${files.length} files, ${totalEntries.toLocaleString()} entries in ${formatDuration(elapsed)}`);
+  console.log(
+    `\n\nReplayed ${files.length} files, ${totalEntries.toLocaleString()} entries in ${formatDuration(elapsed)}`
+  );
 
   return 0;
 }

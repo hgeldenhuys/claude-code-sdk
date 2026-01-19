@@ -6,11 +6,7 @@
  */
 
 import type { Database } from 'bun:sqlite';
-import type {
-  AdapterRegistrationOptions,
-  RegisteredAdapter,
-  TranscriptAdapter,
-} from './types';
+import type { AdapterRegistrationOptions, RegisteredAdapter, TranscriptAdapter } from './types';
 
 /**
  * Default registration options
@@ -82,10 +78,7 @@ export class AdapterRegistry {
    * @param options - Registration options
    * @throws Error if adapter with same name is already registered
    */
-  register(
-    adapter: TranscriptAdapter,
-    options: AdapterRegistrationOptions = {}
-  ): void {
+  register(adapter: TranscriptAdapter, options: AdapterRegistrationOptions = {}): void {
     const name = adapter.name;
 
     if (this.adapters.has(name)) {

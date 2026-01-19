@@ -190,7 +190,7 @@ export class TranscriptLinesAdapter extends BaseAdapter {
         context.filePath,
         null, // turn_id - will be correlated later
         null, // turn_sequence - will be correlated later
-        null  // session_name - will be correlated later
+        null // session_name - will be correlated later
       );
 
       return {
@@ -268,7 +268,7 @@ export class TranscriptLinesAdapter extends BaseAdapter {
     if (result.sessionId || result.entriesIndexed > 0) {
       // Get the final line count
       const cursor = this.getCursor(db, filePath);
-      const lineCount = cursor?.entryCount || (startLineNumber - 1 + result.entriesIndexed);
+      const lineCount = cursor?.entryCount || startLineNumber - 1 + result.entriesIndexed;
 
       // Get slug from first entry if available
       let slug: string | null = null;
@@ -408,8 +408,6 @@ export class TranscriptLinesAdapter extends BaseAdapter {
 /**
  * Create a TranscriptLinesAdapter instance
  */
-export function createTranscriptLinesAdapter(
-  projectsDir?: string
-): TranscriptLinesAdapter {
+export function createTranscriptLinesAdapter(projectsDir?: string): TranscriptLinesAdapter {
   return new TranscriptLinesAdapter(projectsDir);
 }

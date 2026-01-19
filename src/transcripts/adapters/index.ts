@@ -76,8 +76,8 @@ export {
 
 // Import for registration function
 import type { Database } from 'bun:sqlite';
-import { AdapterRegistry } from './registry';
 import { HookEventsAdapter } from './hook-events';
+import { AdapterRegistry } from './registry';
 import { TranscriptLinesAdapter } from './transcript-lines';
 
 /**

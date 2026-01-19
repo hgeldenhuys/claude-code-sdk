@@ -248,7 +248,7 @@ export class HookEventsAdapter extends BaseAdapter {
     if (result.sessionId || result.entriesIndexed > 0) {
       // Get the final event count
       const cursor = this.getCursor(db, filePath);
-      const eventCount = cursor?.entryCount || (startLineNumber - 1 + result.entriesIndexed);
+      const eventCount = cursor?.entryCount || startLineNumber - 1 + result.entriesIndexed;
 
       this.updateHookFilesTable(
         db,

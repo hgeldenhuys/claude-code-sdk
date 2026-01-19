@@ -6,7 +6,7 @@
  */
 
 import type { Database } from 'bun:sqlite';
-import { existsSync, watch, type FSWatcher } from 'node:fs';
+import { type FSWatcher, existsSync, watch } from 'node:fs';
 import { join } from 'node:path';
 import { getAdapterRegistry, registerBuiltinAdapters } from './index';
 import type { DaemonConfig, DaemonState, TranscriptAdapter } from './types';
@@ -59,9 +59,8 @@ export class AdapterDaemon {
     registerBuiltinAdapters(registry, this.db);
 
     // Get adapters to run
-    const adapterNames = this.config.adapterNames.length > 0
-      ? this.config.adapterNames
-      : registry.list(true); // Only enabled adapters
+    const adapterNames =
+      this.config.adapterNames.length > 0 ? this.config.adapterNames : registry.list(true); // Only enabled adapters
 
     this.state.running = true;
     this.state.startedAt = new Date();
@@ -160,7 +159,7 @@ export class AdapterDaemon {
         if (existsSync(dir)) {
           // Get the top-level project directory to avoid watching too many directories
           const parts = dir.split('/');
-          const claudeIdx = parts.findIndex(p => p === '.claude');
+          const claudeIdx = parts.findIndex((p) => p === '.claude');
           if (claudeIdx >= 0 && claudeIdx + 2 < parts.length) {
             // Watch ~/.claude/projects or ~/.claude/hooks directly
             dirSet.add(parts.slice(0, claudeIdx + 2).join('/'));
@@ -183,7 +182,7 @@ export class AdapterDaemon {
           if (!filename) return;
 
           // Check if file matches adapter's extensions
-          const matchesExtension = adapter.fileExtensions.some(ext =>
+          const matchesExtension = adapter.fileExtensions.some((ext) =>
             filename.endsWith(ext.startsWith('.') ? ext : `.${ext}`)
           );
 
@@ -227,9 +226,7 @@ export class AdapterDaemon {
     }
 
     const dir = staticParts.join('/');
-    return dir.startsWith('~')
-      ? dir.replace('~', process.env.HOME || '~')
-      : dir;
+    return dir.startsWith('~') ? dir.replace('~', process.env.HOME || '~') : dir;
   }
 
   /**
@@ -245,10 +242,13 @@ export class AdapterDaemon {
     }
 
     // Set new debounced timer
-    this.debounceTimers.set(key, setTimeout(() => {
-      this.debounceTimers.delete(key);
-      this.processFile(adapter, filePath);
-    }, this.config.debounceMs));
+    this.debounceTimers.set(
+      key,
+      setTimeout(() => {
+        this.debounceTimers.delete(key);
+        this.processFile(adapter, filePath);
+      }, this.config.debounceMs)
+    );
   }
 
   /**
@@ -263,7 +263,7 @@ export class AdapterDaemon {
       // Use delta processing
       if (adapter.processFile) {
         // Get cursor for delta processing
-        const cursor = (adapter as any).getCursor?.(this.db, filePath);
+        const cursor = adapter.getCursor?.(this.db, filePath);
         const fileSize = Bun.file(filePath).size;
 
         // Skip if file hasn't grown
@@ -306,7 +306,7 @@ export class AdapterDaemon {
         for (const filePath of files) {
           // Check if file has grown since last indexed
           if (adapter.processFile) {
-            const cursor = (adapter as any).getCursor?.(this.db, filePath);
+            const cursor = adapter.getCursor?.(this.db, filePath);
             if (!cursor) continue;
 
             const fileSize = Bun.file(filePath).size;
@@ -332,10 +332,7 @@ export function createDaemon(db: Database, config?: DaemonConfig): AdapterDaemon
 /**
  * Run daemon in foreground (for CLI use)
  */
-export async function runDaemonForeground(
-  db: Database,
-  config?: DaemonConfig
-): Promise<void> {
+export async function runDaemonForeground(db: Database, config?: DaemonConfig): Promise<void> {
   const daemon = createDaemon(db, {
     ...config,
     onUpdate: (adapterName, filePath, entriesIndexed) => {

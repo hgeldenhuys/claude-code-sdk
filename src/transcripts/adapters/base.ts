@@ -7,7 +7,7 @@
  * - Common JSONL parsing logic
  */
 
-import { Database } from 'bun:sqlite';
+import type { Database } from 'bun:sqlite';
 import { closeSync, openSync, readFileSync, readSync } from 'node:fs';
 import type {
   AdapterCursor,
@@ -159,10 +159,10 @@ export abstract class BaseAdapter implements TranscriptAdapter {
    * Delete cursor for a file
    */
   deleteCursor(db: Database, filePath: string): void {
-    db.run(
-      'DELETE FROM adapter_cursors WHERE file_path = ? AND adapter_name = ?',
-      [filePath, this.name]
-    );
+    db.run('DELETE FROM adapter_cursors WHERE file_path = ? AND adapter_name = ?', [
+      filePath,
+      this.name,
+    ]);
   }
 
   /**
@@ -245,11 +245,7 @@ export abstract class BaseAdapter implements TranscriptAdapter {
    * Process a file with common JSONL handling
    * Subclasses can override for custom behavior
    */
-  processFile(
-    filePath: string,
-    db: Database,
-    options: ProcessFileOptions = {}
-  ): ProcessFileResult {
+  processFile(filePath: string, db: Database, options: ProcessFileOptions = {}): ProcessFileResult {
     const fromByteOffset = options.fromByteOffset ?? 0;
     const startLineNumber = options.startLineNumber ?? 1;
 
