@@ -444,6 +444,88 @@ bun run sesh info my-project         # Show session details
 claude --resume $(bun run sesh my-project)
 ```
 
+### Hook Events CLI
+
+View and filter Claude Code hook events:
+
+```bash
+# List sessions with hook events
+bun run hook-events list
+
+# View events for current project (. = current session)
+bun run hook-events .
+bun run hook-events . --last 10
+bun run hook-events . --event PreToolUse,PostToolUse
+bun run hook-events . --tool Bash,Read
+
+# Search across all hook events
+bun run hook-events search "error"
+
+# Session info and statistics
+bun run hook-events info .
+
+# Watch mode (tail -f style)
+bun run hook-events . --watch
+
+# Output formats
+bun run hook-events . --human        # Human-readable
+bun run hook-events . --json         # Raw JSON
+bun run hook-events . --minimal      # Text content only
+```
+
+### Hook Events TUI
+
+Interactive terminal UI for browsing hook events:
+
+```bash
+bun run hook-events-tui .                        # Current session
+bun run hook-events-tui . --event PreToolUse     # Pre-filtered
+bun run hook-events-tui . --live                 # Live mode
+bun run hook-events-tui "tender-spider,earnest-lion"  # Multi-session
+```
+
+**Navigation:**
+| Key | Action |
+|-----|--------|
+| `j/k` or `↑/↓` | Navigate lines |
+| `h/l` | Scroll content |
+| `g/G` | First/last line |
+| `Tab` | Switch panes |
+| `r` or `Ctrl+L` | Redraw screen |
+
+**View Modes:**
+| Key | Mode |
+|-----|------|
+| `1` | Raw JSON |
+| `2` | Human-readable (with custom tool views) |
+| `3` | Minimal |
+| `4` | Tool I/O |
+| `5` | Timeline |
+
+**Custom Tool Views** (Human mode):
+| Tool | Rendering |
+|------|-----------|
+| Edit | Delta-style unified diff (red/green) |
+| Bash | Command with syntax highlighting + stdout/stderr |
+| Read | File content with line numbers |
+| Grep | Pattern + highlighted matches |
+| Glob | File tree visualization |
+| Write | Full file content |
+| TodoWrite | Task list with progress bar |
+
+**Features:**
+| Key | Feature |
+|-----|---------|
+| `Space` | Toggle bookmark |
+| `[/]` | Jump between bookmarks |
+| `L` | Toggle live mode (200ms polling) |
+| `?` | Help overlay |
+
+**List format:** `*★ 08:31:02 Pre Bash npm install [ 45%] 8-earnest-lion`
+- `*` = bookmark, `★` = starred
+- Context usage colored: green ≤50%, yellow 51-70%, red 71%+
+- Turn-session column shows `{turn}-{session-name}`
+
 ### Development Commands
 
 ```bash
@@ -504,7 +586,10 @@ skills/                # Distributable skills (30 total)
 bin/                   # CLI tools
 ├── sesh.ts            # Session name manager
 ├── transcript.ts      # Transcript viewer CLI
-└── transcript-tui.ts  # Transcript viewer TUI
+├── transcript-tui.ts  # Transcript viewer TUI
+├── hooks.ts           # Hooks framework CLI
+├── hook-events.ts     # Hook events viewer CLI
+└── hook-events-tui.ts # Hook events viewer TUI
 
 src/
 ├── index.ts           # Main SDK entry point
@@ -523,6 +608,9 @@ src/
 examples/              # Example implementations
 ├── hooks.yaml         # Hook framework config example
 └── hooks/             # Hook script examples
+
+scripts/               # Build and maintenance scripts
+└── patch-blessed.ts   # Patches blessed library for terminfo compatibility
 
 tests/                 # Test suites
 ```

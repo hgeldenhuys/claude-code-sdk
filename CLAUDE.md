@@ -242,6 +242,11 @@ bun run hook-events-tui "tender-spider,earnest-lion"  # Multi-session
 - **Write**: Full file content with line numbers
 - **TodoWrite**: Task list with progress bar and status icons
 
+**Additional features:**
+- **Markdown highlighting**: Backtick code in prompts highlighted in cyan
+- **Syntax highlighting**: TypeScript, JavaScript, Shell, JSON in code views
+- **Blessed patch**: Auto-patches blessed library to suppress terminfo warnings (via postinstall)
+
 ### Hook Events Architecture
 
 The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execution. Here's how it works:
