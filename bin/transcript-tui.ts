@@ -779,8 +779,13 @@ function generateUsageGraph(width: number, height: number): string {
       segmentCount++;
     }
 
-    // Use input_tokens which represents actual context size at this point
-    const inputTokens = line.message?.usage?.input_tokens || 0;
+    // Calculate total input tokens including cache (same as getContextUsage)
+    const usage = line.message?.usage;
+    const inputTokens = usage
+      ? (usage.input_tokens || 0) +
+        (usage.cache_creation_input_tokens || 0) +
+        (usage.cache_read_input_tokens || 0)
+      : 0;
 
     usageData.push({
       lineNumber: line.lineNumber,
