@@ -200,6 +200,8 @@ interface AppState {
   // Performance cache
   cachedListItems: string[]; // Pre-computed list items for performance
   listItemsDirty: boolean; // Flag to regenerate list items
+  // Jump to line
+  startLine: number; // Line number to jump to on start (0 = don't jump)
 }
 
 const state: AppState = {
@@ -233,17 +235,26 @@ const state: AppState = {
   // Performance cache
   cachedListItems: [],
   listItemsDirty: true,
+  // Jump to line
+  startLine: 0,
 };
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-async function resolveTranscriptPath(input: string): Promise<string | null> {
+/**
+ * Resolve a single session name/ID to session info
+ * Returns { filePath, sessionId } or null if not found
+ */
+async function resolveSingleSession(input: string): Promise<{ filePath: string; sessionId: string } | null> {
   // Direct file path
   const file = Bun.file(input);
   if (await file.exists()) {
-    return input;
+    // Extract session ID from filename
+    const filename = input.split('/').pop() || '';
+    const sessionId = filename.replace('.jsonl', '');
+    return { filePath: input, sessionId };
   }
 
   if (input.startsWith('/')) {
@@ -254,14 +265,16 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
   const relativePath = join(process.cwd(), input);
   const relativeFile = Bun.file(relativePath);
   if (await relativeFile.exists()) {
-    return relativePath;
+    const filename = relativePath.split('/').pop() || '';
+    const sessionId = filename.replace('.jsonl', '');
+    return { filePath: relativePath, sessionId };
   }
 
   // Use SQLite to lookup by session ID or slug
   const db = getDb();
   const session = getSession(db, input);
   if (session) {
-    return session.filePath;
+    return { filePath: session.filePath, sessionId: session.sessionId };
   }
 
   // Try session store for name lookup
@@ -272,7 +285,7 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
     if (sessionId) {
       const session2 = getSession(db, sessionId);
       if (session2) {
-        return session2.filePath;
+        return { filePath: session2.filePath, sessionId: session2.sessionId };
       }
     }
   } catch {
@@ -283,11 +296,45 @@ async function resolveTranscriptPath(input: string): Promise<string | null> {
 }
 
 /**
+ * Resolve transcript path(s) from input
+ * Supports comma-separated session names/IDs for multi-session viewing
+ * Returns { filePath, sessionIds } where filePath is the first session and sessionIds contains all
+ */
+async function resolveTranscriptPath(input: string): Promise<string | null> {
+  const result = await resolveSingleSession(input);
+  return result?.filePath ?? null;
+}
+
+/**
+ * Resolve multiple sessions from comma-separated input
+ * Returns array of { filePath, sessionId } for each resolved session
+ */
+async function resolveMultipleSessions(input: string): Promise<Array<{ filePath: string; sessionId: string }>> {
+  const parts = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  const results: Array<{ filePath: string; sessionId: string }> = [];
+
+  for (const part of parts) {
+    const resolved = await resolveSingleSession(part);
+    if (resolved) {
+      results.push(resolved);
+    }
+  }
+
+  return results;
+}
+
+/**
  * Escape curly braces for blessed markup
  * Double braces {{ and }} render as literal { and }
  */
 function escapeBlessedMarkup(text: string): string {
-  return text.replace(/\{/g, '{{').replace(/\}/g, '}}');
+  // Use placeholders to avoid replacement interference
+  // ({open} contains }, {close} contains { - direct replacement would corrupt)
+  return text
+    .replace(/\{/g, '\x00OPEN\x00')
+    .replace(/\}/g, '\x00CLOSE\x00')
+    .replace(/\x00OPEN\x00/g, '{open}')
+    .replace(/\x00CLOSE\x00/g, '{close}');
 }
 
 /**
@@ -332,8 +379,13 @@ function highlightJson(json: string): string {
           i++;
         }
 
-        // Escape braces in the string content
-        const escapedStr = str.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+        // Escape braces in the string content (blessed uses {open} and {close} for literal braces)
+        // Use placeholder approach to avoid replacement interference
+        const escapedStr = str
+          .replace(/\{/g, '\x00OPEN\x00')
+          .replace(/\}/g, '\x00CLOSE\x00')
+          .replace(/\x00OPEN\x00/g, '{open}')
+          .replace(/\x00CLOSE\x00/g, '{close}');
 
         // Check if this is a key (followed by colon)
         const remaining = line.slice(i).trim();
@@ -373,7 +425,7 @@ function highlightJson(json: string): string {
         continue;
       }
 
-      // Handle structural characters
+      // Handle structural characters (blessed uses {open} and {close} for literal braces)
       if (char === '{') {
         result += '{open}';
         i++;
@@ -737,6 +789,7 @@ function generateHelpContent(): string {
   {green-fg}u{/green-fg}               Toggle token usage graph overlay
   {green-fg}m{/green-fg}               Toggle mouse support
   {green-fg}L{/green-fg}               Toggle live mode (watch for new entries)
+  {green-fg}r{/green-fg} or {green-fg}Ctrl+L{/green-fg}  Redraw screen (fix display glitches)
   {green-fg}?{/green-fg}               Toggle this help overlay
 
 {bold}Quit:{/bold}
@@ -885,16 +938,18 @@ function getListItems(): string[] {
   state.cachedListItems = state.lines.map((line, index) => {
     // Compact format: lineNum type preview [usage%] session-name
     // Fixed column widths: markers(2) + lineNum(7) + type(7) + preview(40) + usage(7) + session(13) = 76 chars
-    const type = getDisplayType(line).slice(0, 6).padEnd(6);
+    // Escape type in case it comes from user data (e.g., progress data.type)
+    const type = escapeBlessedMarkup(getDisplayType(line).slice(0, 6).padEnd(6));
     const typeColor = getTypeColor(line.type);
     const contextUsage = getContextUsage(line);
     const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(line.lineNumber) ? '{yellow-fg}★{/yellow-fg}' : ' ';
 
     // Fixed-width preview (40 display columns, padded accounting for wide chars)
+    // Must escape blessed markup in preview to prevent parsing errors
     const PREVIEW_WIDTH = 40;
     const rawPreview = getPreview(line, PREVIEW_WIDTH);
-    const preview = padEndDisplay(rawPreview, PREVIEW_WIDTH);
+    const preview = escapeBlessedMarkup(padEndDisplay(rawPreview, PREVIEW_WIDTH));
 
     // Fixed-width usage column (7 chars: " [XXX%]" or spaces)
     const usageCol = contextUsage ? ` ${contextUsage}` : '        ';
@@ -912,7 +967,7 @@ function getListItems(): string[] {
     } else if (turnSeq) {
       turnSessionStr = `${turnSeq}`;
     }
-    const turnSessionPadded = padEndDisplay(turnSessionStr.slice(0, SESSION_WIDTH), SESSION_WIDTH);
+    const turnSessionPadded = escapeBlessedMarkup(padEndDisplay(turnSessionStr.slice(0, SESSION_WIDTH), SESSION_WIDTH));
     const turnSessionSuffix = turnSessionStr ? ` {cyan-fg}${turnSessionPadded}{/cyan-fg}` : ` ${turnSessionPadded}`;
 
     return `${searchMatch}${bookmarkMark}${String(line.lineNumber).padStart(6)} {${typeColor}-fg}${type}{/${typeColor}-fg} ${preview}${usageCol}${turnSessionSuffix}`;
@@ -1206,13 +1261,15 @@ async function createTUI(): Promise<void> {
     const turnInfo = currentLine?.turnSequence
       ? ` | {cyan-fg}Turn {bold}${currentLine.turnSequence}{/bold}{/cyan-fg}`
       : '';
-    const sessionDisplay = currentLine?.sessionName || state.sessionName || state.sessionId;
+    // Escape session display in case it contains curly braces
+    const sessionDisplay = escapeBlessedMarkup(currentLine?.sessionName || state.sessionName || state.sessionId);
     const filterInfo =
       state.activeFilter !== 'all' ? ` | {yellow-fg}Filter: ${state.activeFilter}{/yellow-fg}` : '';
     const fullscreenInfo = state.fullscreen ? ' | {magenta-fg}FULLSCREEN{/magenta-fg}' : '';
     const liveInfo = state.liveMode ? ' | {green-fg}LIVE{/green-fg}' : '';
+    // Escape search query as it's user input
     const searchInfo = state.searchQuery
-      ? ` | {blue-fg}Search: "${state.searchQuery}" (${state.searchResults.length}){/blue-fg}`
+      ? ` | {blue-fg}Search: "${escapeBlessedMarkup(state.searchQuery)}" (${state.searchResults.length}){/blue-fg}`
       : '';
 
     return `{bold}{cyan-fg}Transcript Viewer{/cyan-fg}{/bold} | Session: {green-fg}${sessionDisplay}{/green-fg}${turnInfo} | {yellow-fg}Lines: ${state.lines.length}{/yellow-fg} | {magenta-fg}${state.currentIndex + 1}/${state.lines.length}{/magenta-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}${filterInfo}${fullscreenInfo}${liveInfo}${searchInfo}`;
@@ -1238,7 +1295,14 @@ async function createTUI(): Promise<void> {
     // Update content pane
     const newContent = renderCurrentLine();
     contentBox.setLabel(` Content [${state.viewMode}] `);
-    contentBox.setContent(newContent);
+    try {
+      contentBox.setContent(newContent);
+    } catch (e) {
+      // If blessed fails to parse the content, show an error message
+      // This catches malformed blessed markup that slipped through escaping
+      const safeContent = `{red-fg}Error rendering content:{/red-fg}\n${escapeBlessedMarkup(String(e))}\n\nLine ${state.currentIndex + 1} content length: ${newContent.length}`;
+      contentBox.setContent(safeContent);
+    }
     contentBox.scrollTo(0);
 
     screen.render();
@@ -1287,13 +1351,24 @@ async function createTUI(): Promise<void> {
     }
 
     // Update list (uses cache if not dirty)
-    listBox.setItems(getListItems());
+    try {
+      listBox.setItems(getListItems());
+    } catch (e) {
+      // If blessed fails to parse list items, log and continue
+      console.error('Error setting list items:', e);
+    }
     listBox.select(state.currentIndex);
 
     // Update content
     const newContent = renderCurrentLine();
     contentBox.setLabel(` Content [${state.viewMode}] `);
-    contentBox.setContent(newContent);
+    try {
+      contentBox.setContent(newContent);
+    } catch (e) {
+      // If blessed fails to parse the content, show an error message
+      const safeContent = `{red-fg}Error rendering content:{/red-fg}\n${escapeBlessedMarkup(String(e))}\n\nLine ${state.currentIndex + 1} content length: ${newContent.length}`;
+      contentBox.setContent(safeContent);
+    }
     contentBox.scrollTo(0);
 
     // Update border colors based on focus
@@ -1716,6 +1791,12 @@ async function createTUI(): Promise<void> {
     screen.render();
   });
 
+  // Redraw screen (fixes garbage characters from wide chars/emojis)
+  screen.key(['C-l', 'r'], () => {
+    screen.realloc();
+    screen.render();
+  });
+
   // Quit
   screen.key(['q', 'C-c'], () => {
     // Clean up polling interval
@@ -1846,7 +1927,13 @@ async function main(): Promise<number> {
     console.log(`transcript-tui v${VERSION} - Interactive Transcript Viewer
 
 Usage:
-  transcript-tui <file|session> [filter options]
+  transcript-tui <file|session|sessions> [filter options]
+
+  The input can be:
+    - A file path (./session.jsonl)
+    - A session name (tender-spider)
+    - A session ID (abc-123-...)
+    - Comma-separated names/IDs ("tender-spider,earnest-lion")
 
 Filter Options:
   --type, -t <types>      Filter by type (comma-separated)
@@ -1859,6 +1946,7 @@ Filter Options:
   --session, -s <ids>     Filter by session ID(s) (comma-separated)
   --session-name <name>   Filter by session name (uses sesh lookup)
   --live, -w              Watch file for new entries in real-time
+  --line, -l <n>          Jump to line number N on start
 
 Navigation:
   j/k, Up/Down     Navigate lines
@@ -1899,6 +1987,7 @@ Features:
 Examples:
   transcript-tui ./session.jsonl
   transcript-tui cryptic-crunching-candle
+  transcript-tui "tender-spider,earnest-lion"               # Multiple sessions
   transcript-tui cryptic-crunching-candle --assistant
   transcript-tui cryptic-crunching-candle --text-only        # AI text only
   transcript-tui cryptic-crunching-candle --type user,assistant
@@ -1963,6 +2052,8 @@ Examples:
       }
     } else if (arg === '--live' || arg === '-w') {
       state.liveMode = true;
+    } else if (arg === '--line' || arg === '-l') {
+      state.startLine = Number.parseInt(args[++i]!, 10);
     } else if (!arg.startsWith('-')) {
       input = arg;
     }
@@ -1973,7 +2064,30 @@ Examples:
     return 1;
   }
 
-  const filePath = await resolveTranscriptPath(input);
+  // Check if input contains comma-separated sessions
+  let filePath: string | null = null;
+  let resolvedSessionIds: string[] = [];
+
+  if (input.includes(',')) {
+    // Multi-session mode: resolve each session name/ID
+    const sessions = await resolveMultipleSessions(input);
+    if (sessions.length === 0) {
+      console.error(`Error: No sessions found matching: ${input}`);
+      return 1;
+    }
+    filePath = sessions[0]!.filePath;
+    resolvedSessionIds = sessions.map(s => s.sessionId);
+    // Add resolved session IDs to filter
+    filterOpts.sessionIds = [...(filterOpts.sessionIds || []), ...resolvedSessionIds];
+    state.sessionFilter = filterOpts.sessionIds;
+    if (filterLabel === 'all') {
+      filterLabel = `sessions:${sessions.length}`;
+    } else {
+      filterLabel = `${filterLabel}+sessions:${sessions.length}`;
+    }
+  } else {
+    filePath = await resolveTranscriptPath(input);
+  }
 
   if (!filePath) {
     console.error(`Error: Transcript not found: ${input}`);
@@ -1982,7 +2096,24 @@ Examples:
 
   try {
     // Load transcript from SQLite
-    const allLines = loadTranscriptLines(filePath);
+    // For multi-session, load all sessions' lines
+    let allLines: TranscriptLine[];
+    if (resolvedSessionIds.length > 1) {
+      // Load lines from all sessions
+      const db = getDb();
+      const allResults: TranscriptLine[] = [];
+      for (const sessionId of resolvedSessionIds) {
+        const results = getLines(db, { sessionId });
+        const lines = results.map(lineResultToTranscriptLine);
+        allResults.push(...lines);
+      }
+      // Sort by timestamp for chronological view
+      allLines = allResults.sort((a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+    } else {
+      allLines = loadTranscriptLines(filePath);
+    }
     const metadata = getSessionMetadata(allLines);
 
     // Apply filters
@@ -1996,12 +2127,22 @@ Examples:
     // Initialize state
     state.allLines = allLines;
     state.lines = filteredLines;
-    state.currentIndex = filteredLines.length - 1; // Start at last line
+    // Start at specified line or last line
+    if (state.startLine > 0) {
+      // Find index of line with matching line number
+      const startIndex = filteredLines.findIndex((l) => l.lineNumber === state.startLine);
+      state.currentIndex = startIndex >= 0 ? startIndex : filteredLines.length - 1;
+    } else {
+      state.currentIndex = filteredLines.length - 1; // Start at last line
+    }
     state.filePath = filePath;
     // Prefer session name from lines (more accurate) over metadata (may be stale)
     const lineSessionName = allLines.find((l) => (l as TranscriptLine & { sessionName?: string }).sessionName)?.sessionName;
-    state.sessionName = lineSessionName || (metadata.sessionName as string) || '';
-    state.sessionId = (metadata.sessionId as string) || '';
+    // For multi-session, show count instead of single name
+    state.sessionName = resolvedSessionIds.length > 1
+      ? `${resolvedSessionIds.length} sessions`
+      : (lineSessionName || (metadata.sessionName as string) || '');
+    state.sessionId = resolvedSessionIds.length > 0 ? resolvedSessionIds[0]! : ((metadata.sessionId as string) || '');
     state.activeFilter = filterLabel;
     state.textOnly = filterOpts.textOnly || false;
     state.filterOpts = filterOpts; // Store for live mode refiltering
