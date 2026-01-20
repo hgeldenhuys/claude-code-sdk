@@ -288,28 +288,41 @@ EOF
   info "Setting up transcript index..."
   local db_path="$HOME/.claude-code-sdk/transcripts.db"
 
-  # Stop existing daemon if running
-  .claude/bin/transcript index daemon stop 2>/dev/null || true
-
   if [ -f "$db_path" ]; then
-    # Database exists - rebuild to pick up any schema changes
-    info "Rebuilding transcript index (schema may have changed)..."
-    .claude/bin/transcript index rebuild 2>/dev/null || {
-      warn "Index rebuild failed, will try fresh build..."
-      rm -f "$db_path"
-      .claude/bin/transcript index build
-    }
+    # Database exists - check if schema version matches
+    local current_version=$(.claude/bin/transcript index version 2>/dev/null || echo "0")
+    local expected_version=$(.claude/bin/transcript index expected-version 2>/dev/null || echo "0")
+
+    if [ "$current_version" = "$expected_version" ] && [ "$current_version" != "0" ]; then
+      # Versions match - just restart daemon, no rebuild needed
+      info "Transcript index up to date (v$current_version)"
+      .claude/bin/transcript index daemon stop 2>/dev/null || true
+      .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
+      success "Transcript daemon restarted"
+    else
+      # Versions don't match - rebuild needed
+      info "Transcript index needs upgrade (v$current_version -> v$expected_version)"
+      .claude/bin/transcript index daemon stop 2>/dev/null || true
+      info "Rebuilding transcript index..."
+      .claude/bin/transcript index rebuild 2>/dev/null || {
+        warn "Index rebuild failed, will try fresh build..."
+        rm -f "$db_path" "$db_path-shm" "$db_path-wal"
+        .claude/bin/transcript index build
+      }
+      success "Transcript index rebuilt"
+      info "Starting transcript daemon..."
+      .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
+      success "Transcript daemon started"
+    fi
   else
     # First time - build index
     info "Building transcript index (first time)..."
     .claude/bin/transcript index build
+    success "Transcript index ready"
+    info "Starting transcript daemon..."
+    .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
+    success "Transcript daemon started"
   fi
-  success "Transcript index ready"
-
-  # Start daemon in background
-  info "Starting transcript daemon..."
-  .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
-  success "Transcript daemon started"
 
   # Create external adapters directory
   info "Setting up external adapters directory..."

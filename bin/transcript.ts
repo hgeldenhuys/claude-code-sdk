@@ -273,6 +273,8 @@ Index Commands:
   transcript index watch    Watch for changes and update index in real-time
   transcript index status   Show index status and statistics
   transcript index rebuild  Clear and rebuild entire index
+  transcript index version  Show current database schema version
+  transcript index expected-version  Show expected schema version from code
   --use-index              Force search to use SQLite index (auto-detected)
 
 Daemon Commands:
@@ -2134,6 +2136,28 @@ async function cmdIndex(args: IndexArgs): Promise<number> {
         console.log(
           `Last indexed:   ${stats.lastIndexed ? formatDate(stats.lastIndexed) : 'never'}`
         );
+        return 0;
+      }
+
+      case 'version': {
+        // Output just the DB version number for scripting
+        // If DB doesn't exist, output 0
+        if (!isDatabaseReady()) {
+          console.log('0');
+          return 0;
+        }
+        const db = getDatabase();
+        const stats = getDbStats(db);
+        db.close();
+        console.log(stats.version.toString());
+        return 0;
+      }
+
+      case 'expected-version': {
+        // Output the expected DB version from the code (DB_VERSION constant)
+        // This is useful for comparing with actual version to determine if rebuild is needed
+        const { DB_VERSION } = await import('../src/transcripts/db');
+        console.log(DB_VERSION.toString());
         return 0;
       }
 

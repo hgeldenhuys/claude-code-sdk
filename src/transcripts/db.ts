@@ -18,7 +18,7 @@ import type { SearchableTable, UnifiedSearchResult } from './adapters/types';
 import { findTranscriptFiles } from './indexer';
 import type { SearchResult, TranscriptLine } from './types';
 
-const DB_VERSION = 8;
+export const DB_VERSION = 8;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
 
 export interface DbStats {
