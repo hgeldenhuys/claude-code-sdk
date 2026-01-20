@@ -406,6 +406,7 @@ function migrateSchema(db: Database): void {
     }
 
     console.error('[db] Migration v7→v8 complete');
+    currentVersion = 8;
   }
 }
 
