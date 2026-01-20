@@ -223,6 +223,34 @@ function escapeBlessedMarkup(text: string): string {
 }
 
 /**
+ * Highlight markdown-style code in text (backticks)
+ * - Triple backticks for code blocks
+ * - Single backticks for inline code
+ * Returns blessed-formatted string
+ */
+function highlightMarkdownCode(text: string): string {
+  // First escape blessed markup
+  let result = escapeBlessedMarkup(text);
+
+  // Highlight code blocks (```...```) - cyan background
+  result = result.replace(
+    /```(\w*)\n?([\s\S]*?)```/g,
+    (_, lang, code) => {
+      const langLabel = lang ? `{gray-fg}[${lang}]{/gray-fg}\n` : '';
+      return `${langLabel}{cyan-fg}${code.trim()}{/cyan-fg}`;
+    }
+  );
+
+  // Highlight inline code (`...`) - cyan with subtle background effect
+  result = result.replace(
+    /`([^`]+)`/g,
+    '{cyan-fg}`$1`{/cyan-fg}'
+  );
+
+  return result;
+}
+
+/**
  * Syntax highlight JSON for blessed markup
  * Colors: keys=cyan, strings=green, numbers=yellow, booleans/null=magenta
  */
@@ -1272,7 +1300,8 @@ function renderCurrentEvent(): string {
           const input = JSON.parse(event.inputJson);
           if (input.prompt) {
             lines.push('{bold}Prompt:{/bold}');
-            lines.push(escapeBlessedMarkup(String(input.prompt).slice(0, 2000)));
+            // Use markdown code highlighting for prompts
+            lines.push(highlightMarkdownCode(String(input.prompt).slice(0, 2000)));
             lines.push('');
           }
           if (input.tool_input) {
