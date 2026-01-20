@@ -172,6 +172,8 @@ interface AppState {
   // Performance cache
   cachedListItems: string[];
   listItemsDirty: boolean;
+  // Session name cache (sessionId -> name)
+  sessionNameCache: Map<string, string>;
 }
 
 const state: AppState = {
@@ -197,6 +199,7 @@ const state: AppState = {
   filterOpts: {},
   cachedListItems: [],
   listItemsDirty: true,
+  sessionNameCache: new Map(),
 };
 
 // ============================================================================
@@ -466,6 +469,31 @@ function getEventColor(eventType: string): string {
       return 'red';
     default:
       return 'white';
+  }
+}
+
+/**
+ * Get short abbreviation for event type (max 6 chars)
+ * Saves space in list view while remaining readable
+ */
+function getEventAbbrev(eventType: string): string {
+  switch (eventType) {
+    case 'PreToolUse':
+      return 'Pre';
+    case 'PostToolUse':
+      return 'Post';
+    case 'UserPromptSubmit':
+      return 'Prompt';
+    case 'SessionStart':
+      return 'Start';
+    case 'SessionEnd':
+      return 'End';
+    case 'Stop':
+      return 'Stop';
+    case 'SubagentStop':
+      return 'SubStp';
+    default:
+      return eventType.slice(0, 6);
   }
 }
 
@@ -799,6 +827,46 @@ function renderCurrentEvent(): string {
  * Generate list items - uses cache for performance
  * Only regenerates when listItemsDirty is true
  */
+/**
+ * Get a preview snippet from hook event input (for list display)
+ */
+function getEventPreview(event: HookEventResult, maxLen: number): string {
+  if (!event.inputJson) return '';
+
+  try {
+    const input = JSON.parse(event.inputJson);
+
+    // For tool events, show relevant input
+    if (event.eventType === 'PreToolUse' && input.tool_input) {
+      const toolInput = input.tool_input;
+      // Show command for Bash, pattern for Grep/Glob, path for Read/Edit
+      if (toolInput.command) return toolInput.command.slice(0, maxLen);
+      if (toolInput.pattern) return toolInput.pattern.slice(0, maxLen);
+      if (toolInput.file_path) return toolInput.file_path.split('/').pop()?.slice(0, maxLen) || '';
+      if (toolInput.query) return toolInput.query.slice(0, maxLen);
+      // Generic: stringify first value
+      const firstVal = Object.values(toolInput)[0];
+      if (typeof firstVal === 'string') return firstVal.slice(0, maxLen);
+    }
+
+    // For PostToolUse, show snippet of response
+    if (event.eventType === 'PostToolUse' && input.tool_response) {
+      const resp = input.tool_response;
+      if (resp.stdout) return resp.stdout.split('\n')[0]?.slice(0, maxLen) || '';
+      if (resp.content) return String(resp.content).split('\n')[0]?.slice(0, maxLen) || '';
+    }
+
+    // For UserPromptSubmit, show prompt snippet
+    if (event.eventType === 'UserPromptSubmit' && input.prompt) {
+      return String(input.prompt).split('\n')[0]?.slice(0, maxLen) || '';
+    }
+  } catch {
+    // Ignore parse errors
+  }
+
+  return '';
+}
+
 function getListItems(): string[] {
   if (!state.listItemsDirty && state.cachedListItems.length === state.events.length) {
     return state.cachedListItems;
@@ -808,31 +876,32 @@ function getListItems(): string[] {
   const searchResultSet = new Set(state.searchResults);
 
   state.cachedListItems = state.events.map((event, index) => {
-    // Compact format: markers + time + type + tool + decision + usage + turn-session
-    const type = event.eventType.slice(0, 12).padEnd(12);
+    // Format similar to transcript-tui:
+    // *★ time type   tool     preview                        [XX%] turn-session
+    const typeAbbrev = getEventAbbrev(event.eventType).padEnd(6);
     const color = getEventColor(event.eventType);
-    const toolInfo = event.toolName ? event.toolName.slice(0, 10).padEnd(10) : '          ';
     const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(event.id) ? '{yellow-fg}★{/yellow-fg}' : ' ';
 
     // Timestamp (time only)
     const time = formatTime(event.timestamp);
 
-    // Decision indicator (PreToolUse only)
-    const decision =
-      event.eventType === 'PreToolUse'
-        ? event.decision
-          ? '{green-fg}✓{/green-fg}'
-          : '{gray-fg}?{/gray-fg}'
-        : ' ';
+    // Tool name (8 chars)
+    const toolInfo = event.toolName ? event.toolName.slice(0, 8).padEnd(8) : '        ';
+
+    // Preview of event content (25 chars)
+    const PREVIEW_WIDTH = 25;
+    const rawPreview = getEventPreview(event, PREVIEW_WIDTH);
+    const preview = escapeBlessedMarkup(padEndDisplay(rawPreview, PREVIEW_WIDTH));
 
     // Context usage percentage (colored)
     const contextUsage = getContextUsage(event);
     const usageCol = contextUsage ? ` ${contextUsage}` : '        ';
 
-    // Combined turn-session column: "{turn}-{session}" (e.g., "22-loyal-whippet")
-    const SESSION_WIDTH = 16;
-    const sessionName = event.sessionName;
+    // Turn-session column (20 chars like transcript-tui)
+    const SESSION_WIDTH = 20;
+    // Use cached session name if event doesn't have one
+    const sessionName = event.sessionName || state.sessionNameCache.get(event.sessionId);
     const turnSeq = event.turnSequence;
 
     let turnSessionStr = '';
@@ -841,8 +910,9 @@ function getListItems(): string[] {
     } else if (sessionName) {
       turnSessionStr = sessionName;
     } else if (turnSeq) {
-      turnSessionStr = `${turnSeq}`;
+      turnSessionStr = String(turnSeq);
     }
+
     const turnSessionPadded = escapeBlessedMarkup(
       padEndDisplay(turnSessionStr.slice(0, SESSION_WIDTH), SESSION_WIDTH)
     );
@@ -850,7 +920,7 @@ function getListItems(): string[] {
       ? ` {cyan-fg}${turnSessionPadded}{/cyan-fg}`
       : ` ${turnSessionPadded}`;
 
-    return `${searchMatch}${bookmarkMark}${time} {${color}-fg}${type}{/${color}-fg} ${toolInfo} ${decision}${usageCol}${turnSessionSuffix}`;
+    return `${searchMatch}${bookmarkMark}${time} {${color}-fg}${typeAbbrev}{/${color}-fg} ${toolInfo} ${preview}${usageCol}${turnSessionSuffix}`;
   });
 
   state.listItemsDirty = false;
@@ -911,6 +981,15 @@ function generateHelpContent(): string {
   {green-fg}L{/green-fg}               Toggle live mode (watch for new events)
   {green-fg}r{/green-fg} or {green-fg}Ctrl+L{/green-fg}  Redraw screen (fix display glitches)
   {green-fg}?{/green-fg}               Toggle this help overlay
+
+{bold}Event Type Abbreviations:{/bold}
+  Pre     PreToolUse
+  Post    PostToolUse
+  Prompt  UserPromptSubmit
+  Start   SessionStart
+  End     SessionEnd
+  Stop    Stop
+  SubStp  SubagentStop
 
 {bold}Decision Indicator (PreToolUse only):{/bold}
   {green-fg}✓{/green-fg}                Hook handler approved
@@ -1634,7 +1713,11 @@ Features:
   q                Quit
 
 List Display:
-  Shows: time, event type, tool name, decision, context usage %, turn-session
+  Format: time + type + tool + preview + usage% + turn-session
+
+  Example: 08:31:02 Pre    Bash     npm install           [ 45%] 8-earnest-lion
+
+  Event Abbreviations: Pre Post Prompt Start End Stop SubStp
 
 Decision Indicator (PreToolUse only):
   ✓                Hook handler approved
@@ -1773,6 +1856,25 @@ Examples:
   const bookmarkStore = loadBookmarks();
   const sessionBookmarks = new Set<number>(bookmarkStore[sessionId] || []);
 
+  // Build session name cache from session store
+  const sessionNameCache = new Map<string, string>();
+  try {
+    const store = getSessionStore();
+    for (const sid of resolvedSessionIds) {
+      const name = store.getName(sid);
+      if (name) {
+        sessionNameCache.set(sid, name);
+      }
+    }
+  } catch {
+    // Session store not available, try to get names from events
+    for (const event of allEvents) {
+      if (event.sessionName && !sessionNameCache.has(event.sessionId)) {
+        sessionNameCache.set(event.sessionId, event.sessionName);
+      }
+    }
+  }
+
   // Initialize state
   state.allEvents = allEvents;
   state.events = filteredEvents;
@@ -1785,6 +1887,7 @@ Examples:
   state.filterOpts = filterOpts;
   state.bookmarks = sessionBookmarks;
   state.bookmarkStore = bookmarkStore;
+  state.sessionNameCache = sessionNameCache;
 
   // Start TUI
   await createTUI();

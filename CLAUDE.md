@@ -216,14 +216,22 @@ bun run hook-events . --watch
 # Interactive TUI
 bun run hook-events-tui .
 bun run hook-events-tui . --event PreToolUse --live
+bun run hook-events-tui "tender-spider,earnest-lion"  # Multi-session
 ```
 
 **hook-events-tui** features:
 - **View modes**: Raw JSON (1), Human-readable (2), Minimal (3), Tool I/O (4), Timeline (5)
 - **Bookmarks**: Space to toggle, `[`/`]` to jump (filter-aware, persisted to `~/.claude-code-sdk/hook-event-bookmarks.json`)
-- **Context usage**: Shows `[XX%]` at end of each line (based on 200K context window)
-- **Live mode**: Press `L` to watch for new events in real-time
-- **Navigation**: j/k or arrows, g/G for first/last, Tab to switch panes
+- **Context usage**: Shows `[XX%]` colored by usage level (green ≤50%, yellow 51-70%, red 71%+)
+- **Live mode**: Press `L` to watch for new events (200ms polling with turn data refresh)
+- **Navigation**: j/k or arrows, g/G for first/last, Tab to switch panes, r/Ctrl+L to redraw
+- **Multi-session**: Comma-separated sessions supported (e.g., `"tender-spider,earnest-lion"`)
+- **Preview column**: Shows tool input/output preview (command, pattern, file path, response snippet)
+- **Turn-session column**: Shows `{turn}-{session-name}` (e.g., `8-earnest-lion`)
+
+**List format:** `*★ 08:31:02 Pre    Bash     npm install           [ 45%] 8-earnest-lion`
+
+**Event abbreviations:** `Pre` `Post` `Prompt` `Start` `End` `Stop` `SubStp`
 
 ### Hook Events Architecture
 
