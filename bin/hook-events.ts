@@ -30,7 +30,7 @@ import {
   type HookEventResult,
   type HookSessionInfo,
 } from '../src/transcripts/db';
-import { getSessionStore } from '../src/hooks/sessions/store';
+import { getSessionStore, getAllSessionIds } from '../src/hooks/sessions/store';
 
 // ============================================================================
 // Constants
@@ -111,6 +111,59 @@ function getDb(): ReturnType<typeof getDatabase> {
 // Helpers
 // ============================================================================
 
+/**
+ * Resolve session input(s) to an array of session IDs
+ * Supports:
+ * - "." for current/most recent session
+ * - Session name (resolves to ALL matching session IDs from history)
+ * - Session ID (used as-is)
+ * - Comma-separated list of any of the above
+ */
+function resolveSessionIds(
+  db: ReturnType<typeof getDatabase>,
+  sessionInput: string
+): string[] {
+  const results = new Set<string>();
+
+  // Split by comma for multiple inputs
+  const inputs = sessionInput.split(',').map((s) => s.trim()).filter(Boolean);
+
+  for (const input of inputs) {
+    if (input === '.') {
+      // Current session - get most recent
+      const sessions = getHookSessions(db, 1);
+      if (sessions.length > 0) {
+        results.add(sessions[0]!.sessionId);
+      }
+    } else {
+      // Try as session name first - get ALL session IDs for this name
+      try {
+        const allIds = getAllSessionIds(input);
+        if (allIds.length > 0) {
+          for (const id of allIds) {
+            results.add(id);
+          }
+        } else {
+          // Not a session name, try as session ID via store
+          const store = getSessionStore();
+          const resolved = store.getSessionId(input);
+          if (resolved) {
+            results.add(resolved);
+          } else {
+            // Use as-is (raw session ID)
+            results.add(input);
+          }
+        }
+      } catch {
+        // Not a session name, use as-is (raw session ID)
+        results.add(input);
+      }
+    }
+  }
+
+  return Array.from(results);
+}
+
 function printError(message: string): void {
   console.error(`error: ${message}`);
 }
@@ -123,6 +176,7 @@ Usage:
   hook-events list [options]                List sessions with hook events
   hook-events search <query> [options]      Search across hook events
   hook-events info <session>                Show hook event metadata
+  hook-events files <session> [options]     List files edited by a session
   hook-events help                          Show this help
 
 View Options:
@@ -152,6 +206,17 @@ List Options:
   --recent <days>         Show sessions from last N days
   --names                 Show session IDs only
 
+Files Options:
+  --json                  Output as JSON array
+  --stats                 Include file statistics (edit count, tools used)
+
+Session Resolution:
+  Session arguments support multiple formats:
+  - "." for current/most recent session
+  - Session name (e.g., "sharp-buffalo") - resolves to ALL historical session IDs
+  - Raw session ID (e.g., "abc-123-...")
+  - Comma-separated list (e.g., "name1,name2" or "id1,id2")
+
 Examples:
   # View last 10 events from current session
   hook-events . --last 10
@@ -166,7 +231,13 @@ Examples:
   hook-events my-session --tail
 
   # List recent sessions with hook events
-  hook-events list --recent 7`);
+  hook-events list --recent 7
+
+  # List files edited by a session
+  hook-events files my-session
+
+  # List files with stats (edit count, tools used)
+  hook-events files my-session --stats`);
 }
 
 function formatDate(isoString: string): string {
@@ -823,6 +894,140 @@ async function cmdSearch(query: string, args: { limit?: number; json?: boolean }
 }
 
 // ============================================================================
+// Files Command
+// ============================================================================
+
+interface FileInfo {
+  path: string;
+  editCount: number;
+  tools: Set<string>;
+  firstEdit: string;
+  lastEdit: string;
+}
+
+async function cmdFiles(
+  sessionInput: string,
+  args: { json?: boolean; stats?: boolean }
+): Promise<number> {
+  const db = getDb();
+
+  // Resolve session input(s) to session IDs
+  // Supports: ".", session names (resolved to ALL historical IDs), raw session IDs, comma-separated
+  const sessionIds = resolveSessionIds(db, sessionInput);
+
+  if (sessionIds.length === 0) {
+    printError('No sessions found');
+    return 1;
+  }
+
+  // Get all PostToolUse events for Edit and Write tools across ALL sessions
+  const allEvents: HookEventResult[] = [];
+  for (const sessionId of sessionIds) {
+    const events = getHookEvents(db, {
+      sessionId,
+      eventTypes: ['PostToolUse'],
+      toolNames: ['Edit', 'Write', 'NotebookEdit'],
+      limit: 10000, // High limit to get all file edits
+    });
+    allEvents.push(...events);
+  }
+
+  if (allEvents.length === 0) {
+    const sessionDesc = sessionIds.length === 1
+      ? 'this session'
+      : `these ${sessionIds.length} sessions`;
+    console.log(`No file edits found for ${sessionDesc}.`);
+    return 0;
+  }
+
+  // Extract file paths and aggregate info
+  const fileMap = new Map<string, FileInfo>();
+
+  for (const event of allEvents) {
+    let filePath: string | undefined;
+
+    // Parse the inputJson to get file_path
+    try {
+      const input = event.inputJson ? JSON.parse(event.inputJson) : null;
+      if (!input) continue;
+
+      // Handle different input structures
+      if (input?.tool_input?.file_path) {
+        filePath = input.tool_input.file_path;
+      } else if (input?.file_path) {
+        filePath = input.file_path;
+      } else if (input?.tool_input?.notebook_path) {
+        filePath = input.tool_input.notebook_path;
+      } else if (input?.notebook_path) {
+        filePath = input.notebook_path;
+      }
+    } catch {
+      // Skip if can't parse
+      continue;
+    }
+
+    if (!filePath) continue;
+
+    const existing = fileMap.get(filePath);
+    if (existing) {
+      existing.editCount++;
+      existing.tools.add(event.toolName || 'unknown');
+      if (event.timestamp < existing.firstEdit) {
+        existing.firstEdit = event.timestamp;
+      }
+      if (event.timestamp > existing.lastEdit) {
+        existing.lastEdit = event.timestamp;
+      }
+    } else {
+      fileMap.set(filePath, {
+        path: filePath,
+        editCount: 1,
+        tools: new Set([event.toolName || 'unknown']),
+        firstEdit: event.timestamp,
+        lastEdit: event.timestamp,
+      });
+    }
+  }
+
+  // Sort by path
+  const files = Array.from(fileMap.values()).sort((a, b) => a.path.localeCompare(b.path));
+
+  if (args.json) {
+    // JSON output
+    const jsonOutput = files.map((f) => ({
+      path: f.path,
+      editCount: f.editCount,
+      tools: Array.from(f.tools),
+      firstEdit: f.firstEdit,
+      lastEdit: f.lastEdit,
+    }));
+    console.log(JSON.stringify(jsonOutput, null, 2));
+  } else if (args.stats) {
+    // Stats output
+    const sessionDesc = sessionIds.length === 1 ? 'session' : `${sessionIds.length} sessions`;
+    console.log(`Files edited in ${sessionDesc} (${files.length} files, ${allEvents.length} edits):\n`);
+    for (const file of files) {
+      const tools = Array.from(file.tools).join(', ');
+      const firstDate = formatTime(file.firstEdit);
+      const lastDate = formatTime(file.lastEdit);
+      console.log(`${file.path}`);
+      console.log(`  Edits: ${file.editCount} | Tools: ${tools}`);
+      console.log(`  First: ${firstDate} | Last: ${lastDate}\n`);
+    }
+  } else {
+    // Simple list
+    const sessionDesc = sessionIds.length === 1 ? 'session' : `${sessionIds.length} sessions`;
+    console.log(`Files edited in ${sessionDesc} (${files.length}):\n`);
+    for (const file of files) {
+      const countSuffix = file.editCount > 1 ? ` (${file.editCount} edits)` : '';
+      console.log(`${file.path}${countSuffix}`);
+    }
+  }
+
+  return 0;
+}
+
+// ============================================================================
 // Argument Parsing
 // ============================================================================
 
@@ -855,6 +1060,11 @@ function parseArgs(args: string[]): {
 
     if (arg === 'info') {
       command = 'info';
+      continue;
+    }
+
+    if (arg === 'files') {
+      command = 'files';
       continue;
     }
 
@@ -930,6 +1140,10 @@ function parseArgs(args: string[]): {
       flags.watch = true;
       continue;
     }
+    if (arg === '--stats') {
+      flags.stats = true;
+      continue;
+    }
 
     // Positional argument
     if (!arg.startsWith('-')) {
@@ -1001,6 +1215,16 @@ async function main(): Promise<number> {
       return cmdSearch(positional.join(' '), {
         limit: flags.limit as number | undefined,
         json: flags.json as boolean | undefined,
+      });
+
+    case 'files':
+      if (positional.length === 0) {
+        printError('usage: hook-events files <session>');
+        return 1;
+      }
+      return cmdFiles(positional[0]!, {
+        json: flags.json as boolean | undefined,
+        stats: flags.stats as boolean | undefined,
       });
 
     default:

@@ -278,6 +278,28 @@ export class SessionStore {
   }
 
   /**
+   * Get ALL session IDs associated with a name (from history)
+   * Returns array of session IDs, most recent first
+   */
+  getAllSessionIds(name: string): string[] {
+    const session = this.db.names[name];
+    if (!session) return [];
+
+    // Extract unique session IDs from history, most recent first
+    const ids = new Set<string>();
+    // Add current session ID first
+    ids.add(session.currentSessionId);
+    // Add historical IDs in reverse order (most recent first)
+    for (let i = session.history.length - 1; i >= 0; i--) {
+      const record = session.history[i];
+      if (record?.sessionId) {
+        ids.add(record.sessionId);
+      }
+    }
+    return Array.from(ids);
+  }
+
+  /**
    * Rename a session
    */
   rename(sessionIdOrName: string, newName: string): void {
@@ -912,6 +934,10 @@ export function getSessionName(sessionId: string): string | undefined {
 
 export function getSessionId(name: string): string | undefined {
   return getSessionStore().getSessionId(name);
+}
+
+export function getAllSessionIds(name: string): string[] {
+  return getSessionStore().getAllSessionIds(name);
 }
 
 export function renameSession(sessionIdOrName: string, newName: string): void {
