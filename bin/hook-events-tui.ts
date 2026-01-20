@@ -1455,11 +1455,24 @@ function getEventPreview(event: HookEventResult, maxLen: number): string {
       if (typeof firstVal === 'string') return firstVal.slice(0, maxLen);
     }
 
-    // For PostToolUse, show snippet of response
-    if (event.eventType === 'PostToolUse' && input.tool_response) {
+    // For PostToolUse, show response or fall back to input context
+    if (event.eventType === 'PostToolUse') {
       const resp = input.tool_response;
-      if (resp.stdout) return resp.stdout.split('\n')[0]?.slice(0, maxLen) || '';
-      if (resp.content) return String(resp.content).split('\n')[0]?.slice(0, maxLen) || '';
+      const toolInput = input.tool_input;
+
+      // For Bash, show first line of stdout
+      if (resp?.stdout) return resp.stdout.split('\n')[0]?.slice(0, maxLen) || '';
+
+      // For Edit/Read/Write, show filename from tool_input
+      if (toolInput?.file_path) {
+        return toolInput.file_path.split('/').pop()?.slice(0, maxLen) || '';
+      }
+
+      // For Grep/Glob, show pattern from tool_input
+      if (toolInput?.pattern) return toolInput.pattern.slice(0, maxLen);
+
+      // Generic response content
+      if (resp?.content) return String(resp.content).split('\n')[0]?.slice(0, maxLen) || '';
     }
 
     // For UserPromptSubmit, show prompt snippet
