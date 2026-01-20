@@ -205,11 +205,25 @@ marked.use({
       return this.parser.parseInline(tokens) + '\n\n';
     },
 
-    // Lists - bullet points
-    list({ items }: { items: any[] }) {
+    // List items
+    listitem({ tokens }: { tokens: any[] }) {
+      // Parse item content (may contain nested blocks)
+      const content = this.parser.parse(tokens).trim();
+      return '  • ' + content + '\n';
+    },
+
+    // Lists - ordered and unordered
+    list({ items, ordered, start }: { items: any[]; ordered: boolean; start: number }) {
       let result = '\n';
-      for (const item of items) {
-        result += '  • ' + this.parser.parseInline(item.tokens) + '\n';
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        // Parse item tokens using listitem
+        const content = this.parser.parse(item.tokens).trim();
+        if (ordered) {
+          result += `  ${start + i}. ${content}\n`;
+        } else {
+          result += `  • ${content}\n`;
+        }
       }
       return result;
     },
