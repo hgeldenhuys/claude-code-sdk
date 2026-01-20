@@ -22,10 +22,24 @@
  *   hook-events-tui peaceful-osprey
  */
 
+// Suppress blessed terminfo warnings BEFORE importing blessed
+// (blessed prints "Error on xterm-256color.Setulc" during module init)
+const _originalStderrWrite = process.stderr.write.bind(process.stderr);
+(process.stderr as any).write = (chunk: any, ...args: any[]) => {
+  const str = String(chunk);
+  if (str.includes('Error on xterm') || str.includes('stack.push') || str.includes('out.push')) {
+    return true; // Suppress blessed terminfo parsing errors
+  }
+  return _originalStderrWrite(chunk, ...args);
+};
+
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import blessed from 'blessed';
 import * as Diff from 'diff';
+
+// Restore stderr after blessed is loaded
+(process.stderr as any).write = _originalStderrWrite;
 import { getSessionStore } from '../src/hooks/sessions/store';
 import {
   DEFAULT_DB_PATH,
@@ -1689,16 +1703,6 @@ function copyToClipboard(text: string): void {
 // ============================================================================
 
 async function createTUI(): Promise<void> {
-  // Suppress blessed terminfo warnings (Setulc parsing errors on modern terminals)
-  const originalStderr = process.stderr.write.bind(process.stderr);
-  let suppressingWarnings = true;
-  process.stderr.write = (chunk: any, ...args: any[]) => {
-    if (suppressingWarnings && String(chunk).includes('Error on xterm')) {
-      return true; // Suppress
-    }
-    return originalStderr(chunk, ...args);
-  };
-
   // Create screen
   const screen = blessed.screen({
     smartCSR: true,
@@ -1706,11 +1710,6 @@ async function createTUI(): Promise<void> {
     fullUnicode: true,
     warnings: false, // Suppress blessed warnings
   });
-
-  // Restore stderr after a short delay (blessed init complete)
-  setTimeout(() => {
-    suppressingWarnings = false;
-  }, 100);
 
   // Build header content
   const buildHeaderContent = (): string => {
