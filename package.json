@@ -96,7 +96,6 @@
     "chalk": "^5.6.2",
     "claude-hooks-sdk": "^0.8.6",
     "marked": "^17.0.1",
-    "marked-terminal": "^7.3.0",
     "yaml": "^2.8.2"
   }
 }

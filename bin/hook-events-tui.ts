@@ -1623,8 +1623,12 @@ Features:
   s                Toggle scroll mode (fullscreen only)
   c                Copy current event to clipboard
   L                Toggle live mode
+  r / Ctrl+L       Redraw screen (fix display glitches)
   ?                Show help
   q                Quit
+
+List Display:
+  Shows: time, event type, tool name, decision, context usage %, turn-session
 
 Decision Indicator (PreToolUse only):
   ✓                Hook handler approved

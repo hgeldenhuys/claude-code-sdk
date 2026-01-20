@@ -156,34 +156,86 @@ function loadTranscriptLines(sessionIdOrPath: string): TranscriptLine[] {
 // View modes
 type ViewMode = 'raw' | 'human' | 'minimal' | 'context' | 'markdown';
 
-// Markdown rendering
+// Markdown rendering with custom terminal renderer (marked v17 compatible)
 import { marked } from 'marked';
-import TerminalRenderer from 'marked-terminal';
 import chalk from 'chalk';
 
-// Configure marked for terminal output with custom styling
-marked.setOptions({
-  renderer: new TerminalRenderer({
-    // Inline code styling (backticks)
-    codespan: (text: string) => chalk.bgGray.white(` ${text} `),
-    // Code block styling
-    code: (code: string, lang: string) => {
-      const header = lang ? chalk.dim(`── ${lang} ──`) + '\n' : '';
-      return '\n' + header + chalk.yellow(code) + '\n';
+// Force chalk to output colors (blessed may not detect TTY correctly)
+chalk.level = 3;
+
+// Configure marked with terminal-friendly renderer
+marked.use({
+  renderer: {
+    // Inline code (backticks) - white on gray background
+    codespan({ text }: { text: string }) {
+      return chalk.bgGray.white(` ${text} `);
     },
-    // Make headings more visible
-    heading: (text: string, level: number) => {
-      const prefix = '#'.repeat(level);
+
+    // Code blocks - yellow with optional language header
+    code({ text, lang }: { text: string; lang?: string }) {
+      const header = lang ? chalk.dim(`── ${lang} ──`) + '\n' : '';
+      return '\n' + header + chalk.yellow(text) + '\n';
+    },
+
+    // Headings - bold cyan with # prefix
+    heading({ tokens, depth }: { tokens: any[]; depth: number }) {
+      const text = this.parser.parseInline(tokens);
+      const prefix = '#'.repeat(depth);
       return '\n' + chalk.bold.cyan(`${prefix} ${text}`) + '\n';
     },
-    // Links
-    link: (href: string, title: string, text: string) => {
+
+    // Links - blue underlined with URL
+    link({ href, tokens }: { href: string; tokens: any[] }) {
+      const text = this.parser.parseInline(tokens);
       return chalk.blue.underline(text) + chalk.dim(` (${href})`);
     },
-    // Bold and italic
-    strong: (text: string) => chalk.bold(text),
-    em: (text: string) => chalk.italic(text),
-  }) as any,
+
+    // Bold
+    strong({ tokens }: { tokens: any[] }) {
+      return chalk.bold(this.parser.parseInline(tokens));
+    },
+
+    // Italic
+    em({ tokens }: { tokens: any[] }) {
+      return chalk.italic(this.parser.parseInline(tokens));
+    },
+
+    // Paragraphs - no HTML wrapper
+    paragraph({ tokens }: { tokens: any[] }) {
+      return this.parser.parseInline(tokens) + '\n\n';
+    },
+
+    // Lists - bullet points
+    list({ items }: { items: any[] }) {
+      let result = '\n';
+      for (const item of items) {
+        result += '  • ' + this.parser.parseInline(item.tokens) + '\n';
+      }
+      return result;
+    },
+
+    // Blockquotes - gray bar prefix
+    blockquote({ tokens }: { tokens: any[] }) {
+      const content = this.parser.parse(tokens);
+      const lines = content.split('\n');
+      return lines.map((line: string) => chalk.gray('│ ') + line).join('\n') + '\n';
+    },
+
+    // Horizontal rules
+    hr() {
+      return '\n' + chalk.dim('─'.repeat(40)) + '\n';
+    },
+
+    // Line breaks
+    br() {
+      return '\n';
+    },
+
+    // HTML - strip tags
+    html({ text }: { text: string }) {
+      return text.replace(/<[^>]+>/g, '');
+    },
+  },
 });
 
 // ============================================================================
