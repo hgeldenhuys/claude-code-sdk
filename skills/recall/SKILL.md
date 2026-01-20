@@ -21,7 +21,7 @@ tools:
 >
 > **THE ONLY COMMAND YOU MAY USE IS:**
 > ```
-> transcript recall "your query"
+> .claude/bin/transcript recall "your query"
 > ```
 >
 > **YOU MUST NOT USE:**
@@ -47,7 +47,7 @@ Raw tools like `rg` return unreadable JSON blobs and miss context. **Using them 
 ## The Command
 
 ```bash
-transcript recall "your query"
+.claude/bin/transcript recall "your query"
 ```
 
 That's it. Run this command. Read the output. Done.
@@ -78,12 +78,12 @@ The command automatically escalates to deep path when:
 
 ```bash
 # Force deep path (LLM synthesis) even for simple queries
-transcript recall "caching" --deep
-transcript recall "caching" -D
+.claude/bin/transcript recall "caching" --deep
+.claude/bin/transcript recall "caching" -D
 
 # Force fast path (skip synthesis) even when criteria would trigger escalation
-transcript recall "why did we choose redis" --fast
-transcript recall "why did we choose redis" -F
+.claude/bin/transcript recall "why did we choose redis" --fast
+.claude/bin/transcript recall "why did we choose redis" -F
 ```
 
 **Note:** `--fast` takes precedence over `--deep` if both are specified.
@@ -91,37 +91,37 @@ transcript recall "why did we choose redis" -F
 ### Options
 
 ```bash
-transcript recall "query" --max-sessions 5    # Limit sessions shown (default: 5)
-transcript recall "query" --context 3         # Matches per session (default: 3)
-transcript recall "query" --limit 100         # Total matches to search (default: 100)
-transcript recall "query" --deep              # Force LLM synthesis
-transcript recall "query" --fast              # Skip LLM synthesis
-transcript recall "query" --json              # Output as JSON (includes synthesis if applicable)
+.claude/bin/transcript recall "query" --max-sessions 5    # Limit sessions shown (default: 5)
+.claude/bin/transcript recall "query" --context 3         # Matches per session (default: 3)
+.claude/bin/transcript recall "query" --limit 100         # Total matches to search (default: 100)
+.claude/bin/transcript recall "query" --deep              # Force LLM synthesis
+.claude/bin/transcript recall "query" --fast              # Skip LLM synthesis
+.claude/bin/transcript recall "query" --json              # Output as JSON (includes synthesis if applicable)
 ```
 
 ## Examples
 
 ### Simple keyword lookup (fast path)
 ```bash
-transcript recall "caching"
+.claude/bin/transcript recall "caching"
 ```
 Returns grouped results in 1-2 seconds.
 
 ### Question query (auto-escalates to deep path)
 ```bash
-transcript recall "why did we decide to use Redis?"
+.claude/bin/transcript recall "why did we decide to use Redis?"
 ```
 Auto-detects question pattern, runs synthesis, returns synthesized answer with citations.
 
 ### Force deep analysis
 ```bash
-transcript recall "authentication patterns" --deep
+.claude/bin/transcript recall "authentication patterns" --deep
 ```
 Forces LLM synthesis even if auto-escalation criteria not met.
 
 ### Skip synthesis for speed
 ```bash
-transcript recall "how does the login flow work" --fast
+.claude/bin/transcript recall "how does the login flow work" --fast
 ```
 Skips synthesis despite question pattern, returns fast path results only.
 
@@ -141,7 +141,7 @@ Found 12 matches across 3 sessions
    [10:32 AM] assistant   Line 245
    Implemented Redis caching layer with 60-second TTL...
 
-   → transcript happy-hippo --search "caching" --human
+   → .claude/bin/transcripthappy-hippo --search "caching" --human
 ```
 
 ### Deep Path Output
@@ -167,9 +167,9 @@ Based on your past sessions, you chose Redis for caching because:
 📚 Sources
 
   [1] happy-hippo (Jan 15, 2026)
-      → transcript happy-hippo --search "why did we choose Redis?" --human
+      → .claude/bin/transcripthappy-hippo --search "why did we choose Redis?" --human
   [2] clever-cat (Jan 10, 2026)
-      → transcript clever-cat --search "why did we choose Redis?" --human
+      → .claude/bin/transcriptclever-cat --search "why did we choose Redis?" --human
 ```
 
 ## Workflow
@@ -177,7 +177,7 @@ Based on your past sessions, you chose Redis for caching because:
 ```
 User asks about past discussion
          ↓
-transcript recall "topic"     ← START HERE, ALWAYS
+.claude/bin/transcript recall "topic"     ← START HERE, ALWAYS
          ↓
 Check path indicator (⏩ Fast or ⚡ Deep)
          ↓
@@ -205,13 +205,13 @@ cat ~/.claude/projects/*/abc123.jsonl | grep sandbox
 ```
 
 ```bash
-# CORRECT - Use transcript recall
-transcript recall "sandbox"
+# CORRECT - Use .claude/bin/transcript recall
+.claude/bin/transcript recall "sandbox"
 ```
 
 ## Summary
 
-1. **USE:** `transcript recall "query"`
+1. **USE:** `.claude/bin/transcript recall "query"`
 2. **DO NOT USE:** `rg`, `grep`, `find`, `cat` on transcript files
 3. Let auto-escalation work - it detects when synthesis is needed
 4. Use `--deep` to force synthesis, `--fast` to skip it
