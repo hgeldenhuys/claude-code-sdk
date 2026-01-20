@@ -867,6 +867,104 @@ function renderWriteToolView(toolInput: any, toolResponse: any): string[] {
   return lines;
 }
 
+/**
+ * Render TodoWrite tool with visual task list
+ */
+function renderTodoWriteToolView(toolInput: any, toolResponse: any): string[] {
+  const lines: string[] = [];
+  const todos = toolInput?.todos || [];
+
+  if (!Array.isArray(todos) || todos.length === 0) {
+    lines.push('{gray-fg}(no todos){/gray-fg}');
+    return lines;
+  }
+
+  // Calculate stats
+  const total = todos.length;
+  const completed = todos.filter((t: any) => t.status === 'completed').length;
+  const inProgress = todos.filter((t: any) => t.status === 'in_progress').length;
+  const pending = todos.filter((t: any) => t.status === 'pending').length;
+  const percentage = Math.round((completed / total) * 100);
+
+  // Progress bar
+  const barWidth = 30;
+  const filledComplete = Math.round((completed / total) * barWidth);
+  const filledProgress = Math.round((inProgress / total) * barWidth);
+  const progressBar =
+    '{green-fg}' + '█'.repeat(filledComplete) + '{/green-fg}' +
+    '{yellow-fg}' + '█'.repeat(filledProgress) + '{/yellow-fg}' +
+    '{gray-fg}' + '░'.repeat(barWidth - filledComplete - filledProgress) + '{/gray-fg}';
+
+  lines.push(`{bold}Todo List{/bold} - ${completed}/${total} completed (${percentage}%)`);
+  lines.push(`[${progressBar}]`);
+  lines.push('');
+
+  // Stats line
+  lines.push(
+    `{green-fg}✓ ${completed} done{/green-fg}  ` +
+    `{yellow-fg}▶ ${inProgress} active{/yellow-fg}  ` +
+    `{gray-fg}○ ${pending} pending{/gray-fg}`
+  );
+  lines.push('');
+  lines.push('{gray-fg}─────────────────────────────────────{/gray-fg}');
+  lines.push('');
+
+  // Render each todo
+  for (let i = 0; i < todos.length; i++) {
+    const todo = todos[i];
+    const content = todo.content || '(no content)';
+    const activeForm = todo.activeForm || '';
+    const status = todo.status || 'pending';
+
+    let statusIcon: string;
+    let statusColor: string;
+    let contentStyle: string;
+
+    switch (status) {
+      case 'completed':
+        statusIcon = '✓';
+        statusColor = 'green';
+        contentStyle = '{green-fg}{strikethrough}';
+        break;
+      case 'in_progress':
+        statusIcon = '▶';
+        statusColor = 'yellow';
+        contentStyle = '{yellow-fg}{bold}';
+        break;
+      case 'pending':
+      default:
+        statusIcon = '○';
+        statusColor = 'gray';
+        contentStyle = '{white-fg}';
+        break;
+    }
+
+    // Main task line
+    const escapedContent = escapeBlessedMarkup(content);
+    if (status === 'completed') {
+      // Strikethrough effect with dashes
+      lines.push(`{${statusColor}-fg}${statusIcon}{/${statusColor}-fg} {gray-fg}${escapedContent}{/gray-fg}`);
+    } else if (status === 'in_progress') {
+      lines.push(`{${statusColor}-fg}${statusIcon}{/${statusColor}-fg} {bold}{${statusColor}-fg}${escapedContent}{/${statusColor}-fg}{/bold}`);
+    } else {
+      lines.push(`{${statusColor}-fg}${statusIcon}{/${statusColor}-fg} ${escapedContent}`);
+    }
+
+    // Active form (what's being done) - shown for in_progress
+    if (status === 'in_progress' && activeForm) {
+      lines.push(`    {cyan-fg}↳ ${escapeBlessedMarkup(activeForm)}{/cyan-fg}`);
+    }
+  }
+
+  // Response info
+  if (toolResponse?.error) {
+    lines.push('');
+    lines.push(`{red-fg}{bold}Error:{/bold} ${escapeBlessedMarkup(String(toolResponse.error))}{/red-fg}`);
+  }
+
+  return lines;
+}
+
 function getEventColor(eventType: string): string {
   switch (eventType) {
     case 'UserPromptSubmit':
@@ -1138,6 +1236,11 @@ function renderCurrentEvent(): string {
             case 'Write': {
               const writeLines = renderWriteToolView(toolInput, toolResponse);
               lines.push(...writeLines);
+              break;
+            }
+            case 'TodoWrite': {
+              const todoLines = renderTodoWriteToolView(toolInput, toolResponse);
+              lines.push(...todoLines);
               break;
             }
             default: {
@@ -1438,12 +1541,13 @@ function generateHelpContent(): string {
   {green-fg}5{/green-fg}               Timeline (context around current event)
 
 {bold}Custom Tool Views (Human mode):{/bold}
-  {cyan-fg}Edit{/cyan-fg}    Delta-style unified diff (red/green)
-  {cyan-fg}Bash{/cyan-fg}    Shell command + stdout/stderr
-  {cyan-fg}Read{/cyan-fg}    File with line numbers + syntax
-  {cyan-fg}Grep{/cyan-fg}    Pattern + highlighted matches
-  {cyan-fg}Glob{/cyan-fg}    File tree visualization
-  {cyan-fg}Write{/cyan-fg}   Full file content + line numbers
+  {cyan-fg}Edit{/cyan-fg}      Delta-style unified diff (red/green)
+  {cyan-fg}Bash{/cyan-fg}      Shell command + stdout/stderr
+  {cyan-fg}Read{/cyan-fg}      File with line numbers + syntax
+  {cyan-fg}Grep{/cyan-fg}      Pattern + highlighted matches
+  {cyan-fg}Glob{/cyan-fg}      File tree visualization
+  {cyan-fg}Write{/cyan-fg}     Full file content + line numbers
+  {cyan-fg}TodoWrite{/cyan-fg} Task list with progress bar
 
 {bold}Search:{/bold}
   {green-fg}/{/green-fg}               Open search

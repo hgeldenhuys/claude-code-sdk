@@ -240,6 +240,7 @@ bun run hook-events-tui "tender-spider,earnest-lion"  # Multi-session
 - **Grep**: Pattern + matches highlighted in yellow
 - **Glob**: File tree visualization
 - **Write**: Full file content with line numbers
+- **TodoWrite**: Task list with progress bar and status icons
 
 ### Hook Events Architecture
 
