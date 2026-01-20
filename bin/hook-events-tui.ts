@@ -1689,12 +1689,28 @@ function copyToClipboard(text: string): void {
 // ============================================================================
 
 async function createTUI(): Promise<void> {
+  // Suppress blessed terminfo warnings (Setulc parsing errors on modern terminals)
+  const originalStderr = process.stderr.write.bind(process.stderr);
+  let suppressingWarnings = true;
+  process.stderr.write = (chunk: any, ...args: any[]) => {
+    if (suppressingWarnings && String(chunk).includes('Error on xterm')) {
+      return true; // Suppress
+    }
+    return originalStderr(chunk, ...args);
+  };
+
   // Create screen
   const screen = blessed.screen({
     smartCSR: true,
     title: `Hook Events Viewer - ${state.sessionId.slice(0, 8)}`,
     fullUnicode: true,
+    warnings: false, // Suppress blessed warnings
   });
+
+  // Restore stderr after a short delay (blessed init complete)
+  setTimeout(() => {
+    suppressingWarnings = false;
+  }, 100);
 
   // Build header content
   const buildHeaderContent = (): string => {
