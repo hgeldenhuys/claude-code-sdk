@@ -64,7 +64,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/diff": "^8.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -95,6 +96,7 @@
     "blessed-contrib": "^4.11.0",
     "chalk": "^5.6.2",
     "claude-hooks-sdk": "^0.8.6",
+    "diff": "^8.0.3",
     "marked": "^17.0.1",
     "yaml": "^2.8.2"
   }

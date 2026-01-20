@@ -23,8 +23,9 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, extname } from 'node:path';
 import blessed from 'blessed';
+import * as Diff from 'diff';
 import { getSessionStore } from '../src/hooks/sessions/store';
 import {
   DEFAULT_DB_PATH,
@@ -454,6 +455,418 @@ function getContextUsage(event: HookEventResult): string {
   }
 }
 
+// ============================================================================
+// Custom Tool View Renderers (delta-style diff, syntax highlighting)
+// ============================================================================
+
+/**
+ * Detect language from file extension for syntax highlighting hints
+ */
+function detectLanguage(filePath: string): string {
+  const ext = extname(filePath).toLowerCase();
+  const langMap: Record<string, string> = {
+    '.ts': 'typescript',
+    '.tsx': 'typescript',
+    '.js': 'javascript',
+    '.jsx': 'javascript',
+    '.json': 'json',
+    '.md': 'markdown',
+    '.py': 'python',
+    '.rs': 'rust',
+    '.go': 'go',
+    '.sh': 'shell',
+    '.bash': 'shell',
+    '.zsh': 'shell',
+    '.yaml': 'yaml',
+    '.yml': 'yaml',
+    '.toml': 'toml',
+    '.css': 'css',
+    '.html': 'html',
+    '.sql': 'sql',
+  };
+  return langMap[ext] || 'text';
+}
+
+/**
+ * Simple syntax highlighting for common patterns
+ * Returns blessed-formatted string
+ */
+function syntaxHighlight(code: string, language: string): string {
+  // Escape blessed markup first
+  let result = escapeBlessedMarkup(code);
+
+  // Common patterns to highlight (keep it simple for TUI performance)
+  if (['typescript', 'javascript'].includes(language)) {
+    // Keywords
+    result = result.replace(
+      /\b(const|let|var|function|return|if|else|for|while|import|export|from|class|interface|type|async|await|try|catch|throw|new)\b/g,
+      '{magenta-fg}$1{/magenta-fg}'
+    );
+    // Strings (simple - single/double quotes)
+    result = result.replace(
+      /(['"`])(?:(?!\1)[^\\]|\\.)*\1/g,
+      '{green-fg}$&{/green-fg}'
+    );
+    // Comments
+    result = result.replace(
+      /(\/\/.*$)/gm,
+      '{gray-fg}$1{/gray-fg}'
+    );
+    // Numbers
+    result = result.replace(
+      /\b(\d+(?:\.\d+)?)\b/g,
+      '{yellow-fg}$1{/yellow-fg}'
+    );
+  } else if (language === 'shell') {
+    // Shell commands
+    result = result.replace(
+      /^(\s*)([\w-]+)/gm,
+      '$1{cyan-fg}$2{/cyan-fg}'
+    );
+    // Flags
+    result = result.replace(
+      /(\s)(--?[\w-]+)/g,
+      '$1{yellow-fg}$2{/yellow-fg}'
+    );
+    // Strings
+    result = result.replace(
+      /(['"])(?:(?!\1)[^\\]|\\.)*\1/g,
+      '{green-fg}$&{/green-fg}'
+    );
+  } else if (language === 'json') {
+    // Use existing JSON highlighter
+    return highlightJson(code);
+  }
+
+  return result;
+}
+
+/**
+ * Render Edit tool with delta-style unified diff
+ * Shows old_string → new_string with syntax highlighting
+ */
+function renderEditToolView(toolInput: any, toolResponse: any, filePath?: string): string[] {
+  const lines: string[] = [];
+  const lang = filePath ? detectLanguage(filePath) : 'text';
+
+  // Header with file info
+  if (filePath) {
+    lines.push(`{bold}{blue-fg}─── ${filePath} ───{/blue-fg}{/bold}`);
+    lines.push('');
+  }
+
+  const oldStr = toolInput?.old_string || '';
+  const newStr = toolInput?.new_string || '';
+
+  if (!oldStr && !newStr) {
+    lines.push('{gray-fg}(no diff content){/gray-fg}');
+    return lines;
+  }
+
+  // Compute unified diff
+  const diffResult = Diff.createPatch(
+    filePath || 'file',
+    oldStr,
+    newStr,
+    'old',
+    'new',
+    { context: 3 }
+  );
+
+  // Parse and render diff with colors
+  const diffLines = diffResult.split('\n');
+  let inHunk = false;
+
+  for (const line of diffLines) {
+    // Skip diff headers (---, +++, Index, etc.)
+    if (line.startsWith('Index:') || line.startsWith('===') ||
+        line.startsWith('---') || line.startsWith('+++')) {
+      continue;
+    }
+
+    // Hunk header (@@ -x,y +x,y @@)
+    if (line.startsWith('@@')) {
+      inHunk = true;
+      lines.push(`{cyan-fg}${escapeBlessedMarkup(line)}{/cyan-fg}`);
+      continue;
+    }
+
+    if (!inHunk) continue;
+
+    // Removed lines (red)
+    if (line.startsWith('-')) {
+      const content = line.slice(1);
+      lines.push(`{red-fg}-{/red-fg}{red-bg}{black-fg}${escapeBlessedMarkup(content)}{/black-fg}{/red-bg}`);
+    }
+    // Added lines (green)
+    else if (line.startsWith('+')) {
+      const content = line.slice(1);
+      lines.push(`{green-fg}+{/green-fg}{green-bg}{black-fg}${escapeBlessedMarkup(content)}{/black-fg}{/green-bg}`);
+    }
+    // Context lines (gray)
+    else if (line.startsWith(' ')) {
+      const content = line.slice(1);
+      lines.push(` ${escapeBlessedMarkup(content)}`);
+    }
+    // Empty line in diff
+    else if (line === '') {
+      lines.push('');
+    }
+  }
+
+  // If response has error, show it
+  if (toolResponse?.error) {
+    lines.push('');
+    lines.push(`{red-fg}{bold}Error:{/bold} ${escapeBlessedMarkup(String(toolResponse.error))}{/red-fg}`);
+  }
+
+  // Show replace_all flag if set
+  if (toolInput?.replace_all) {
+    lines.push('');
+    lines.push('{yellow-fg}(replace_all: true){/yellow-fg}');
+  }
+
+  return lines;
+}
+
+/**
+ * Render Bash tool with command highlighting and output
+ */
+function renderBashToolView(toolInput: any, toolResponse: any): string[] {
+  const lines: string[] = [];
+
+  // Command with syntax highlighting
+  const command = toolInput?.command || '';
+  if (command) {
+    lines.push('{bold}{blue-fg}$ {/blue-fg}{/bold}' + syntaxHighlight(command, 'shell'));
+    lines.push('');
+  }
+
+  // Working directory if available
+  if (toolInput?.cwd) {
+    lines.push(`{gray-fg}cwd: ${escapeBlessedMarkup(toolInput.cwd)}{/gray-fg}`);
+    lines.push('');
+  }
+
+  // Response
+  if (toolResponse) {
+    // Stdout
+    if (toolResponse.stdout) {
+      const stdout = String(toolResponse.stdout);
+      const stdoutLines = stdout.split('\n');
+      const maxLines = 100; // Limit output for performance
+
+      if (stdoutLines.length > maxLines) {
+        lines.push(`{gray-fg}─── stdout (${stdoutLines.length} lines, showing first ${maxLines}) ───{/gray-fg}`);
+        for (let i = 0; i < maxLines; i++) {
+          lines.push(escapeBlessedMarkup(stdoutLines[i] || ''));
+        }
+        lines.push(`{gray-fg}... ${stdoutLines.length - maxLines} more lines ...{/gray-fg}`);
+      } else {
+        lines.push('{gray-fg}─── stdout ───{/gray-fg}');
+        for (const l of stdoutLines) {
+          lines.push(escapeBlessedMarkup(l));
+        }
+      }
+    }
+
+    // Stderr (in red)
+    if (toolResponse.stderr) {
+      lines.push('');
+      lines.push('{red-fg}─── stderr ───{/red-fg}');
+      const stderrLines = String(toolResponse.stderr).split('\n');
+      for (const l of stderrLines.slice(0, 50)) {
+        lines.push(`{red-fg}${escapeBlessedMarkup(l)}{/red-fg}`);
+      }
+    }
+
+    // Exit code
+    if (toolResponse.exit_code !== undefined && toolResponse.exit_code !== 0) {
+      lines.push('');
+      lines.push(`{red-fg}{bold}Exit code:{/bold} ${toolResponse.exit_code}{/red-fg}`);
+    }
+  }
+
+  return lines;
+}
+
+/**
+ * Render Read tool with line numbers and syntax highlighting
+ */
+function renderReadToolView(toolInput: any, toolResponse: any): string[] {
+  const lines: string[] = [];
+  const filePath = toolInput?.file_path || '';
+  const lang = detectLanguage(filePath);
+
+  // Header
+  if (filePath) {
+    lines.push(`{bold}{blue-fg}─── ${escapeBlessedMarkup(filePath)} ───{/blue-fg}{/bold}`);
+
+    // Show offset/limit if specified
+    const info: string[] = [];
+    if (toolInput?.offset) info.push(`offset: ${toolInput.offset}`);
+    if (toolInput?.limit) info.push(`limit: ${toolInput.limit}`);
+    if (info.length > 0) {
+      lines.push(`{gray-fg}(${info.join(', ')}){/gray-fg}`);
+    }
+    lines.push('');
+  }
+
+  // Content with line numbers
+  if (toolResponse?.content) {
+    const content = String(toolResponse.content);
+    const contentLines = content.split('\n');
+    const startLine = toolInput?.offset || 1;
+    const maxLineNumWidth = String(startLine + contentLines.length).length;
+
+    for (let i = 0; i < contentLines.length && i < 200; i++) {
+      const lineNum = String(startLine + i).padStart(maxLineNumWidth);
+      const lineContent = contentLines[i] || '';
+      // Simple highlighting for code
+      const highlighted = syntaxHighlight(lineContent, lang);
+      lines.push(`{gray-fg}${lineNum}│{/gray-fg} ${highlighted}`);
+    }
+
+    if (contentLines.length > 200) {
+      lines.push(`{gray-fg}... ${contentLines.length - 200} more lines ...{/gray-fg}`);
+    }
+  } else if (toolResponse?.error) {
+    lines.push(`{red-fg}{bold}Error:{/bold} ${escapeBlessedMarkup(String(toolResponse.error))}{/red-fg}`);
+  }
+
+  return lines;
+}
+
+/**
+ * Render Grep tool with match highlighting
+ */
+function renderGrepToolView(toolInput: any, toolResponse: any): string[] {
+  const lines: string[] = [];
+
+  // Pattern and options
+  const pattern = toolInput?.pattern || '';
+  lines.push(`{bold}{blue-fg}Pattern:{/blue-fg}{/bold} {yellow-fg}${escapeBlessedMarkup(pattern)}{/yellow-fg}`);
+
+  if (toolInput?.path) {
+    lines.push(`{gray-fg}Path: ${escapeBlessedMarkup(toolInput.path)}{/gray-fg}`);
+  }
+  if (toolInput?.glob) {
+    lines.push(`{gray-fg}Glob: ${escapeBlessedMarkup(toolInput.glob)}{/gray-fg}`);
+  }
+  lines.push('');
+
+  // Results
+  if (toolResponse?.filenames) {
+    const filenames = toolResponse.filenames;
+    lines.push(`{green-fg}${filenames.length} files matched{/green-fg}`);
+    lines.push('');
+    for (const f of filenames.slice(0, 50)) {
+      lines.push(`  {cyan-fg}${escapeBlessedMarkup(f)}{/cyan-fg}`);
+    }
+    if (filenames.length > 50) {
+      lines.push(`  {gray-fg}... ${filenames.length - 50} more files ...{/gray-fg}`);
+    }
+  } else if (toolResponse?.content) {
+    // Content mode - show matches with context
+    const content = String(toolResponse.content);
+    const contentLines = content.split('\n');
+
+    // Try to highlight pattern matches
+    const regex = new RegExp(`(${pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+
+    for (let i = 0; i < contentLines.length && i < 100; i++) {
+      let line = escapeBlessedMarkup(contentLines[i] || '');
+      // Highlight matches
+      line = line.replace(regex, '{yellow-bg}{black-fg}$1{/black-fg}{/yellow-bg}');
+      lines.push(line);
+    }
+
+    if (contentLines.length > 100) {
+      lines.push(`{gray-fg}... ${contentLines.length - 100} more lines ...{/gray-fg}`);
+    }
+  }
+
+  return lines;
+}
+
+/**
+ * Render Glob tool as file tree
+ */
+function renderGlobToolView(toolInput: any, toolResponse: any): string[] {
+  const lines: string[] = [];
+
+  // Pattern
+  const pattern = toolInput?.pattern || '';
+  lines.push(`{bold}{blue-fg}Pattern:{/blue-fg}{/bold} {yellow-fg}${escapeBlessedMarkup(pattern)}{/yellow-fg}`);
+
+  if (toolInput?.path) {
+    lines.push(`{gray-fg}Path: ${escapeBlessedMarkup(toolInput.path)}{/gray-fg}`);
+  }
+  lines.push('');
+
+  // Results as tree
+  if (toolResponse?.filenames) {
+    const filenames = toolResponse.filenames as string[];
+    lines.push(`{green-fg}${filenames.length} files matched{/green-fg}`);
+    lines.push('');
+
+    // Simple tree view
+    for (let i = 0; i < filenames.length && i < 100; i++) {
+      const f = filenames[i]!;
+      const isLast = i === filenames.length - 1 || i === 99;
+      const prefix = isLast ? '└── ' : '├── ';
+      lines.push(`{gray-fg}${prefix}{/gray-fg}{cyan-fg}${escapeBlessedMarkup(f)}{/cyan-fg}`);
+    }
+
+    if (filenames.length > 100) {
+      lines.push(`{gray-fg}... ${filenames.length - 100} more files ...{/gray-fg}`);
+    }
+  }
+
+  return lines;
+}
+
+/**
+ * Render Write tool - show full file content that was written
+ */
+function renderWriteToolView(toolInput: any, toolResponse: any): string[] {
+  const lines: string[] = [];
+  const filePath = toolInput?.file_path || '';
+  const lang = detectLanguage(filePath);
+
+  // Header
+  if (filePath) {
+    lines.push(`{bold}{green-fg}─── Writing: ${escapeBlessedMarkup(filePath)} ───{/green-fg}{/bold}`);
+    lines.push('');
+  }
+
+  // Content with line numbers
+  if (toolInput?.content) {
+    const content = String(toolInput.content);
+    const contentLines = content.split('\n');
+    const maxLineNumWidth = String(contentLines.length).length;
+
+    for (let i = 0; i < contentLines.length && i < 200; i++) {
+      const lineNum = String(i + 1).padStart(maxLineNumWidth);
+      const lineContent = contentLines[i] || '';
+      const highlighted = syntaxHighlight(lineContent, lang);
+      lines.push(`{gray-fg}${lineNum}│{/gray-fg} ${highlighted}`);
+    }
+
+    if (contentLines.length > 200) {
+      lines.push(`{gray-fg}... ${contentLines.length - 200} more lines ...{/gray-fg}`);
+    }
+  }
+
+  // Response
+  if (toolResponse?.error) {
+    lines.push('');
+    lines.push(`{red-fg}{bold}Error:{/bold} ${escapeBlessedMarkup(String(toolResponse.error))}{/red-fg}`);
+  }
+
+  return lines;
+}
+
 function getEventColor(eventType: string): string {
   switch (eventType) {
     case 'UserPromptSubmit':
@@ -689,18 +1102,79 @@ function renderCurrentEvent(): string {
         lines.push('');
       }
 
-      // Tool input
-      if (event.inputJson) {
+      // Custom tool views based on tool name
+      if (event.inputJson && event.toolName) {
         try {
           const input = JSON.parse(event.inputJson);
+          const toolInput = input.tool_input;
+          const toolResponse = input.tool_response;
+
+          switch (event.toolName) {
+            case 'Edit': {
+              const editLines = renderEditToolView(toolInput, toolResponse, toolInput?.file_path);
+              lines.push(...editLines);
+              break;
+            }
+            case 'Bash': {
+              const bashLines = renderBashToolView(toolInput, toolResponse);
+              lines.push(...bashLines);
+              break;
+            }
+            case 'Read': {
+              const readLines = renderReadToolView(toolInput, toolResponse);
+              lines.push(...readLines);
+              break;
+            }
+            case 'Grep': {
+              const grepLines = renderGrepToolView(toolInput, toolResponse);
+              lines.push(...grepLines);
+              break;
+            }
+            case 'Glob': {
+              const globLines = renderGlobToolView(toolInput, toolResponse);
+              lines.push(...globLines);
+              break;
+            }
+            case 'Write': {
+              const writeLines = renderWriteToolView(toolInput, toolResponse);
+              lines.push(...writeLines);
+              break;
+            }
+            default: {
+              // Default view for unknown tools
+              if (toolInput) {
+                lines.push('{bold}Tool Input:{/bold}');
+                lines.push(highlightJson(JSON.stringify(toolInput, null, 2)));
+                lines.push('');
+              }
+              if (toolResponse) {
+                lines.push('{bold}Tool Response:{/bold}');
+                if (toolResponse.stdout) {
+                  lines.push(escapeBlessedMarkup(String(toolResponse.stdout).slice(0, 1000)));
+                } else if (toolResponse.content) {
+                  lines.push(escapeBlessedMarkup(String(toolResponse.content).slice(0, 1000)));
+                } else {
+                  lines.push(highlightJson(JSON.stringify(toolResponse, null, 2).slice(0, 1000)));
+                }
+              }
+            }
+          }
+        } catch {
+          lines.push('{bold}Input JSON:{/bold}');
+          lines.push(highlightJson(event.inputJson.slice(0, 500)));
+        }
+      } else if (event.inputJson) {
+        // Non-tool events (UserPromptSubmit, Stop, etc.)
+        try {
+          const input = JSON.parse(event.inputJson);
+          if (input.prompt) {
+            lines.push('{bold}Prompt:{/bold}');
+            lines.push(escapeBlessedMarkup(String(input.prompt).slice(0, 2000)));
+            lines.push('');
+          }
           if (input.tool_input) {
             lines.push('{bold}Tool Input:{/bold}');
             lines.push(highlightJson(JSON.stringify(input.tool_input, null, 2)));
-            lines.push('');
-          }
-          if (input.prompt) {
-            lines.push('{bold}Prompt:{/bold}');
-            lines.push(escapeBlessedMarkup(String(input.prompt).slice(0, 500)));
             lines.push('');
           }
           if (input.tool_response) {
@@ -958,10 +1432,18 @@ function generateHelpContent(): string {
 
 {bold}View Modes:{/bold}
   {green-fg}1{/green-fg}               Raw JSON
-  {green-fg}2{/green-fg}               Human-readable (default)
+  {green-fg}2{/green-fg}               Human-readable (default) - custom tool views
   {green-fg}3{/green-fg}               Minimal
   {green-fg}4{/green-fg}               Tool I/O (input/output for tool events)
   {green-fg}5{/green-fg}               Timeline (context around current event)
+
+{bold}Custom Tool Views (Human mode):{/bold}
+  {cyan-fg}Edit{/cyan-fg}    Delta-style unified diff (red/green)
+  {cyan-fg}Bash{/cyan-fg}    Shell command + stdout/stderr
+  {cyan-fg}Read{/cyan-fg}    File with line numbers + syntax
+  {cyan-fg}Grep{/cyan-fg}    Pattern + highlighted matches
+  {cyan-fg}Glob{/cyan-fg}    File tree visualization
+  {cyan-fg}Write{/cyan-fg}   Full file content + line numbers
 
 {bold}Search:{/bold}
   {green-fg}/{/green-fg}               Open search

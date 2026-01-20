@@ -233,6 +233,14 @@ bun run hook-events-tui "tender-spider,earnest-lion"  # Multi-session
 
 **Event abbreviations:** `Pre` `Post` `Prompt` `Start` `End` `Stop` `SubStp`
 
+**Custom tool views** (in Human view mode):
+- **Edit**: Delta-style unified diff with red/green highlighting
+- **Bash**: Command with shell syntax highlighting + stdout/stderr
+- **Read**: File content with line numbers and syntax highlighting
+- **Grep**: Pattern + matches highlighted in yellow
+- **Glob**: File tree visualization
+- **Write**: Full file content with line numbers
+
 ### Hook Events Architecture
 
 The hook-events CLI/TUI provides real-time monitoring of Claude Code hook execution. Here's how it works:
