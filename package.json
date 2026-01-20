@@ -41,6 +41,7 @@
     }
   },
   "scripts": {
+    "postinstall": "bun scripts/patch-blessed.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "test": "bun test",

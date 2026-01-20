@@ -22,24 +22,10 @@
  *   hook-events-tui peaceful-osprey
  */
 
-// Suppress blessed terminfo warnings BEFORE importing blessed
-// (blessed prints "Error on xterm-256color.Setulc" during module init)
-const _originalStderrWrite = process.stderr.write.bind(process.stderr);
-(process.stderr as any).write = (chunk: any, ...args: any[]) => {
-  const str = String(chunk);
-  if (str.includes('Error on xterm') || str.includes('stack.push') || str.includes('out.push')) {
-    return true; // Suppress blessed terminfo parsing errors
-  }
-  return _originalStderrWrite(chunk, ...args);
-};
-
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import blessed from 'blessed';
 import * as Diff from 'diff';
-
-// Restore stderr after blessed is loaded
-(process.stderr as any).write = _originalStderrWrite;
 import { getSessionStore } from '../src/hooks/sessions/store';
 import {
   DEFAULT_DB_PATH,
@@ -55,7 +41,7 @@ import {
 // Constants
 // ============================================================================
 
-const VERSION = '1.1.1';
+const VERSION = '1.1.2';
 const DAEMON_DIR = join(process.env.HOME || '~', '.claude-code-sdk');
 const PID_FILE = join(DAEMON_DIR, 'transcript-daemon.pid');
 const BOOKMARKS_FILE = join(DAEMON_DIR, 'hook-event-bookmarks.json');
