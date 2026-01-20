@@ -159,10 +159,31 @@ type ViewMode = 'raw' | 'human' | 'minimal' | 'context' | 'markdown';
 // Markdown rendering
 import { marked } from 'marked';
 import TerminalRenderer from 'marked-terminal';
+import chalk from 'chalk';
 
-// Configure marked for terminal output
+// Configure marked for terminal output with custom styling
 marked.setOptions({
-  renderer: new TerminalRenderer() as any,
+  renderer: new TerminalRenderer({
+    // Inline code styling (backticks)
+    codespan: (text: string) => chalk.bgGray.white(` ${text} `),
+    // Code block styling
+    code: (code: string, lang: string) => {
+      const header = lang ? chalk.dim(`── ${lang} ──`) + '\n' : '';
+      return '\n' + header + chalk.yellow(code) + '\n';
+    },
+    // Make headings more visible
+    heading: (text: string, level: number) => {
+      const prefix = '#'.repeat(level);
+      return '\n' + chalk.bold.cyan(`${prefix} ${text}`) + '\n';
+    },
+    // Links
+    link: (href: string, title: string, text: string) => {
+      return chalk.blue.underline(text) + chalk.dim(` (${href})`);
+    },
+    // Bold and italic
+    strong: (text: string) => chalk.bold(text),
+    em: (text: string) => chalk.italic(text),
+  }) as any,
 });
 
 // ============================================================================

@@ -205,9 +205,17 @@ const state: AppState = {
 
 /**
  * Escape curly braces for blessed markup
+ * Double braces {{ and }} render as literal { and }
+ * Uses placeholder approach to avoid replacement interference
  */
 function escapeBlessedMarkup(text: string): string {
-  return text.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+  // Use placeholders to avoid replacement interference
+  // ({open} contains }, {close} contains { - direct replacement would corrupt)
+  return text
+    .replace(/\{/g, '\x00OPEN\x00')
+    .replace(/\}/g, '\x00CLOSE\x00')
+    .replace(/\x00OPEN\x00/g, '{open}')
+    .replace(/\x00CLOSE\x00/g, '{close}');
 }
 
 /**
@@ -252,8 +260,13 @@ function highlightJson(json: string): string {
           i++;
         }
 
-        // Escape braces in the string content
-        const escapedStr = str.replace(/\{/g, '{open}').replace(/\}/g, '{close}');
+        // Escape braces in the string content (blessed uses {open} and {close} for literal braces)
+        // Use placeholder approach to avoid replacement interference
+        const escapedStr = str
+          .replace(/\{/g, '\x00OPEN\x00')
+          .replace(/\}/g, '\x00CLOSE\x00')
+          .replace(/\x00OPEN\x00/g, '{open}')
+          .replace(/\x00CLOSE\x00/g, '{close}');
 
         // Check if this is a key (followed by colon)
         const remaining = line.slice(i).trim();
@@ -331,6 +344,110 @@ function formatTime(isoString: string): string {
     });
   } catch {
     return isoString;
+  }
+}
+
+/**
+ * Get the display width of a string in terminal columns.
+ * Accounts for wide characters (emojis, CJK, etc.) that take 2 columns.
+ */
+function getDisplayWidth(str: string): number {
+  let width = 0;
+  for (const char of str) {
+    const code = char.codePointAt(0) || 0;
+    // Wide characters: emojis, CJK, fullwidth forms
+    if (
+      (code >= 0x1f300 && code <= 0x1faff) || // Emojis
+      (code >= 0x2600 && code <= 0x27bf) || // Misc symbols
+      (code >= 0x3000 && code <= 0x9fff) || // CJK
+      (code >= 0xf900 && code <= 0xfaff) || // CJK compatibility
+      (code >= 0xff00 && code <= 0xffef) // Fullwidth forms
+    ) {
+      width += 2;
+    } else {
+      width += 1;
+    }
+  }
+  return width;
+}
+
+/**
+ * Truncate a string to a target display width, accounting for wide characters.
+ */
+function truncateDisplay(str: string, targetWidth: number): string {
+  let width = 0;
+  let result = '';
+  for (const char of str) {
+    const code = char.codePointAt(0) || 0;
+    const charWidth =
+      (code >= 0x1f300 && code <= 0x1faff) || // Emojis
+      (code >= 0x2600 && code <= 0x27bf) || // Misc symbols
+      (code >= 0x3000 && code <= 0x9fff) || // CJK
+      (code >= 0xf900 && code <= 0xfaff) || // CJK compatibility
+      (code >= 0xff00 && code <= 0xffef) // Fullwidth forms
+        ? 2
+        : 1;
+    if (width + charWidth > targetWidth) {
+      break;
+    }
+    result += char;
+    width += charWidth;
+  }
+  return result;
+}
+
+/**
+ * Pad a string to a target display width, accounting for wide characters.
+ */
+function padEndDisplay(str: string, targetWidth: number): string {
+  const truncated = truncateDisplay(str, targetWidth);
+  const currentWidth = getDisplayWidth(truncated);
+  if (currentWidth >= targetWidth) {
+    return truncated;
+  }
+  return truncated + ' '.repeat(targetWidth - currentWidth);
+}
+
+/**
+ * Calculate context usage percentage from a hook event
+ * Returns formatted string with color based on usage level
+ * 0-50% = green, 51-70% = yellow, 71%+ = red
+ */
+const CONTEXT_WINDOW_SIZE = 200000; // Standard tier context window
+
+function getContextUsage(event: HookEventResult): string {
+  if (!event.inputJson) return '';
+
+  try {
+    const input = JSON.parse(event.inputJson);
+    const usage = input.usage;
+    if (!usage) return '';
+
+    // Calculate total input tokens (including cache)
+    const inputTokens =
+      (usage.input_tokens || 0) +
+      (usage.cache_creation_input_tokens || 0) +
+      (usage.cache_read_input_tokens || 0);
+
+    if (inputTokens === 0) return '';
+
+    const percentage = Math.round((inputTokens / CONTEXT_WINDOW_SIZE) * 100);
+
+    // Color based on percentage thresholds
+    let color: string;
+    if (percentage <= 50) {
+      color = 'green';
+    } else if (percentage <= 70) {
+      color = 'yellow'; // orange approximation in blessed
+    } else {
+      color = 'red';
+    }
+
+    // Right-align percentage to 4 chars (e.g., "  5%" or "100%") for consistent column width
+    const percentStr = `${percentage}%`.padStart(4);
+    return `{${color}-fg}[${percentStr}]{/${color}-fg}`;
+  } catch {
+    return '';
   }
 }
 
@@ -691,9 +808,10 @@ function getListItems(): string[] {
   const searchResultSet = new Set(state.searchResults);
 
   state.cachedListItems = state.events.map((event, index) => {
-    const type = event.eventType.slice(0, 14).padEnd(14);
+    // Compact format: markers + time + type + tool + decision + usage + turn-session
+    const type = event.eventType.slice(0, 12).padEnd(12);
     const color = getEventColor(event.eventType);
-    const toolInfo = event.toolName ? event.toolName.slice(0, 12).padEnd(12) : '            ';
+    const toolInfo = event.toolName ? event.toolName.slice(0, 10).padEnd(10) : '          ';
     const searchMatch = searchResultSet.has(index) ? '*' : ' ';
     const bookmarkMark = state.bookmarks.has(event.id) ? '{yellow-fg}★{/yellow-fg}' : ' ';
 
@@ -708,7 +826,31 @@ function getListItems(): string[] {
           : '{gray-fg}?{/gray-fg}'
         : ' ';
 
-    return `${searchMatch}${bookmarkMark}${time} {${color}-fg}${type}{/${color}-fg} ${toolInfo} ${decision}`;
+    // Context usage percentage (colored)
+    const contextUsage = getContextUsage(event);
+    const usageCol = contextUsage ? ` ${contextUsage}` : '        ';
+
+    // Combined turn-session column: "{turn}-{session}" (e.g., "22-loyal-whippet")
+    const SESSION_WIDTH = 16;
+    const sessionName = event.sessionName;
+    const turnSeq = event.turnSequence;
+
+    let turnSessionStr = '';
+    if (turnSeq && sessionName) {
+      turnSessionStr = `${turnSeq}-${sessionName}`;
+    } else if (sessionName) {
+      turnSessionStr = sessionName;
+    } else if (turnSeq) {
+      turnSessionStr = `${turnSeq}`;
+    }
+    const turnSessionPadded = escapeBlessedMarkup(
+      padEndDisplay(turnSessionStr.slice(0, SESSION_WIDTH), SESSION_WIDTH)
+    );
+    const turnSessionSuffix = turnSessionStr
+      ? ` {cyan-fg}${turnSessionPadded}{/cyan-fg}`
+      : ` ${turnSessionPadded}`;
+
+    return `${searchMatch}${bookmarkMark}${time} {${color}-fg}${type}{/${color}-fg} ${toolInfo} ${decision}${usageCol}${turnSessionSuffix}`;
   });
 
   state.listItemsDirty = false;
@@ -767,6 +909,7 @@ function generateHelpContent(): string {
   {green-fg}c{/green-fg}               Copy current event to clipboard
   {green-fg}m{/green-fg}               Toggle mouse support
   {green-fg}L{/green-fg}               Toggle live mode (watch for new events)
+  {green-fg}r{/green-fg} or {green-fg}Ctrl+L{/green-fg}  Redraw screen (fix display glitches)
   {green-fg}?{/green-fg}               Toggle this help overlay
 
 {bold}Decision Indicator (PreToolUse only):{/bold}
@@ -929,7 +1072,7 @@ async function createTUI(): Promise<void> {
     border: 'line',
     style: { border: { fg: 'blue' }, fg: 'gray' },
     content:
-      '{bold}j/k{/bold}:nav {bold}Space{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit',
+      '{bold}j/k{/bold}:nav {bold}Space{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}r{/bold}:redraw {bold}?{/bold}:help {bold}q{/bold}:quit',
     tags: true,
   });
 
@@ -1140,7 +1283,7 @@ async function createTUI(): Promise<void> {
     }
   });
 
-  screen.key('G', () => {
+  screen.key(['G', 'S-g'], () => {
     if (shouldNavigateEvents()) {
       state.currentIndex = state.events.length - 1;
       updateSelection();
@@ -1287,7 +1430,7 @@ async function createTUI(): Promise<void> {
     updateSelection();
   });
 
-  screen.key('N', () => {
+  screen.key(['N', 'S-n'], () => {
     jumpToPrevSearchResult();
     updateSelection();
   });
@@ -1300,17 +1443,20 @@ async function createTUI(): Promise<void> {
   });
 
   // Live mode
-  screen.key('L', () => {
+  screen.key(['L', 'S-l'], () => {
     state.liveMode = !state.liveMode;
 
     if (state.liveMode && !state.pollInterval) {
       const db = getDb();
       state.lastMaxEventId = getMaxHookEventId(db, state.sessionId);
 
+      // Start polling SQLite every 200ms (same as transcript-tui)
+      let pollCount = 0;
       state.pollInterval = setInterval(() => {
         try {
           const db = getDb();
           const currentMaxId = getMaxHookEventId(db, state.sessionId);
+          let needsUpdate = false;
 
           if (currentMaxId > state.lastMaxEventId) {
             const newEvents = getHookEventsAfterId(
@@ -1324,30 +1470,63 @@ async function createTUI(): Promise<void> {
             if (newEvents.length > 0) {
               state.allEvents = [...state.allEvents, ...newEvents];
               state.lastMaxEventId = currentMaxId;
-
-              const filteredEvents = filterEvents(state.allEvents, state.filterOpts);
-              const prevCount = state.events.length;
-              state.events = filteredEvents;
-              invalidateListCache(); // Events changed
-
-              const wasAtEnd = state.currentIndex >= prevCount - 1;
-              if (wasAtEnd && filteredEvents.length > prevCount) {
-                state.currentIndex = filteredEvents.length - 1;
-              }
-
-              updateUI();
+              needsUpdate = true;
             }
+          }
+
+          // Every 5th poll (1 second), check for turn/session data updates on events missing it
+          pollCount++;
+          if (pollCount >= 5) {
+            pollCount = 0;
+            // Find events missing turn data
+            const eventsMissingTurnData = state.allEvents.filter(
+              (event) => !event.turnSequence
+            );
+            if (eventsMissingTurnData.length > 0) {
+              // Re-query these events from the database
+              const refreshedResults = getHookEvents(db, { sessionId: state.sessionId });
+              const refreshedMap = new Map(refreshedResults.map((r) => [r.id, r]));
+              // Update allEvents with refreshed turn data
+              let updated = 0;
+              for (let i = 0; i < state.allEvents.length; i++) {
+                const event = state.allEvents[i]!;
+                if (!event.turnSequence) {
+                  const refreshed = refreshedMap.get(event.id);
+                  if (refreshed?.turnSequence) {
+                    state.allEvents[i] = refreshed;
+                    updated++;
+                  }
+                }
+              }
+              if (updated > 0) {
+                needsUpdate = true;
+              }
+            }
+          }
+
+          if (needsUpdate) {
+            const filteredEvents = filterEvents(state.allEvents, state.filterOpts);
+            const prevCount = state.events.length;
+            state.events = filteredEvents;
+            invalidateListCache(); // Events changed
+
+            const wasAtEnd = state.currentIndex >= prevCount - 1;
+            if (wasAtEnd && filteredEvents.length > prevCount) {
+              state.currentIndex = filteredEvents.length - 1;
+            }
+
+            updateUI();
           }
         } catch {
           // Ignore polling errors
         }
-      }, 2000); // Poll every 2 seconds (hook events update frequently)
+      }, 200);
     } else if (!state.liveMode && state.pollInterval) {
       clearInterval(state.pollInterval);
       state.pollInterval = null;
     }
 
-    showToast(`Live mode ${state.liveMode ? 'enabled' : 'disabled'}`);
+    showToast(`Live mode ${state.liveMode ? 'enabled (polling SQLite)' : 'disabled'}`);
     updateUI();
   });
 
@@ -1367,6 +1546,12 @@ async function createTUI(): Promise<void> {
   helpOverlay.key(['escape', 'enter', 'q', '?'], () => {
     state.showHelp = false;
     helpOverlay.hide();
+    screen.render();
+  });
+
+  // Redraw screen (fixes garbage characters from wide chars/emojis)
+  screen.key(['C-l', 'r'], () => {
+    screen.realloc();
     screen.render();
   });
 
