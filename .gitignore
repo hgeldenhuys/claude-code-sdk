@@ -45,3 +45,8 @@ data/
 # Integration test results (local only)
 integration-tests/results/*
 !integration-tests/results/.gitkeep
+
+# Claude Code hooks SDK and local settings
+.claude/claude-code-sdk/
+.claude/bin/
+.claude/settings.local.json

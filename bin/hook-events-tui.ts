@@ -1592,7 +1592,13 @@ async function main(): Promise<number> {
     console.log(`hook-events-tui v${VERSION} - Interactive Hook Events Viewer
 
 Usage:
-  hook-events-tui <session> [filter options]
+  hook-events-tui <session|sessions> [filter options]
+
+  The session can be:
+    - "." for most recent session
+    - A session name (tender-spider)
+    - A session ID (abc-123-...)
+    - Comma-separated names/IDs ("tender-spider,earnest-lion")
 
 Filter Options:
   --event, -e <types>     Filter by event type (comma-separated)
@@ -1636,6 +1642,7 @@ Decision Indicator (PreToolUse only):
 
 Examples:
   hook-events-tui .
+  hook-events-tui "tender-spider,earnest-lion"        # Multiple sessions
   hook-events-tui . --event PreToolUse,PostToolUse
   hook-events-tui . --tool Bash --live`);
     return 0;
@@ -1672,33 +1679,83 @@ Examples:
 
   const db = getDb();
 
-  // Resolve "." to most recent session
-  if (sessionId === '.') {
-    const sessions = getHookSessions(db, { recentDays: 1 });
-    if (sessions.length === 0) {
-      console.error('Error: No recent hook events found');
-      return 1;
+  // Helper to resolve a single session name/ID
+  const resolveSingleSession = (input: string): string | null => {
+    // Handle "." as most recent session
+    if (input === '.') {
+      const sessions = getHookSessions(db, { recentDays: 1 });
+      if (sessions.length === 0) {
+        return null;
+      }
+      return sessions[0]!.sessionId;
     }
-    sessionId = sessions[0]!.sessionId;
-  } else {
+
     // Try to resolve session name to session ID
     // Session names are like "peaceful-osprey", IDs are UUIDs
-    const isLikelyName = !sessionId.includes('-') || sessionId.split('-').length <= 3;
+    const isLikelyName = !input.includes('-') || input.split('-').length <= 3;
     if (isLikelyName) {
       try {
         const store = getSessionStore();
-        const resolvedId = store.getSessionId(sessionId);
+        const resolvedId = store.getSessionId(input);
         if (resolvedId) {
-          sessionId = resolvedId;
+          return resolvedId;
         }
       } catch {
         // Ignore - will try as literal session ID
       }
     }
+    return input;
+  };
+
+  // Check if input contains comma-separated sessions
+  let resolvedSessionIds: string[] = [];
+  if (sessionId.includes(',')) {
+    // Multi-session mode: resolve each session name/ID
+    const parts = sessionId.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+    for (const part of parts) {
+      const resolved = resolveSingleSession(part);
+      if (resolved) {
+        resolvedSessionIds.push(resolved);
+      }
+    }
+    if (resolvedSessionIds.length === 0) {
+      console.error(`Error: No sessions found matching: ${sessionId}`);
+      return 1;
+    }
+    // Use first session as primary for bookmarks
+    sessionId = resolvedSessionIds[0]!;
+    if (filterLabel === 'all') {
+      filterLabel = `sessions:${resolvedSessionIds.length}`;
+    } else {
+      filterLabel = `${filterLabel}+sessions:${resolvedSessionIds.length}`;
+    }
+  } else {
+    // Single session mode
+    const resolved = resolveSingleSession(sessionId);
+    if (!resolved) {
+      console.error('Error: No recent hook events found');
+      return 1;
+    }
+    sessionId = resolved;
+    resolvedSessionIds = [sessionId];
   }
 
-  // Load events
-  const allEvents = getHookEvents(db, { sessionId });
+  // Load events from all sessions
+  let allEvents: HookEventResult[];
+  if (resolvedSessionIds.length > 1) {
+    const allResults: HookEventResult[] = [];
+    for (const sid of resolvedSessionIds) {
+      const events = getHookEvents(db, { sessionId: sid });
+      allResults.push(...events);
+    }
+    // Sort by timestamp for chronological view
+    allEvents = allResults.sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+  } else {
+    allEvents = getHookEvents(db, { sessionId });
+  }
+
   if (allEvents.length === 0) {
     console.error(`Error: No hook events found for session: ${sessionId}`);
     console.error('Tip: Use "." for most recent session, or provide a full session ID');
@@ -1720,7 +1777,10 @@ Examples:
   state.allEvents = allEvents;
   state.events = filteredEvents;
   state.currentIndex = filteredEvents.length - 1; // Start at last event
-  state.sessionId = sessionId;
+  // For multi-session, show count; for single session, show the ID
+  state.sessionId = resolvedSessionIds.length > 1
+    ? `${resolvedSessionIds.length} sessions`
+    : sessionId;
   state.activeFilter = filterLabel;
   state.filterOpts = filterOpts;
   state.bookmarks = sessionBookmarks;

@@ -1,24 +1,19 @@
-# Hook Framework Configuration
-# ============================
-# Native TypeScript handlers only - no subprocess spawning.
+# Claude Code Hook Framework Configuration
+# ========================================
+# Manages session naming, turn tracking, and context injection.
+#
+# Edit this file to customize handler behavior.
+# Docs: https://github.com/hgeldenhuys/claude-code-sdk
 
 version: 1
 
 settings:
-  debug: true
+  debug: false
   parallelExecution: false
   defaultTimeoutMs: 30000
   defaultErrorStrategy: continue
 
 builtins:
-  # Performance metrics - runs first (priority 1)
-  metrics:
-    enabled: true
-    options:
-      logToStderr: true
-      warnThresholdMs: 100
-      collectStats: true
-
   # Human-friendly session names (e.g., "brave-elephant")
   session-naming:
     enabled: true
@@ -28,6 +23,15 @@ builtins:
   # Track turns between Stop events
   turn-tracker:
     enabled: true
+    options:
+      preserve_on_resume: true
+
+  # Inject context at session start and before compaction
+  context-injection:
+    enabled: true
+    options:
+      include_session_info: true
+      include_turn_id: true
 
   # Block dangerous Bash commands
   dangerous-command-guard:
@@ -38,19 +42,7 @@ builtins:
         - "rm -rf /"
         - "rm -rf ~"
 
-  # Context injection (disabled by default)
-  context-injection:
-    enabled: false
-
-  # Tool logging (disabled by default)
-  tool-logger:
-    enabled: false
-
-  # Debug logger (disabled by default)
-  debug-logger:
-    enabled: false
-
-  # Event logger - logs hook events to JSONL for indexing
+  # Log events for transcript indexing
   event-logger:
     enabled: true
     options:
@@ -58,5 +50,17 @@ builtins:
       includeContext: true
       includeHandlerResults: true
 
-# No custom subprocess handlers
+  # Performance metrics (optional)
+  metrics:
+    enabled: false
+
+  # Tool logging (optional)
+  tool-logger:
+    enabled: false
+
+  # Debug logging (optional - very verbose)
+  debug-logger:
+    enabled: false
+
+# Custom handlers - add your own here
 handlers: {}
