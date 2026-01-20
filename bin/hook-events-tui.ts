@@ -55,7 +55,7 @@ import {
 // Constants
 // ============================================================================
 
-const VERSION = '1.1.0';
+const VERSION = '1.1.1';
 const DAEMON_DIR = join(process.env.HOME || '~', '.claude-code-sdk');
 const PID_FILE = join(DAEMON_DIR, 'transcript-daemon.pid');
 const BOOKMARKS_FILE = join(DAEMON_DIR, 'hook-event-bookmarks.json');
