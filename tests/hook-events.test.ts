@@ -183,7 +183,7 @@ beforeAll(async () => {
   // Create and initialize database
   db = new Database(dbPath);
 
-  // Create hook_events table (matching the schema in db.ts - v5 schema)
+  // Create hook_events table (matching the schema in db.ts - v8 schema)
   db.run(`
     CREATE TABLE IF NOT EXISTS hook_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -201,6 +201,9 @@ beforeAll(async () => {
       turn_id TEXT,
       turn_sequence INTEGER,
       session_name TEXT,
+      git_hash TEXT,
+      git_branch TEXT,
+      git_dirty INTEGER,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
