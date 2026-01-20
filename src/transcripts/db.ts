@@ -103,6 +103,9 @@ export function initSchema(db: Database): void {
       turn_id TEXT,
       turn_sequence INTEGER,
       session_name TEXT,
+      git_hash TEXT,
+      git_branch TEXT,
+      git_dirty INTEGER,
       UNIQUE(session_id, uuid)
     )
   `);
@@ -115,6 +118,7 @@ export function initSchema(db: Database): void {
   db.run('CREATE INDEX IF NOT EXISTS idx_line_number ON lines(line_number)');
   db.run('CREATE INDEX IF NOT EXISTS idx_lines_turn_id ON lines(turn_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_lines_session_name ON lines(session_name)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_lines_git_hash ON lines(git_hash)');
 
   // Full-text search virtual table
   db.run(`
@@ -187,7 +191,10 @@ export function initSchema(db: Database): void {
       line_number INTEGER NOT NULL,
       turn_id TEXT,
       turn_sequence INTEGER,
-      session_name TEXT
+      session_name TEXT,
+      git_hash TEXT,
+      git_branch TEXT,
+      git_dirty INTEGER
     )
   `);
 
@@ -198,6 +205,7 @@ export function initSchema(db: Database): void {
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_timestamp ON hook_events(timestamp)');
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_turn_id ON hook_events(turn_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_hook_session_name ON hook_events(session_name)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_hook_git_hash ON hook_events(git_hash)');
 
   // FTS table for hook events (standalone - stores content directly)
   db.run(`
