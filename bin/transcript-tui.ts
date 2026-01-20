@@ -766,54 +766,80 @@ function generateUsageGraph(width: number, height: number): string {
   const sourceLines = state.allLines.length > 0 ? state.allLines : state.lines;
   if (sourceLines.length === 0) return 'No data';
 
-  // Calculate cumulative usage for each line
-  const usageData: { lineNumber: number; total: number }[] = [];
-  let runningInput = 0;
-  let runningOutput = 0;
+  // Track actual context usage at each point (not cumulative across clears)
+  // The input_tokens field represents current context size at that point
+  const usageData: { lineNumber: number; inputTokens: number; isClearBoundary: boolean }[] = [];
+  let prevLineNumber = 0;
+  let segmentCount = 1;
 
   for (const line of sourceLines) {
-    if (line.message?.usage) {
-      runningInput += line.message.usage.input_tokens || 0;
-      runningOutput += line.message.usage.output_tokens || 0;
+    // Detect clear/compact boundary: line number decreased significantly or summary line
+    const isClearBoundary = line.lineNumber < prevLineNumber - 10 || line.type === 'summary';
+    if (isClearBoundary && usageData.length > 0) {
+      segmentCount++;
     }
+
+    // Use input_tokens which represents actual context size at this point
+    const inputTokens = line.message?.usage?.input_tokens || 0;
+
     usageData.push({
       lineNumber: line.lineNumber,
-      total: runningInput + runningOutput,
+      inputTokens,
+      isClearBoundary,
     });
+
+    prevLineNumber = line.lineNumber;
   }
 
-  const maxTokens = usageData[usageData.length - 1]?.total || 1;
-  const graphHeight = height - 4; // Leave room for labels
-  const graphWidth = width - 12; // Leave room for Y-axis labels
+  // Find max tokens for scaling (use context window as reference)
+  const maxTokens = Math.max(CONTEXT_WINDOW_SIZE, ...usageData.map(d => d.inputTokens));
+  const graphHeight = height - 6; // Leave room for labels
+  const graphWidth = width - 14; // Leave room for Y-axis labels
 
   // Sample data points to fit width
   const step = Math.max(1, Math.floor(usageData.length / graphWidth));
-  const sampledData: number[] = [];
+  const sampledData: typeof usageData = [];
   for (let i = 0; i < usageData.length; i += step) {
-    sampledData.push(usageData[i]?.total || 0);
+    sampledData.push(usageData[i]!);
   }
 
   // Build the graph
   const lines: string[] = [];
-  lines.push(`{bold}Token Usage Graph{/bold} (Total: ${maxTokens.toLocaleString()} tokens)`);
+  const currentUsage = usageData[usageData.length - 1]?.inputTokens || 0;
+  const currentPct = Math.round((currentUsage / CONTEXT_WINDOW_SIZE) * 100);
+  lines.push(`{bold}Context Usage Graph{/bold} (Current: ${currentUsage.toLocaleString()} / ${CONTEXT_WINDOW_SIZE.toLocaleString()} = ${currentPct}%)`);
+  if (segmentCount > 1) {
+    lines.push(`{yellow-fg}Note: ${segmentCount} segments detected (clear/compact boundaries){/yellow-fg}`);
+  }
   lines.push('');
 
   // ASCII bar chart (horizontal bars for each sampled point)
   const barChar = '█';
+  const clearChar = '│';
   const numBars = Math.min(graphHeight, sampledData.length);
   const dataStep = Math.max(1, Math.floor(sampledData.length / numBars));
 
   for (let i = 0; i < numBars; i++) {
     const dataIndex = Math.min(i * dataStep, sampledData.length - 1);
-    const value = sampledData[dataIndex] || 0;
-    const barLength = Math.round((value / maxTokens) * (graphWidth - 10));
-    const lineNum = usageData[dataIndex * step]?.lineNumber || 0;
-    const label = String(lineNum).padStart(5);
-    const bar = barChar.repeat(Math.max(1, barLength));
-    lines.push(`${label} {cyan-fg}${bar}{/cyan-fg} ${value.toLocaleString()}`);
+    const data = sampledData[dataIndex]!;
+    const pct = Math.round((data.inputTokens / CONTEXT_WINDOW_SIZE) * 100);
+    const barLength = Math.round((data.inputTokens / CONTEXT_WINDOW_SIZE) * (graphWidth - 10));
+    const label = String(data.lineNumber).padStart(5);
+
+    // Color based on usage level
+    let color = 'green';
+    if (pct > 70) color = 'red';
+    else if (pct > 50) color = 'yellow';
+
+    // Mark clear boundaries
+    const boundaryMark = data.isClearBoundary ? '{magenta-fg}◆{/magenta-fg}' : ' ';
+
+    const bar = barChar.repeat(Math.max(0, barLength));
+    lines.push(`${boundaryMark}${label} {${color}-fg}${bar}{/${color}-fg} ${pct}%`);
   }
 
   lines.push('');
+  lines.push('{gray-fg}◆ = clear/compact boundary | Colors: green <50%, yellow 50-70%, red >70%{/gray-fg}');
   lines.push(
     `{gray-fg}Lines: ${sourceLines.length} | Current: ${state.lines[state.currentIndex]?.lineNumber || 0}{/gray-fg}`
   );
