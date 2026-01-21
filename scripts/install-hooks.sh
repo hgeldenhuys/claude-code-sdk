@@ -142,14 +142,27 @@ HOOKS_YAML
   REPO_URL="https://github.com/hgeldenhuys/claude-code-sdk.git"
   SDK_DIR=".claude/claude-code-sdk"
 
-  if [ -d "$SDK_DIR" ]; then
+  if [ -d "$SDK_DIR/.git" ]; then
     info "Updating claude-code-sdk..."
-    (cd "$SDK_DIR" && git pull --quiet 2>/dev/null) || warn "Could not update SDK"
+    # Use fetch+reset for reliable shallow clone updates
+    if (cd "$SDK_DIR" && git fetch --depth 1 origin main 2>/dev/null && git reset --hard origin/main 2>/dev/null); then
+      success "SDK updated"
+    else
+      warn "Update failed, re-cloning..."
+      rm -rf "$SDK_DIR"
+      git clone --depth 1 --quiet "$REPO_URL" "$SDK_DIR" || error "Failed to clone SDK"
+      success "SDK re-cloned"
+    fi
   else
+    # Directory exists but not a git repo, or doesn't exist - clean slate
+    if [ -d "$SDK_DIR" ]; then
+      warn "SDK directory exists but is not a git repo, removing..."
+      rm -rf "$SDK_DIR"
+    fi
     info "Cloning claude-code-sdk..."
-    git clone --depth 1 --quiet "$REPO_URL" "$SDK_DIR" 2>/dev/null || error "Failed to clone SDK"
+    git clone --depth 1 --quiet "$REPO_URL" "$SDK_DIR" || error "Failed to clone SDK"
+    success "SDK cloned"
   fi
-  success "SDK ready at $SDK_DIR"
 
   # Install SDK dependencies
   info "Installing SDK dependencies..."

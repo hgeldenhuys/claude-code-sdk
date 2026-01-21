@@ -55,7 +55,7 @@ import {
 // Constants
 // ============================================================================
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const PROJECTS_DIR = join(process.env.HOME || '~', '.claude', 'projects');
 const DAEMON_DIR = join(process.env.HOME || '~', '.claude-code-sdk');
 const PID_FILE = join(DAEMON_DIR, 'transcript-daemon.pid');
@@ -1184,7 +1184,7 @@ async function createTUI(): Promise<void> {
       border: { fg: 'blue' },
       fg: 'white',
     },
-    content: `{bold}{cyan-fg}Transcript Viewer{/cyan-fg}{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | {yellow-fg}Lines: ${state.lines.length}{/yellow-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}`,
+    content: `{bold}{cyan-fg}Transcript TUI v${VERSION}{/cyan-fg}{/bold} | Session: {green-fg}${state.sessionName || state.sessionId}{/green-fg} | {yellow-fg}Lines: ${state.lines.length}{/yellow-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}`,
     tags: true,
   });
 
@@ -1390,7 +1390,7 @@ async function createTUI(): Promise<void> {
       ? ` | {blue-fg}Search: "${escapeBlessedMarkup(state.searchQuery)}" (${state.searchResults.length}){/blue-fg}`
       : '';
 
-    return `{bold}{cyan-fg}Transcript Viewer{/cyan-fg}{/bold} | Session: {green-fg}${sessionDisplay}{/green-fg}${turnInfo} | {yellow-fg}Lines: ${state.lines.length}{/yellow-fg} | {magenta-fg}${state.currentIndex + 1}/${state.lines.length}{/magenta-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}${filterInfo}${fullscreenInfo}${liveInfo}${searchInfo}`;
+    return `{bold}{cyan-fg}Transcript TUI v${VERSION}{/cyan-fg}{/bold} | Session: {green-fg}${sessionDisplay}{/green-fg}${turnInfo} | {yellow-fg}Lines: ${state.lines.length}{/yellow-fg} | {magenta-fg}${state.currentIndex + 1}/${state.lines.length}{/magenta-fg} | {blue-fg}[${state.viewMode}]{/blue-fg}${filterInfo}${fullscreenInfo}${liveInfo}${searchInfo}`;
   };
 
   // Lightweight selection update - only updates selection and content, no list regeneration
