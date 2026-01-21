@@ -8,11 +8,11 @@
       "description": "This page provides reference documentation for implementing hooks in Claude Code.",
       "category": "development",
       "tags": [],
-      "contentHash": "26284344113f769b110115c1531bfc6a5625b579c51fd645a7016c193121941b",
+      "contentHash": "278be7303fa9fae0289214bb1f00da34df4b66e46e590bd672d10916f3563fd8",
       "firstCached": "2025-12-15T03:39:00.381Z",
-      "lastFetched": "2026-01-19T17:59:20.572Z",
-      "lastChanged": "2026-01-16T15:01:03.377Z",
-      "version": 7
+      "lastFetched": "2026-01-20T18:38:22.715Z",
+      "lastChanged": "2026-01-20T18:38:22.715Z",
+      "version": 8
     }
   ],
   [
@@ -24,11 +24,11 @@
       "description": "Learn how to customize and extend Claude Code's behavior by registering shell commands",
       "category": "development",
       "tags": [],
-      "contentHash": "19e6d30899036fabcb1a04c936943b50fdfbacc18e27c6c841a369c867a28cd2",
+      "contentHash": "aff60b0aa0bdae75f326f75cc5725abac37a37ed100853c0cbdab0d7b287dcc1",
       "firstCached": "2025-12-15T03:39:00.610Z",
-      "lastFetched": "2026-01-19T17:59:20.778Z",
-      "lastChanged": "2025-12-15T03:39:00.610Z",
-      "version": 1
+      "lastFetched": "2026-01-20T18:38:22.972Z",
+      "lastChanged": "2026-01-20T18:38:22.972Z",
+      "version": 2
     }
   ],
   [
@@ -36,15 +36,15 @@
     {
       "url": "https://code.claude.com/docs/en/skills.md",
       "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_skills_md.md",
-      "title": "Agent Skills",
-      "description": "Create, manage, and share Skills to extend Claude's capabilities in Claude Code.",
+      "title": "Extend Claude with skills",
+      "description": "Create, manage, and share skills to extend Claude's capabilities in Claude Code. Includes custom slash commands.",
       "category": "development",
       "tags": [],
-      "contentHash": "f1b7577f6fc33b5e6c2fc853dce36c784dde2c6ff0a5044212b6842d11ca3ab8",
+      "contentHash": "4c0b4c02449ea8d686cece90c95658affde1836beefb69d5f12cd3f604cd4247",
       "firstCached": "2025-12-15T03:39:00.847Z",
-      "lastFetched": "2026-01-19T17:59:20.969Z",
-      "lastChanged": "2026-01-16T15:01:04.010Z",
-      "version": 6
+      "lastFetched": "2026-01-20T18:38:23.227Z",
+      "lastChanged": "2026-01-20T18:38:23.227Z",
+      "version": 7
     }
   ],
   [
@@ -56,11 +56,11 @@
       "description": "Create and use specialized AI subagents in Claude Code for task-specific workflows and improved context management.",
       "category": "development",
       "tags": [],
-      "contentHash": "cab882cf51123b40cad5df17f8690658995237eeaab43339f4645684ba5e9289",
+      "contentHash": "3e11f508f8429369d81b42298175ce0c6dc0cb87822d9ec31eaf6b122b0470fc",
       "firstCached": "2025-12-15T03:39:01.054Z",
-      "lastFetched": "2026-01-19T17:59:21.215Z",
-      "lastChanged": "2026-01-17T06:26:16.884Z",
-      "version": 7
+      "lastFetched": "2026-01-20T18:38:23.465Z",
+      "lastChanged": "2026-01-20T18:38:23.465Z",
+      "version": 8
     }
   ],
   [
@@ -69,14 +69,14 @@
       "url": "https://code.claude.com/docs/en/plugins.md",
       "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_plugins_md.md",
       "title": "Create plugins",
-      "description": "Create custom plugins to extend Claude Code with slash commands, agents, hooks, Skills, and MCP servers.",
+      "description": "Create custom plugins to extend Claude Code with skills, agents, hooks, and MCP servers.",
       "category": "development",
       "tags": [],
-      "contentHash": "3f9f67dc213377a80a2c5048428ec7a469e67f69e1d6fb8e4ad5ab69f56a5072",
+      "contentHash": "f4580edabeaeea12de31492960a1afbc3c9f2d241650efdac66dfa4914228f52",
       "firstCached": "2025-12-15T03:39:01.421Z",
-      "lastFetched": "2026-01-19T17:59:21.441Z",
-      "lastChanged": "2026-01-02T20:02:40.177Z",
-      "version": 3
+      "lastFetched": "2026-01-20T18:38:23.677Z",
+      "lastChanged": "2026-01-20T18:38:23.677Z",
+      "version": 4
     }
   ],
   [
@@ -88,11 +88,11 @@
       "description": "Complete technical reference for Claude Code plugin system, including schemas, CLI commands, and component specifications.",
       "category": "reference",
       "tags": [],
-      "contentHash": "0ffe76fbc6056137d0fedb5c701d9c14eec6c4c4ced7a32e35c8fd8514d4e9fe",
+      "contentHash": "0f6ca3c496f45cfec8d2b1fc216db98fd6641d4695e98d4dab42550c80906dbf",
       "firstCached": "2025-12-15T03:39:01.643Z",
-      "lastFetched": "2026-01-19T17:59:21.737Z",
-      "lastChanged": "2026-01-11T20:49:32.602Z",
-      "version": 5
+      "lastFetched": "2026-01-20T18:38:23.909Z",
+      "lastChanged": "2026-01-20T18:38:23.909Z",
+      "version": 6
     }
   ],
   [
@@ -104,11 +104,11 @@
       "description": "Use the Agent SDK to run Claude Code programmatically from the CLI, Python, or TypeScript.",
       "category": "development",
       "tags": [],
-      "contentHash": "17faa0c74834d76a7a6a821407a4e97bef1362ebca178bb88ab959e2fa2f2146",
+      "contentHash": "d8474c2faf1d92f4b60189cc22b1afb8448e3f99ca601edd1b74818b44afc0dd",
       "firstCached": "2025-12-15T03:39:01.850Z",
-      "lastFetched": "2026-01-19T17:59:22.264Z",
-      "lastChanged": "2026-01-19T09:37:30.102Z",
-      "version": 4
+      "lastFetched": "2026-01-20T18:38:24.369Z",
+      "lastChanged": "2026-01-20T18:38:24.369Z",
+      "version": 5
     }
   ],
   [
@@ -120,11 +120,11 @@
       "description": "Learn how to connect Claude Code to your tools with the Model Context Protocol.",
       "category": "integration",
       "tags": [],
-      "contentHash": "df428cfcc67fe3eb6a503025069b5ef67e9291d049ba8af42596ed0302e63aea",
+      "contentHash": "281389b3747fe34c31cb04c618e8c36ff9543b0fbfdc55e310bc73504ee08c22",
       "firstCached": "2025-12-15T03:39:02.061Z",
-      "lastFetched": "2026-01-19T17:59:22.489Z",
-      "lastChanged": "2026-01-16T15:01:07.614Z",
-      "version": 6
+      "lastFetched": "2026-01-20T18:38:24.550Z",
+      "lastChanged": "2026-01-20T18:38:24.550Z",
+      "version": 7
     }
   ],
   [
@@ -136,11 +136,11 @@
       "description": "Configure Claude Code with global and project-level settings, and environment variables.",
       "category": "configuration",
       "tags": [],
-      "contentHash": "961cb0b3c3d37f429c53e5b7499c3446e2d10e0c695abcf5bfbd2e281e982915",
+      "contentHash": "fb91a2a30503346e7a1e220f23ada8f3d8fec94b880df0e79b7ff5a68a4b7f3d",
       "firstCached": "2025-12-15T03:39:02.444Z",
-      "lastFetched": "2026-01-19T17:59:22.785Z",
-      "lastChanged": "2026-01-19T09:37:30.445Z",
-      "version": 13
+      "lastFetched": "2026-01-20T18:38:24.762Z",
+      "lastChanged": "2026-01-20T18:38:24.762Z",
+      "version": 14
     }
   ],
   [
@@ -152,11 +152,11 @@
       "description": "Learn how to manage Claude Code's memory across sessions with different memory locations and best practices.",
       "category": "configuration",
       "tags": [],
-      "contentHash": "1e841a080d9656cc2959293b224ae7fdadf69219b36cbe8faabfe462ea7940b0",
+      "contentHash": "b83194cef72334c8261a24388cf7666913dc68eedad93fc9886509e811ffb66d",
       "firstCached": "2025-12-15T03:39:02.651Z",
-      "lastFetched": "2026-01-19T17:59:22.964Z",
-      "lastChanged": "2026-01-11T20:49:33.643Z",
-      "version": 3
+      "lastFetched": "2026-01-20T18:38:25.019Z",
+      "lastChanged": "2026-01-20T18:38:25.019Z",
+      "version": 4
     }
   ],
   [
@@ -170,7 +170,7 @@
       "tags": [],
       "contentHash": "ba19a4a1cad941f0606c5d7094c8eeeaee054f67072dc715e086e4d3d77ea8b7",
       "firstCached": "2025-12-15T03:39:02.871Z",
-      "lastFetched": "2026-01-19T17:59:23.181Z",
+      "lastFetched": "2026-01-20T18:38:25.256Z",
       "lastChanged": "2025-12-15T03:39:02.871Z",
       "version": 1
     }
@@ -186,7 +186,7 @@
       "tags": [],
       "contentHash": "32266d5df37b014f004e21c199c15a3ca03576ca62eeaf28fb6d7f25769be3fd",
       "firstCached": "2025-12-15T03:39:03.061Z",
-      "lastFetched": "2026-01-19T17:59:23.416Z",
+      "lastFetched": "2026-01-20T18:38:25.446Z",
       "lastChanged": "2026-01-08T03:16:38.158Z",
       "version": 2
     }
@@ -200,11 +200,11 @@
       "description": "Adapt Claude Code for uses beyond software engineering",
       "category": "configuration",
       "tags": [],
-      "contentHash": "6457f8e1cffbbcb0a09d1623c044c5db9a442ed23f7ac64e06844bea0f149eca",
+      "contentHash": "f9c50b784d4d0971bad81ba469ad3b99bb9bc76de2c9bde960459ea5e8bfa4e7",
       "firstCached": "2025-12-15T03:39:03.280Z",
-      "lastFetched": "2026-01-19T17:59:23.610Z",
-      "lastChanged": "2025-12-15T03:39:03.280Z",
-      "version": 1
+      "lastFetched": "2026-01-20T18:38:25.675Z",
+      "lastChanged": "2026-01-20T18:38:25.675Z",
+      "version": 2
     }
   ],
   [
@@ -218,7 +218,7 @@
       "tags": [],
       "contentHash": "135cc18b87007811dca084180ce944f1d6f27c7e04513167fcb8a9d1c9d5586a",
       "firstCached": "2025-12-15T03:39:03.482Z",
-      "lastFetched": "2026-01-19T17:59:23.833Z",
+      "lastFetched": "2026-01-20T18:38:25.863Z",
       "lastChanged": "2026-01-16T15:01:09.739Z",
       "version": 3
     }
@@ -232,11 +232,11 @@
       "description": "Complete reference for Claude Code command-line interface, including commands and flags.",
       "category": "reference",
       "tags": [],
-      "contentHash": "5a79ad19f0dfa3a0d629bf3cf8fbd85556b8ef78ceafdad16989bed9245b6b4b",
+      "contentHash": "8ae9fdf2ed95727b4bdbe5c9b93952e7c48cbf6cef83bef37b985fb5a96e32a4",
       "firstCached": "2025-12-15T03:39:03.693Z",
-      "lastFetched": "2026-01-19T17:59:24.034Z",
-      "lastChanged": "2026-01-19T09:37:31.544Z",
-      "version": 7
+      "lastFetched": "2026-01-20T18:38:26.091Z",
+      "lastChanged": "2026-01-20T18:38:26.091Z",
+      "version": 8
     }
   ],
   [
@@ -264,11 +264,11 @@
       "description": "Complete reference for keyboard shortcuts, input modes, and interactive features in Claude Code sessions.",
       "category": "reference",
       "tags": [],
-      "contentHash": "de34f95a52d6d531c579d06c160455f53d08137b83b4a618a9e59b3a12ab7190",
+      "contentHash": "24bc18fd0fac5e5b418d5db271f3edfa292f63e03469bfe26b1b6d891cd36c7a",
       "firstCached": "2025-12-15T03:39:04.121Z",
-      "lastFetched": "2026-01-19T17:59:24.475Z",
-      "lastChanged": "2026-01-13T01:16:24.463Z",
-      "version": 4
+      "lastFetched": "2026-01-20T18:38:26.555Z",
+      "lastChanged": "2026-01-20T18:38:26.555Z",
+      "version": 5
     }
   ],
   [
@@ -280,11 +280,11 @@
       "description": "Automatically track and rewind Claude's edits to quickly recover from unwanted changes.",
       "category": "reference",
       "tags": [],
-      "contentHash": "3412893eca2d799ac0f53886b7672e996a9e86126d353bfdbbc9240e639c957b",
+      "contentHash": "fc66856a30d314c8da4be3f809175bdbc2c85aaee724e44414826629367b2c8a",
       "firstCached": "2025-12-15T03:39:04.325Z",
-      "lastFetched": "2026-01-19T17:59:24.729Z",
-      "lastChanged": "2025-12-15T03:39:04.325Z",
-      "version": 1
+      "lastFetched": "2026-01-20T18:38:26.780Z",
+      "lastChanged": "2026-01-20T18:38:26.780Z",
+      "version": 2
     }
   ],
   [
@@ -298,7 +298,7 @@
       "tags": [],
       "contentHash": "1d17dd35fe770a0b698a66e15a3026bbbaa0277c64eedccfbd9dc10b833e3779",
       "firstCached": "2025-12-15T03:39:04.542Z",
-      "lastFetched": "2026-01-19T17:59:24.993Z",
+      "lastFetched": "2026-01-20T18:38:26.988Z",
       "lastChanged": "2026-01-11T20:49:35.766Z",
       "version": 2
     }
@@ -314,7 +314,7 @@
       "tags": [],
       "contentHash": "b57f9a2687ef34c9156a873bda76416093af0a9faa70a44a0c862a50d6dadce1",
       "firstCached": "2025-12-15T03:39:04.754Z",
-      "lastFetched": "2026-01-19T17:59:25.186Z",
+      "lastFetched": "2026-01-20T18:38:27.248Z",
       "lastChanged": "2026-01-02T20:02:43.599Z",
       "version": 2
     }
@@ -330,7 +330,7 @@
       "tags": [],
       "contentHash": "9024e9f000eae32010edb41e58215d558229c84adfeba1d8e5dd724389043758",
       "firstCached": "2025-12-15T03:39:04.972Z",
-      "lastFetched": "2026-01-19T17:59:25.407Z",
+      "lastFetched": "2026-01-20T18:38:27.486Z",
       "lastChanged": "2025-12-15T03:39:04.972Z",
       "version": 1
     }
@@ -346,7 +346,7 @@
       "tags": [],
       "contentHash": "c8b3fb2a5182c25d58eebca099671bf53976c9889419056df53c63ee55f27180",
       "firstCached": "2025-12-15T03:39:05.234Z",
-      "lastFetched": "2026-01-19T17:59:25.636Z",
+      "lastFetched": "2026-01-20T18:38:27.761Z",
       "lastChanged": "2025-12-15T03:39:05.234Z",
       "version": 1
     }
@@ -360,11 +360,11 @@
       "description": "Discover solutions to common issues with Claude Code installation and usage.",
       "category": "troubleshooting",
       "tags": [],
-      "contentHash": "4a524a4a75728ade37942a093aef6069863083e54e18f53cf444188109606ae4",
+      "contentHash": "373202499fbc0b1d1b35d74f6c12ac0ffa275b627da47bb768d24c1a66f030bf",
       "firstCached": "2025-12-15T03:39:05.475Z",
-      "lastFetched": "2026-01-19T17:59:26.022Z",
-      "lastChanged": "2026-01-08T03:16:40.506Z",
-      "version": 5
+      "lastFetched": "2026-01-20T18:38:28.216Z",
+      "lastChanged": "2026-01-20T18:38:28.216Z",
+      "version": 6
     }
   ],
   [
@@ -378,7 +378,7 @@
       "tags": [],
       "contentHash": "b8c12a7161d9fd21e2662e872d9a3afb1731c84bc1abf5f2cf16f06b2e9d19c0",
       "firstCached": "2025-12-16T15:40:41.903Z",
-      "lastFetched": "2026-01-19T17:59:26.181Z",
+      "lastFetched": "2026-01-20T18:38:28.355Z",
       "lastChanged": "2026-01-19T09:37:33.574Z",
       "version": 11
     }
@@ -394,7 +394,7 @@
       "tags": [],
       "contentHash": "ca4d42d6792bb8c02a0bd3cd6edc18e54d2978cf3f5fe5768d5564be2bccc03f",
       "firstCached": "2026-01-02T20:02:44.679Z",
-      "lastFetched": "2026-01-19T17:59:26.589Z",
+      "lastFetched": "2026-01-20T18:38:29.194Z",
       "lastChanged": "2026-01-06T21:22:32.329Z",
       "version": 2
     }
@@ -410,7 +410,7 @@
       "tags": [],
       "contentHash": "ebcc593fba18290ddce3ff3c856457929580538c4929047dff2a7a71b972e9dd",
       "firstCached": "2026-01-02T20:02:44.890Z",
-      "lastFetched": "2026-01-19T17:59:27.009Z",
+      "lastFetched": "2026-01-20T18:38:29.650Z",
       "lastChanged": "2026-01-02T20:02:44.890Z",
       "version": 1
     }
@@ -426,7 +426,7 @@
       "tags": [],
       "contentHash": "28e54e937f6cb2ac3af754dd2861fdbbc1e79d82b7a9e7d943a435bd8a94a887",
       "firstCached": "2026-01-02T20:02:45.092Z",
-      "lastFetched": "2026-01-19T17:59:27.694Z",
+      "lastFetched": "2026-01-20T18:38:30.146Z",
       "lastChanged": "2026-01-06T21:22:32.752Z",
       "version": 2
     }
@@ -442,7 +442,7 @@
       "tags": [],
       "contentHash": "5945216cb8f4dc746276ada5b7fbf2a61b180c3ff32abc0a7c786e5774d52857",
       "firstCached": "2026-01-02T20:02:45.297Z",
-      "lastFetched": "2026-01-19T17:59:28.044Z",
+      "lastFetched": "2026-01-20T18:38:30.956Z",
       "lastChanged": "2026-01-06T21:22:32.985Z",
       "version": 2
     }
@@ -456,11 +456,11 @@
       "description": "",
       "category": "development",
       "tags": [],
-      "contentHash": "7f765b8067538584de2e452193e2180a8abea8db03485d78094f967178b67848",
+      "contentHash": "d9995d2c7239adc1e572c092691000ac0e16a25a1852bbccc103f563f6e7f93b",
       "firstCached": "2026-01-02T20:02:45.630Z",
-      "lastFetched": "2026-01-19T17:59:28.553Z",
-      "lastChanged": "2026-01-19T17:59:28.553Z",
-      "version": 17
+      "lastFetched": "2026-01-20T18:38:31.648Z",
+      "lastChanged": "2026-01-20T18:38:31.648Z",
+      "version": 18
     }
   ],
   [
@@ -472,11 +472,11 @@
       "description": "Build and host plugin marketplaces to distribute Claude Code extensions across teams and communities.",
       "category": "development",
       "tags": [],
-      "contentHash": "1ba2bf6cebc94fb1bc1aa2829610e5a3ccb07de051dfc48e57b9087846850dc6",
+      "contentHash": "d46d810f44fe0b40cef85b4725a427a9244a47fef682af888485f5e211b5251f",
       "firstCached": "2026-01-07T04:50:39.009Z",
-      "lastFetched": "2026-01-19T17:59:21.979Z",
-      "lastChanged": "2026-01-13T01:16:21.921Z",
-      "version": 4
+      "lastFetched": "2026-01-20T18:38:24.157Z",
+      "lastChanged": "2026-01-20T18:38:24.157Z",
+      "version": 5
     }
   ],
   [
@@ -488,11 +488,11 @@
       "description": "Connect Claude Code to your browser to test web apps, debug with console logs, and automate browser tasks.",
       "category": "ide",
       "tags": [],
-      "contentHash": "0b5470585497c8ece8021d03385dde73d51f7c3755c4c86af844c4e03229a81e",
+      "contentHash": "2b1fa6cca8782c3c6a07c2eccf38c87f13d87f399a7c144afdaf51ab15f12d46",
       "firstCached": "2026-01-13T19:51:39.091Z",
-      "lastFetched": "2026-01-19T17:59:25.818Z",
-      "lastChanged": "2026-01-13T19:51:39.091Z",
-      "version": 1
+      "lastFetched": "2026-01-20T18:38:27.992Z",
+      "lastChanged": "2026-01-20T18:38:27.992Z",
+      "version": 2
     }
   ]
 ]

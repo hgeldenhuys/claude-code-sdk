@@ -190,7 +190,16 @@ bun run bin/transcript.ts recall "error handling" --max-sessions 3
 
 # TUI viewer
 bun run bin/transcript.ts tui
+bun run transcript-tui tender-spider --live -o       # Text-only, live mode
+bun run transcript-tui "tender-spider,earnest-lion"  # Multi-session view
 ```
+
+**transcript-tui** features:
+- **View modes**: Raw (1), Human (2), Context (3), JSON (4), Markdown (5)
+- **Multi-session**: Comma-separated sessions merged chronologically
+- **Usage graph**: Press `u` for context usage visualization (detects clear/compact boundaries)
+- **Markdown rendering**: Custom terminal renderer with code highlighting
+- **Navigation**: j/k or arrows, g/G for first/last, 1-5 for view modes
 
 **hook-events** - Hook events viewer CLI and TUI (Bun-only, uses bun:sqlite):
 
