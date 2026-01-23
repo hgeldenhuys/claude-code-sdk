@@ -12,16 +12,21 @@ Build event-driven automation for Claude Code using hooks - scripts that execute
 
 | Hook Event | When It Fires | Uses Matcher | Common Use Cases |
 |------------|---------------|--------------|------------------|
-| `PreToolUse` | Before tool executes | Yes | Validation, auto-approval, input modification |
-| `PostToolUse` | After tool completes | Yes | Auto-formatting, linting, logging |
-| `PermissionRequest` | User shown permission dialog | Yes | Auto-allow/deny, policy enforcement |
-| `Notification` | Claude sends notification | Yes | Custom alerts, logging |
+| `PreToolUse` | Before tool executes | Yes (tool name) | Validation, auto-approval, input modification |
+| `PostToolUse` | After tool succeeds | Yes (tool name) | Auto-formatting, linting, logging |
+| `PostToolUseFailure` | After tool fails | Yes (tool name) | Error handling, fallback logic |
+| `PermissionRequest` | User shown permission dialog | Yes (tool name) | Auto-allow/deny, policy enforcement |
+| `Notification` | Claude sends notification | Yes (type) | Custom alerts, logging |
 | `UserPromptSubmit` | User submits prompt | No | Prompt validation, context injection |
+| `Setup` | `--init` or `--maintenance` | Yes (trigger) | Dependency install, migrations, cleanup |
 | `Stop` | Main agent finishes | No | Task completion checks, force continue |
+| `SubagentStart` | Subagent (Task) spawns | No | Logging, tracking, rate limiting |
 | `SubagentStop` | Subagent (Task) finishes | No | Subagent task validation |
-| `PreCompact` | Before context compaction | Yes | Custom compaction handling |
-| `SessionStart` | Session begins/resumes | Yes | Context loading, env setup |
-| `SessionEnd` | Session ends | No | Cleanup, logging |
+| `PreCompact` | Before context compaction | Yes (trigger) | Custom compaction handling |
+| `SessionStart` | Session begins/resumes | Yes (source) | Context loading, env setup |
+| `SessionEnd` | Session ends | Yes (reason) | Cleanup, logging |
+
+*Updated for Claude Code 2.1.17*
 
 ## Configuration Locations
 

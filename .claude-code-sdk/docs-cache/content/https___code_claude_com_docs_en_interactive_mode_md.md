@@ -257,8 +257,18 @@ Bash mode:
 * Shows real-time progress and output
 * Supports the same `Ctrl+B` backgrounding for long-running commands
 * Does not require Claude to interpret or approve the command
+* Supports history-based autocomplete: type a partial command and press **Tab** to complete from previous `!` commands in the current project
 
 This is useful for quick shell operations while maintaining conversation context.
+
+## Task list
+
+When working on complex, multi-step work, Claude creates a task list to track progress. Tasks appear in the status area of your terminal with indicators showing what's pending, in progress, or complete.
+
+* Press `Ctrl+T` to toggle the task list view. The display shows up to 10 tasks at a time
+* To see all tasks or clear them, ask Claude directly: "show me all tasks" or "clear all tasks"
+* Tasks persist across context compactions, helping Claude stay organized on larger projects
+* To share a task list across sessions, set `CLAUDE_CODE_TASK_LIST_ID` to use a named directory in `~/.claude/tasks/`: `CLAUDE_CODE_TASK_LIST_ID=my-project claude`
 
 ## See also
 

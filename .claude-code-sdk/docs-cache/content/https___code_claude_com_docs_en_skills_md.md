@@ -79,7 +79,7 @@ Where you store a skill determines who can use it:
 | Project    | `.claude/skills/<skill-name>/SKILL.md`           | This project only              |
 | Plugin     | `<plugin>/skills/<skill-name>/SKILL.md`          | Where plugin is enabled        |
 
-Project skills override personal skills with the same name. If you have files in `.claude/commands/`, those work the same way but a skill takes precedence over a command with the same name.
+When skills share the same name across levels, higher-priority locations win: enterprise > personal > project. Plugin skills use a `plugin-name:skill-name` namespace, so they cannot conflict with other levels. If you have files in `.claude/commands/`, those work the same way, but if a skill and a command share the same name, the skill takes precedence.
 
 #### Automatic discovery from nested directories
 
@@ -329,7 +329,7 @@ When this skill runs:
 This is preprocessing, not something Claude executes. Claude only sees the final result.
 
 <Tip>
-  To enable [extended thinking](/en/common-workflows#use-extended-thinking) in a skill, include the word "ultrathink" anywhere in your skill content.
+  To enable [extended thinking](/en/common-workflows#use-extended-thinking-thinking-mode) in a skill, include the word "ultrathink" anywhere in your skill content.
 </Tip>
 
 ### Run skills in a subagent
@@ -390,7 +390,7 @@ Three ways to control which skills Claude can invoke:
 Skill
 ```
 
-**Allow or deny specific skills** using [permission rules](/en/permissions):
+**Allow or deny specific skills** using [permission rules](/en/iam):
 
 ```
 # Allow only specific skills
@@ -637,7 +637,7 @@ To increase the limit, set the `SLASH_COMMAND_TOOL_CHAR_BUDGET` environment vari
 * **[Hooks](/en/hooks)**: automate workflows around tool events
 * **[Memory](/en/memory)**: manage CLAUDE.md files for persistent context
 * **[Interactive mode](/en/interactive-mode#built-in-commands)**: built-in commands and shortcuts
-* **[Permissions](/en/permissions)**: control tool and skill access
+* **[Permissions](/en/iam)**: control tool and skill access
 
 
 ---
