@@ -12,7 +12,7 @@
  *   g/G              Go to first/last line
  *   /                Search
  *   Tab              Switch panes
- *   1-4              Switch view mode (raw, human, minimal, context)
+ *   1-3              Switch view mode (json, md, custom)
  *   q                Quit
  *
  * Examples:
@@ -153,8 +153,8 @@ function loadTranscriptLines(sessionIdOrPath: string): TranscriptLine[] {
   return results.map(lineResultToTranscriptLine);
 }
 
-// View modes
-type ViewMode = 'raw' | 'human' | 'minimal' | 'context' | 'markdown';
+// View modes: JSON (raw), MD (human-readable + markdown), CUSTOM (tool-specific)
+type ViewMode = 'json' | 'md' | 'custom';
 
 // Markdown rendering with custom terminal renderer (marked v17 compatible)
 import { marked } from 'marked';
@@ -295,7 +295,7 @@ const state: AppState = {
   lines: [],
   allLines: [],
   currentIndex: 0,
-  viewMode: 'human',
+  viewMode: 'md',
   searchQuery: '',
   searchResults: [],
   searchResultIndex: 0,
@@ -883,11 +883,9 @@ function generateHelpContent(): string {
   {green-fg}u/a{/green-fg}             Jump to next user/assistant message
 
 {bold}View Modes:{/bold}
-  {green-fg}1{/green-fg}               Raw JSON
-  {green-fg}2{/green-fg}               Human-readable
-  {green-fg}3{/green-fg}               Minimal (text only)
-  {green-fg}4{/green-fg}               Context (conversation thread)
-  {green-fg}5{/green-fg}               Markdown (rendered)
+  {green-fg}1{/green-fg}               JSON - Raw JSON with syntax highlighting
+  {green-fg}2{/green-fg}               MD - Metadata header + markdown content
+  {green-fg}3{/green-fg}               CUSTOM - Tool-specific views (Edit diff, Bash output, etc.)
 
 {bold}Search:{/bold}
   {green-fg}/{/green-fg}               Open search
@@ -953,6 +951,348 @@ function getCumulativeUsage(upToLine: TranscriptLine): {
   return { input, output, total: input + output };
 }
 
+/**
+ * Extract tool name from a transcript line (if it contains tool_use)
+ */
+function getToolName(line: TranscriptLine): string | null {
+  if (line.type !== 'assistant' || !line.message?.content) return null;
+  if (!Array.isArray(line.message.content)) return null;
+
+  for (const block of line.message.content as any[]) {
+    if (block.type === 'tool_use' && block.name) {
+      return block.name;
+    }
+  }
+  return null;
+}
+
+/**
+ * Get tool input from a transcript line
+ */
+function getToolInput(line: TranscriptLine): Record<string, any> | null {
+  if (line.type !== 'assistant' || !line.message?.content) return null;
+  if (!Array.isArray(line.message.content)) return null;
+
+  for (const block of line.message.content as any[]) {
+    if (block.type === 'tool_use' && block.input) {
+      return block.input;
+    }
+  }
+  return null;
+}
+
+/**
+ * Render Edit tool as unified diff
+ */
+function renderEditDiff(line: TranscriptLine): string {
+  const input = getToolInput(line);
+  if (!input) return '{red-fg}No Edit input found{/red-fg}';
+
+  const parts: string[] = [];
+  parts.push('{cyan-fg}━━━ EDIT ━━━{/cyan-fg}\n');
+
+  if (input.file_path) {
+    parts.push(`File: {yellow-fg}${escapeBlessedMarkup(String(input.file_path))}{/yellow-fg}\n\n`);
+  }
+
+  const oldString = typeof input.old_string === 'string' ? input.old_string : '';
+  const newString = typeof input.new_string === 'string' ? input.new_string : '';
+
+  parts.push('{gray-fg}@@ removed / added @@{/gray-fg}\n');
+
+  // Show removed lines in red
+  for (const oldLine of oldString.split('\n')) {
+    parts.push(`{red-fg}- ${escapeBlessedMarkup(oldLine)}{/red-fg}\n`);
+  }
+
+  // Show added lines in green
+  for (const newLine of newString.split('\n')) {
+    parts.push(`{green-fg}+ ${escapeBlessedMarkup(newLine)}{/green-fg}\n`);
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Render Bash tool output
+ */
+function renderBashOutput(line: TranscriptLine): string {
+  const input = getToolInput(line);
+  const parts: string[] = [];
+  parts.push('{cyan-fg}━━━ BASH ━━━{/cyan-fg}\n');
+
+  if (input?.command) {
+    parts.push(`{green-fg}${'{close}'}{/green-fg} {yellow-fg}${escapeBlessedMarkup(String(input.command))}{/yellow-fg}\n\n`);
+  }
+
+  // Get tool result from the line
+  if (line.toolUseResult) {
+    const stdout = line.toolUseResult.stdout;
+    const stderr = line.toolUseResult.stderr;
+    if (typeof stdout === 'string' && stdout) {
+      parts.push(escapeBlessedMarkup(stdout));
+      if (!stdout.endsWith('\n')) parts.push('\n');
+    }
+    if (typeof stderr === 'string' && stderr) {
+      parts.push(`{red-fg}${escapeBlessedMarkup(stderr)}{/red-fg}`);
+      if (!stderr.endsWith('\n')) parts.push('\n');
+    }
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Render Read tool output with line numbers
+ */
+function renderReadOutput(line: TranscriptLine): string {
+  const input = getToolInput(line);
+  const parts: string[] = [];
+  parts.push('{cyan-fg}━━━ READ ━━━{/cyan-fg}\n');
+
+  if (input?.file_path) {
+    parts.push(`File: {yellow-fg}${escapeBlessedMarkup(String(input.file_path))}{/yellow-fg}\n\n`);
+  }
+
+  // Get file content from tool result
+  const content = line.toolUseResult?.content;
+  if (typeof content === 'string' && content) {
+    const contentLines = content.split('\n');
+    for (let i = 0; i < contentLines.length; i++) {
+      const lineNum = String(i + 1).padStart(4);
+      parts.push(`{gray-fg}${lineNum}{/gray-fg} ${escapeBlessedMarkup(contentLines[i] || '')}\n`);
+    }
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Render Write tool with file content
+ */
+function renderWriteOutput(line: TranscriptLine): string {
+  const input = getToolInput(line);
+  const parts: string[] = [];
+  parts.push('{cyan-fg}━━━ WRITE ━━━{/cyan-fg}\n');
+
+  if (input?.file_path) {
+    parts.push(`File: {yellow-fg}${escapeBlessedMarkup(String(input.file_path))}{/yellow-fg}\n\n`);
+  }
+
+  const content = input?.content;
+  if (typeof content === 'string' && content) {
+    const contentLines = content.split('\n');
+    for (let i = 0; i < contentLines.length; i++) {
+      const lineNum = String(i + 1).padStart(4);
+      parts.push(`{gray-fg}${lineNum}{/gray-fg} ${escapeBlessedMarkup(contentLines[i] || '')}\n`);
+    }
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Render Grep tool with pattern highlighted
+ */
+function renderGrepOutput(line: TranscriptLine): string {
+  const input = getToolInput(line);
+  const parts: string[] = [];
+  parts.push('{cyan-fg}━━━ GREP ━━━{/cyan-fg}\n');
+
+  if (input?.pattern) {
+    parts.push(`Pattern: {yellow-fg}${escapeBlessedMarkup(String(input.pattern))}{/yellow-fg}\n`);
+  }
+  if (input?.path) {
+    parts.push(`Path: {cyan-fg}${escapeBlessedMarkup(String(input.path))}{/cyan-fg}\n`);
+  }
+  parts.push('\n');
+
+  // Show tool result
+  const content = line.toolUseResult?.content;
+  if (typeof content === 'string' && content) {
+    parts.push(escapeBlessedMarkup(content));
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Render TodoWrite tool as task list
+ */
+function renderTodoList(line: TranscriptLine): string {
+  const input = getToolInput(line);
+  const parts: string[] = [];
+  parts.push('{cyan-fg}━━━ TODOWRITE ━━━{/cyan-fg}\n\n');
+
+  if (input?.todos && Array.isArray(input.todos)) {
+    let completed = 0;
+    const total = input.todos.length;
+
+    for (const todo of input.todos) {
+      const content = todo.content || '';
+      const status = todo.status || 'pending';
+
+      let checkbox: string;
+      let color: string;
+      switch (status) {
+        case 'completed':
+          checkbox = '[✓]';
+          color = 'green';
+          completed++;
+          break;
+        case 'in_progress':
+          checkbox = '[→]';
+          color = 'yellow';
+          break;
+        default:
+          checkbox = '[ ]';
+          color = 'gray';
+      }
+
+      parts.push(`{${color}-fg}${checkbox}{/${color}-fg} ${escapeBlessedMarkup(content)}\n`);
+    }
+
+    parts.push('\n');
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    parts.push(`{cyan-fg}Progress: ${completed}/${total} (${percent}%){/cyan-fg}\n`);
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Render Glob tool as file tree
+ */
+function renderGlobOutput(line: TranscriptLine): string {
+  const input = getToolInput(line);
+  const parts: string[] = [];
+  parts.push('{cyan-fg}━━━ GLOB ━━━{/cyan-fg}\n');
+
+  if (input?.pattern) {
+    parts.push(`Pattern: {yellow-fg}${escapeBlessedMarkup(String(input.pattern))}{/yellow-fg}\n`);
+  }
+  if (input?.path) {
+    parts.push(`Path: {cyan-fg}${escapeBlessedMarkup(String(input.path))}{/cyan-fg}\n`);
+  }
+  parts.push('\n');
+
+  // Show file list from tool result
+  const content = line.toolUseResult?.content;
+  if (typeof content === 'string' && content) {
+    const files = content.split('\n').filter((f: string) => f.trim());
+    for (const file of files) {
+      parts.push(`  {gray-fg}├─{/gray-fg} ${escapeBlessedMarkup(file)}\n`);
+    }
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Render custom tool-specific view
+ */
+function renderCustomView(line: TranscriptLine): string {
+  const toolName = getToolName(line);
+
+  if (!toolName) {
+    // For non-tool lines, fall back to MD view
+    return renderMdView(line);
+  }
+
+  switch (toolName) {
+    case 'Edit':
+      return renderEditDiff(line);
+    case 'Bash':
+      return renderBashOutput(line);
+    case 'Read':
+      return renderReadOutput(line);
+    case 'Write':
+      return renderWriteOutput(line);
+    case 'Grep':
+      return renderGrepOutput(line);
+    case 'Glob':
+      return renderGlobOutput(line);
+    case 'TodoWrite':
+      return renderTodoList(line);
+    default: {
+      // For other tools, show tool name + content
+      const parts: string[] = [];
+      parts.push(`{cyan-fg}━━━ ${escapeBlessedMarkup(toolName.toUpperCase())} ━━━{/cyan-fg}\n\n`);
+      const content = escapeBlessedMarkup(renderLine(line).fullContent);
+      parts.push(content);
+      return parts.join('');
+    }
+  }
+}
+
+/**
+ * Render MD view (metadata header + markdown content)
+ */
+function renderMdView(line: TranscriptLine): string {
+  const parts: string[] = [];
+
+  // Metadata header
+  parts.push(`{cyan-fg}━━━ ${line.type.toUpperCase()} ━━━ ${formatTimestamp(line.timestamp)} ━━━{/cyan-fg}\n`);
+
+  // Session name
+  const sessionName = (line as TranscriptLine & { sessionName?: string }).sessionName;
+  if (sessionName) {
+    parts.push(`Session: {cyan-fg}${escapeBlessedMarkup(sessionName)}{/cyan-fg}\n`);
+  }
+
+  // Turn info
+  const turnId = (line as TranscriptLine & { turnId?: string }).turnId;
+  const turnSeq = (line as TranscriptLine & { turnSequence?: number }).turnSequence;
+  if (turnId) {
+    parts.push(`Turn: ${turnId}`);
+    if (turnSeq) {
+      parts.push(` (seq ${turnSeq})`);
+    }
+    parts.push('\n');
+  }
+
+  parts.push('\n');
+
+  // Extract text content and render as markdown
+  let textContent = '';
+  if (line.message?.content) {
+    if (typeof line.message.content === 'string') {
+      textContent = line.message.content;
+    } else if (Array.isArray(line.message.content)) {
+      for (const block of line.message.content as any[]) {
+        if (block.type === 'text' && block.text) {
+          textContent += `${block.text}\n`;
+        }
+      }
+    }
+  }
+
+  if (textContent.trim()) {
+    try {
+      const rendered = marked(textContent) as string;
+      parts.push(escapeBlessedMarkup(rendered));
+    } catch {
+      parts.push(escapeBlessedMarkup(textContent));
+    }
+  } else {
+    // Fall back to full content rendering
+    parts.push(escapeBlessedMarkup(renderLine(line).fullContent));
+  }
+
+  // Token usage
+  const usage = line.message?.usage;
+  if (usage) {
+    const inTokens = usage.input_tokens || 0;
+    const outTokens = usage.output_tokens || 0;
+    const cacheCreate = usage.cache_creation_input_tokens || 0;
+    const cacheRead = usage.cache_read_input_tokens || 0;
+    const total = inTokens + outTokens + cacheCreate + cacheRead;
+    parts.push(`\n{gray-fg}📊 Tokens: ${inTokens.toLocaleString()} in / ${outTokens.toLocaleString()} out = ${total.toLocaleString()} total{/gray-fg}\n`);
+  }
+
+  return parts.join('');
+}
+
 function renderCurrentLine(): string {
   if (state.lines.length === 0) {
     return 'No lines loaded.';
@@ -968,73 +1308,17 @@ function renderCurrentLine(): string {
     `{${color}-fg}=== VIEW: ${mode.toUpperCase()} ==={/${color}-fg}\n\n`;
 
   switch (state.viewMode) {
-    case 'raw':
+    case 'json':
       // Raw JSON with syntax highlighting
-      return viewLabel('raw', 'yellow') + highlightJson(formatJson(line, true));
+      return viewLabel('json', 'yellow') + highlightJson(formatJson(line, true));
 
-    case 'human': {
-      const content = escapeBlessedMarkup(renderLine(line).fullContent);
-      const usage = getCumulativeUsage(line);
-      const usageStr = `\n\n{cyan-fg}[Context: ${usage.total.toLocaleString()} tokens (in: ${usage.input.toLocaleString()}, out: ${usage.output.toLocaleString()})]{/cyan-fg}`;
-      return viewLabel('human', 'green') + content + usageStr;
-    }
+    case 'md':
+      // Metadata header + markdown-rendered content
+      return viewLabel('md', 'green') + renderMdView(line);
 
-    case 'minimal':
-      return (
-        viewLabel('minimal', 'magenta') + escapeBlessedMarkup(formatMinimal(line) || '(empty)')
-      );
-
-    case 'context': {
-      // Show conversation thread (user prompt + response) from full transcript
-      const sourceLines = state.allLines.length > 0 ? state.allLines : state.lines;
-      const thread = getConversationThread(sourceLines, line.uuid);
-      const parts: string[] = [];
-
-      for (const threadLine of thread) {
-        parts.push(escapeBlessedMarkup(renderLine(threadLine).fullContent));
-        parts.push('');
-      }
-
-      return viewLabel('context', 'blue') + parts.join('\n');
-    }
-
-    case 'markdown': {
-      // Extract text content and render as markdown
-      let textContent = '';
-      if (line.type === 'assistant' && line.message?.content) {
-        if (typeof line.message.content === 'string') {
-          textContent = line.message.content;
-        } else if (Array.isArray(line.message.content)) {
-          for (const block of line.message.content as any[]) {
-            if (block.type === 'text' && block.text) {
-              textContent += `${block.text}\n`;
-            }
-          }
-        }
-      } else if (line.type === 'user' && line.message?.content) {
-        if (typeof line.message.content === 'string') {
-          textContent = line.message.content;
-        } else if (Array.isArray(line.message.content)) {
-          for (const block of line.message.content as any[]) {
-            if (block.type === 'text' && block.text) {
-              textContent += `${block.text}\n`;
-            }
-          }
-        }
-      }
-
-      if (!textContent.trim()) {
-        return `${viewLabel('markdown', 'red')}--- Line ${line.lineNumber} [${line.type}] ---\n\n(no text content to render as markdown)`;
-      }
-
-      try {
-        const rendered = marked(textContent) as string;
-        // Escape curly braces in rendered markdown (may contain code blocks with JSON)
-        return `${viewLabel('markdown', 'red')}--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(rendered)}`;
-      } catch {
-        return `${viewLabel('markdown', 'red')}--- Line ${line.lineNumber} [${line.type}] ---\n\n${escapeBlessedMarkup(textContent)}`;
-      }
-    }
+    case 'custom':
+      // Tool-specific rendering
+      return viewLabel('custom', 'magenta') + renderCustomView(line);
 
     default:
       return escapeBlessedMarkup(renderLine(line).fullContent);
@@ -1249,7 +1533,7 @@ async function createTUI(): Promise<void> {
       fg: 'gray',
     },
     content:
-      '{bold}j/k{/bold}:nav {bold}b{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}u{/bold}:usage {bold}m{/bold}:mouse {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit',
+      '{bold}j/k{/bold}:nav {bold}b{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}u{/bold}:usage {bold}m{/bold}:mouse {bold}f{/bold}:fullscreen {bold}1-3{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit',
     tags: true,
   });
 
@@ -1464,7 +1748,7 @@ async function createTUI(): Promise<void> {
       contentBox.border = 'line';
       state.scrollMode = false; // Reset scroll mode when exiting fullscreen
       footer.setContent(
-        '{bold}j/k{/bold}:nav {bold}b{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}u{/bold}:usage {bold}m{/bold}:mouse {bold}f{/bold}:fullscreen {bold}1-5{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit'
+        '{bold}j/k{/bold}:nav {bold}b{/bold}:bookmark {bold}[]{/bold}:jump {bold}c{/bold}:copy {bold}u{/bold}:usage {bold}m{/bold}:mouse {bold}f{/bold}:fullscreen {bold}1-3{/bold}:view {bold}/{/bold}:search {bold}?{/bold}:help {bold}q{/bold}:quit'
       );
     }
 
@@ -1596,25 +1880,17 @@ async function createTUI(): Promise<void> {
     }
   });
 
-  // View modes
+  // View modes: 1=JSON, 2=MD, 3=CUSTOM
   screen.key('1', () => {
-    state.viewMode = 'raw';
+    state.viewMode = 'json';
     updateUI();
   });
   screen.key('2', () => {
-    state.viewMode = 'human';
+    state.viewMode = 'md';
     updateUI();
   });
   screen.key('3', () => {
-    state.viewMode = 'minimal';
-    updateUI();
-  });
-  screen.key('4', () => {
-    state.viewMode = 'context';
-    updateUI();
-  });
-  screen.key('5', () => {
-    state.viewMode = 'markdown';
+    state.viewMode = 'custom';
     updateUI();
   });
 
@@ -2030,6 +2306,125 @@ async function createTUI(): Promise<void> {
 }
 
 // ============================================================================
+// Screenshot Mode
+// ============================================================================
+
+/**
+ * Render a single frame to stdout (for comparison testing)
+ * This generates ANSI output similar to the Rust version
+ */
+function renderScreenshot(width: number, height: number): void {
+  const CYAN = '\x1b[36m';
+  const RESET = '\x1b[0m';
+  const BOLD = '\x1b[1m';
+  const DIM = '\x1b[2m';
+  const GREEN = '\x1b[32m';
+  const BLUE = '\x1b[34m';
+  const YELLOW = '\x1b[33m';
+  const MAGENTA = '\x1b[35m';
+  const GRAY = '\x1b[90m';
+  const REVERSE = '\x1b[7m';
+
+  // Build header
+  const viewModes = ['1:JSON', '2:MD', '3:CUSTOM'];
+  const currentModeIndex = state.viewMode === 'json' ? 0 : state.viewMode === 'md' ? 1 : 2;
+  const modesDisplay = viewModes.map((m, i) => i === currentModeIndex ? `[${m}]` : m).join(' ');
+  const liveIndicator = state.liveMode ? ' LIVE' : '';
+  const header = `${CYAN}${BOLD}Transcript: ${state.sessionName || state.sessionId.slice(0, 8)} │ ${modesDisplay} │ v${VERSION}${liveIndicator}${RESET}`;
+
+  // Print header
+  console.log(header);
+  console.log(`${CYAN}${BOLD}${'─'.repeat(width)}${RESET}`);
+
+  // Calculate pane widths
+  const listWidth = Math.floor(width * 0.4);
+  const contentWidth = width - listWidth;
+  const contentHeight = height - 4; // Minus header and footer
+
+  // Generate list items - show lines around current selection
+  const listItems: string[] = [];
+  const visibleCount = contentHeight - 2; // Minus borders
+
+  // Calculate start index to show current selection in view
+  const halfVisible = Math.floor(visibleCount / 2);
+  let startIdx = Math.max(0, state.currentIndex - halfVisible);
+  // Adjust if we'd go past the end
+  if (startIdx + visibleCount > state.lines.length) {
+    startIdx = Math.max(0, state.lines.length - visibleCount);
+  }
+
+  for (let i = startIdx; i < startIdx + visibleCount && i < state.lines.length; i++) {
+    const line = state.lines[i]!;
+    const isSelected = i === state.currentIndex;
+    const isBookmarked = state.bookmarks.has(line.lineNumber);
+
+    const time = formatTimestamp(line.timestamp).slice(0, 8);
+    const typeAbbr = line.type === 'user' ? 'USR' :
+                     line.type === 'assistant' ? 'AST' :
+                     line.type === 'system' ? 'SYS' :
+                     line.type === 'summary' ? 'SUM' :
+                     line.type === 'progress' ? 'PRG' : '???';
+    const typeColor = line.type === 'user' ? GREEN :
+                      line.type === 'assistant' ? BLUE :
+                      line.type === 'system' ? YELLOW :
+                      line.type === 'summary' ? MAGENTA : GRAY;
+    const bookmark = isBookmarked ? '★' : ' ';
+    const preview = getPreview(line, listWidth - 20);
+
+    let item = `${isSelected ? REVERSE : ''}${bookmark}  ${GRAY}${time} ${RESET}${typeColor}${typeAbbr} ${RESET}${preview}${RESET}`;
+    listItems.push(item);
+  }
+
+  // Render content for current line
+  const currentLine = state.lines[state.currentIndex];
+  let contentLines: string[] = [];
+  if (currentLine) {
+    // Use the same rendering logic as the main TUI based on viewMode
+    let content: string;
+    switch (state.viewMode) {
+      case 'json':
+        content = formatJson(currentLine, true);
+        break;
+      case 'md':
+        content = renderLine(currentLine).fullContent;
+        break;
+      case 'custom':
+        // For screenshot, just show the tool name and content
+        const toolName = getToolName(currentLine);
+        if (toolName) {
+          content = `=== ${toolName.toUpperCase()} ===\n${renderLine(currentLine).fullContent}`;
+        } else {
+          content = renderLine(currentLine).fullContent;
+        }
+        break;
+      default:
+        content = renderLine(currentLine).fullContent;
+    }
+    contentLines = content.split('\n');
+  }
+
+  // Print panes side by side
+  console.log(`${CYAN}┌ Lines ${'─'.repeat(listWidth - 9)}┐${GRAY}┌ Content (${state.viewMode.toUpperCase()}) ${'─'.repeat(contentWidth - 18)}┐${RESET}`);
+
+  for (let row = 0; row < contentHeight - 2; row++) {
+    const listLine = listItems[row] || '';
+    const contentLine = contentLines[row] || '';
+
+    // Pad lines to width (simplified - doesn't handle ANSI codes perfectly)
+    const listPadded = listLine.slice(0, listWidth - 2).padEnd(listWidth - 2);
+    const contentPadded = contentLine.slice(0, contentWidth - 2).padEnd(contentWidth - 2);
+
+    console.log(`${CYAN}│${RESET}${listPadded}${CYAN}│${GRAY}│${RESET}${contentPadded}${GRAY}│${RESET}`);
+  }
+
+  console.log(`${CYAN}└${'─'.repeat(listWidth - 2)}┘${GRAY}└${'─'.repeat(contentWidth - 2)}┘${RESET}`);
+
+  // Footer
+  console.log(`${GRAY}${'─'.repeat(width)}${RESET}`);
+  console.log(`${GRAY}Line ${state.currentIndex + 1}/${state.lines.length} | Mode: ${state.viewMode.toUpperCase()} │ ?: help  q: quit${RESET}`);
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -2075,11 +2470,9 @@ Navigation:
   a                Jump to next assistant message
 
 View Modes:
-  1                Raw JSON (pretty-printed)
-  2                Human-readable format
-  3                Minimal (text only)
-  4                Context (conversation thread)
-  5                Markdown (rendered with colors/formatting)
+  1                JSON - Raw JSON with syntax highlighting
+  2                MD - Metadata header + markdown content
+  3                CUSTOM - Tool-specific views (Edit diff, Bash output, etc.)
 
 Search:
   /                Open search
@@ -2102,6 +2495,11 @@ Features:
   ?                Show help overlay
   q, Ctrl+C        Quit
 
+Screenshot Mode (for testing/comparison):
+  --screenshot     Render one frame and exit
+  --width <n>      Screenshot width (default: 120)
+  --height <n>     Screenshot height (default: 40)
+
 Examples:
   transcript-tui ./session.jsonl
   transcript-tui cryptic-crunching-candle
@@ -2117,6 +2515,9 @@ Examples:
   let input = '';
   const filterOpts: FilterOptions = {};
   let filterLabel = 'all';
+  let screenshotMode = false;
+  let screenshotWidth = 120;
+  let screenshotHeight = 40;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
@@ -2172,6 +2573,13 @@ Examples:
       state.liveMode = true;
     } else if (arg === '--line' || arg === '-l') {
       state.startLine = Number.parseInt(args[++i]!, 10);
+    } else if (arg === '--screenshot') {
+      // Screenshot mode: render one frame and exit (for comparison testing)
+      screenshotMode = true;
+    } else if (arg === '--width') {
+      screenshotWidth = Number.parseInt(args[++i]!, 10);
+    } else if (arg === '--height') {
+      screenshotHeight = Number.parseInt(args[++i]!, 10);
     } else if (!arg.startsWith('-')) {
       input = arg;
     }
@@ -2264,6 +2672,12 @@ Examples:
     state.activeFilter = filterLabel;
     state.textOnly = filterOpts.textOnly || false;
     state.filterOpts = filterOpts; // Store for live mode refiltering
+
+    // Screenshot mode: render one frame and exit
+    if (screenshotMode) {
+      renderScreenshot(screenshotWidth, screenshotHeight);
+      return 0;
+    }
 
     // Start TUI
     await createTUI();
