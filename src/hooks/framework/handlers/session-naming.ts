@@ -21,6 +21,7 @@ interface SessionNamingState {
   sessionName?: string;
   sessionId?: string;
   isNew?: boolean;
+  recovered?: boolean;
 }
 
 // ============================================================================
@@ -60,15 +61,34 @@ export function createSessionNamingHandler(
         // Get or generate session name
         let sessionName: string;
         let isNew = false;
+        let recovered = false;
 
         // Try to get existing session name from store
         const store = getSessionStore();
         const existingName = getSessionName(sessionId);
 
         if (existingName) {
+          // Session ID already has a name (e.g., resume or compact)
           sessionName = existingName;
+        } else if (event.source === 'clear' && ctx.cwd) {
+          // After /clear, try to recover the previous session name for this directory
+          const result = store.resumeLatestForDirectory(sessionId, ctx.cwd, 'clear');
+          if (result) {
+            sessionName = result.name;
+            recovered = true;
+            isNew = result.isNew;
+          } else {
+            // No previous session to recover - generate new name
+            sessionName = generateSessionName(format, nameGenerator, includeTimestamp);
+            isNew = true;
+            store.track(sessionId, {
+              name: sessionName,
+              cwd: ctx.cwd,
+              source: event.source || 'startup',
+            });
+          }
         } else {
-          // Generate new name based on format
+          // New session - generate new name
           sessionName = generateSessionName(format, nameGenerator, includeTimestamp);
           isNew = true;
 
@@ -84,9 +104,10 @@ export function createSessionNamingHandler(
         ctx.state.sessionName = sessionName;
         ctx.state.sessionId = sessionId;
         ctx.state.isNew = isNew;
+        ctx.state.recovered = recovered;
 
         // Build context message for Claude
-        const contextMessage = buildContextMessage(sessionName, event, isNew);
+        const contextMessage = buildContextMessage(sessionName, event, isNew, recovered);
 
         return {
           success: true,
@@ -96,6 +117,7 @@ export function createSessionNamingHandler(
             sessionName,
             sessionId,
             isNew,
+            recovered,
           },
         };
       } catch (error) {
@@ -155,7 +177,8 @@ function generateSessionName(
 function buildContextMessage(
   sessionName: string,
   event: SessionStartInput,
-  isNew: boolean
+  isNew: boolean,
+  recovered: boolean
 ): string {
   const lines: string[] = ['<session-info>', `Session: ${sessionName}`];
 
@@ -164,8 +187,10 @@ function buildContextMessage(
     lines.push(`Source: ${event.source}`);
   }
 
-  // Add note if session was just created
-  if (isNew) {
+  // Add note about session status
+  if (recovered) {
+    lines.push('Note: Session name recovered after /clear');
+  } else if (isNew) {
     lines.push('Note: New session name assigned');
   }
 
