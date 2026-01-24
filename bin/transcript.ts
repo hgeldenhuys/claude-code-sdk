@@ -1202,6 +1202,8 @@ interface RecallSession {
   firstTimestamp: string;
   lastTimestamp: string;
   matchCount: number;
+  /** Best relevance rank (lower = more relevant, based on BM25 ordering) */
+  bestRank: number;
   matches: Array<{
     lineNumber: number;
     type: string;
@@ -1522,10 +1524,12 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
     }
 
     // Use unified search across all adapter sources
+    // Use relevance sorting to preserve BM25 ordering (best matches first)
     const results = searchUnified(db, searchableTables, {
       query: args.query,
       totalLimit: limit,
       limitPerSource: Math.ceil(limit / Math.max(searchableTables.length, 1)),
+      sortBy: 'relevance',
     });
 
     if (results.length === 0) {
@@ -1552,9 +1556,11 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
     }
 
     // Group results by session
+    // Note: results are ordered by BM25 relevance (lower index = better match)
     const sessionMap = new Map<string, RecallSession>();
 
-    for (const result of results) {
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i]!;
       const key = result.sessionId;
 
       if (!sessionMap.has(key)) {
@@ -1564,6 +1570,7 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
           firstTimestamp: result.timestamp,
           lastTimestamp: result.timestamp,
           matchCount: 0,
+          bestRank: i, // First occurrence = best rank for this session
           matches: [],
           artifacts: [],
           sources: {},
@@ -1599,10 +1606,11 @@ async function cmdRecall(args: RecallArgs): Promise<number> {
       }
     }
 
-    // Sort sessions by most matches, then most recent
+    // Sort sessions by best relevance rank (BM25), then most recent
+    // Lower bestRank = better match quality
     const sessions = Array.from(sessionMap.values())
       .sort((a, b) => {
-        if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+        if (a.bestRank !== b.bestRank) return a.bestRank - b.bestRank;
         return b.lastTimestamp.localeCompare(a.lastTimestamp);
       })
       .slice(0, maxSessions);

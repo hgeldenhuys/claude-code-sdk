@@ -1329,6 +1329,8 @@ export interface UnifiedSearchOptions {
   sessionIds?: string[];
   /** Sources to include (adapter names). If not specified, searches all */
   sources?: string[];
+  /** Sort order: 'relevance' preserves BM25 ordering, 'timestamp' sorts by recency (default: 'timestamp') */
+  sortBy?: 'relevance' | 'timestamp';
 }
 
 /**
@@ -1521,8 +1523,14 @@ export function searchUnified(
     }
   }
 
-  // Sort all results by timestamp (most recent first)
-  allResults.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  // Sort results based on sortBy option
+  // 'relevance' (default for recall): preserve BM25 ordering from source queries
+  // 'timestamp': sort by most recent first
+  if (options.sortBy === 'timestamp') {
+    allResults.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  }
+  // For 'relevance', results are already in BM25 order from each source
+  // We interleave them to maintain relative relevance across sources
 
   // Apply total limit
   return allResults.slice(0, totalLimit);
