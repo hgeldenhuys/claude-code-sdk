@@ -156,23 +156,17 @@ export class NameGenerator {
    * Generate a unique name that doesn't collide with existing names
    */
   generateUnique(existingNames: Set<string>): string {
-    // Try basic generation first
-    let name = this.generate();
-    if (!existingNames.has(name)) {
-      return name;
-    }
-
-    // Try with counter
-    const baseName = name;
-    for (let i = 2; i <= this.maxCollisionAttempts; i++) {
-      name = `${baseName}${this.separator}${i}`;
+    // Keep generating random names until we find an unused one
+    for (let i = 0; i < this.maxCollisionAttempts; i++) {
+      const name = this.generate();
       if (!existingNames.has(name)) {
         return name;
       }
     }
 
-    // Fallback to timestamp
-    return `${baseName}${this.separator}${Date.now()}`;
+    // Fallback to timestamp only if we somehow exhausted attempts
+    // (extremely unlikely with 2916+ combinations)
+    return `${this.generate()}${this.separator}${Date.now()}`;
   }
 
   /**
