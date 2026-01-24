@@ -227,7 +227,7 @@ Convenience Filters:
 
 Output Formats:
   --json                  Raw JSON (one per line)
-  --human, -h             Human-readable format
+  --human, -H             Human-readable format
   --minimal, -m           Just the text content
   --pretty                Pretty-print JSON
   --color                 Syntax highlight JSON output (auto-detected for TTY)
@@ -2556,6 +2556,11 @@ function parseArgs(args: string[]): {
         continue;
       }
 
+      if (arg === 'view') {
+        command = 'view';
+        continue;
+      }
+
       if (arg === 'list' || arg === 'ls') {
         command = 'list';
         continue;
@@ -2680,7 +2685,7 @@ function parseArgs(args: string[]): {
       flags.format = 'json';
       continue;
     }
-    if (arg === '--human') {
+    if (arg === '--human' || arg === '-H') {
       flags.format = 'human';
       continue;
     }

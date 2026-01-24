@@ -25,5 +25,11 @@ chrono = { workspace = true }
 # Terminal colors
 colored = "2.1"
 
+# TTY detection
+atty = "0.2"
+
+# Text processing
+regex = "1.11"
+
 # Directories
 dirs = "6.0"

@@ -28,7 +28,7 @@ pub fn run(cli: &Cli, db: &TranscriptDb, session: &str) -> Result<()> {
         }
     };
 
-    match cli.format {
+    match cli.effective_format() {
         OutputFormat::Human => {
             println!("{}", colors::header("Session Info"));
             println!();
@@ -131,7 +131,11 @@ pub fn run(cli: &Cli, db: &TranscriptDb, session: &str) -> Result<()> {
                     "total_tokens": total_tokens
                 }
             });
-            println!("{}", serde_json::to_string_pretty(&output)?);
+            if cli.pretty {
+                println!("{}", serde_json::to_string_pretty(&output)?);
+            } else {
+                println!("{}", serde_json::to_string(&output)?);
+            }
         }
 
         OutputFormat::Minimal => {

@@ -108,7 +108,7 @@ pub fn run(cli: &Cli, db: Option<TranscriptDb>) -> Result<()> {
     });
 
     // Output results
-    match cli.format {
+    match cli.effective_format() {
         OutputFormat::Human => {
             println!("{}", colors::header("Transcript Indexing Doctor"));
             println!();
@@ -148,7 +148,11 @@ pub fn run(cli: &Cli, db: Option<TranscriptDb>) -> Result<()> {
                 })).collect::<Vec<_>>(),
                 "all_passed": checks.iter().all(|c| c.passed)
             });
-            println!("{}", serde_json::to_string_pretty(&output)?);
+            if cli.pretty {
+                println!("{}", serde_json::to_string_pretty(&output)?);
+            } else {
+                println!("{}", serde_json::to_string(&output)?);
+            }
         }
 
         OutputFormat::Minimal => {

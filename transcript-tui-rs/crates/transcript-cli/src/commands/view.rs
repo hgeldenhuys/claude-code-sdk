@@ -90,14 +90,23 @@ pub fn run(
     }
 
     // Output based on format
+    let format = cli.effective_format();
     for line in &lines {
-        match cli.format {
+        match format {
             OutputFormat::Human => {
-                println!("{}", human::format_line(line, true));
-                println!(); // Blank line between entries
+                // Skip noise lines in human mode
+                if human::should_hide(line) {
+                    continue;
+                }
+                let formatted = human::format_line(line, true);
+                println!("{}", formatted);
+                // Only add blank line if there was content (line has newline)
+                if formatted.contains('\n') {
+                    println!();
+                }
             }
             OutputFormat::Json => {
-                println!("{}", json::format_line(line));
+                println!("{}", json::format_line(line, cli.pretty));
             }
             OutputFormat::Minimal => {
                 let content = minimal::format_line(line);

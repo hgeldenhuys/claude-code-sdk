@@ -15,16 +15,80 @@ pub struct Cli {
     #[arg(long, global = true, env = "TRANSCRIPT_DB_PATH")]
     pub db_path: Option<PathBuf>,
 
-    /// Output format
-    #[arg(long, short = 'f', global = true, default_value = "human")]
-    pub format: OutputFormat,
+    /// Output format (auto-detects based on TTY if not specified)
+    #[arg(long, short = 'f', global = true)]
+    pub format: Option<OutputFormat>,
+
+    /// Output raw JSON (alias for --format json)
+    #[arg(long, global = true)]
+    pub json: bool,
+
+    /// Output human-readable (alias for --format human)
+    #[arg(long, short = 'H', global = true)]
+    pub human: bool,
+
+    /// Output minimal text (alias for --format minimal)
+    #[arg(long, short = 'm', global = true)]
+    pub minimal: bool,
+
+    /// Pretty-print JSON with indentation
+    #[arg(long, short = 'p', global = true)]
+    pub pretty: bool,
+
+    /// Force color output
+    #[arg(long, global = true)]
+    pub color: bool,
+
+    /// Disable color output
+    #[arg(long, global = true)]
+    pub no_color: bool,
 
     #[command(subcommand)]
     pub command: Command,
 }
 
+impl Cli {
+    /// Get the effective output format, resolving aliases and auto-detecting based on TTY
+    pub fn effective_format(&self) -> OutputFormat {
+        // Explicit flag aliases take precedence
+        if self.json {
+            return OutputFormat::Json;
+        }
+        if self.human {
+            return OutputFormat::Human;
+        }
+        if self.minimal {
+            return OutputFormat::Minimal;
+        }
+
+        // Explicit --format flag
+        if let Some(f) = self.format {
+            return f;
+        }
+
+        // Auto-detect: human for TTY, json otherwise
+        if atty::is(atty::Stream::Stdout) {
+            OutputFormat::Human
+        } else {
+            OutputFormat::Json
+        }
+    }
+
+    /// Check if colors should be used
+    pub fn use_color(&self) -> bool {
+        if self.no_color {
+            return false;
+        }
+        if self.color {
+            return true;
+        }
+        // Auto-detect based on TTY
+        atty::is(atty::Stream::Stdout)
+    }
+}
+
 /// Output format for commands
-#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+#[derive(Debug, Clone, Copy, ValueEnum, Default, PartialEq, Eq)]
 pub enum OutputFormat {
     /// Human-readable output with colors
     #[default]

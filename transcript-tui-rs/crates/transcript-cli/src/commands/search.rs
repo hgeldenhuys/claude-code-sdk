@@ -26,7 +26,7 @@ pub fn run(
     // Perform search
     let lines = db.search_lines(query, limit, session_id.as_deref())?;
 
-    match cli.format {
+    match cli.effective_format() {
         OutputFormat::Human => {
             if lines.is_empty() {
                 println!("No results found for: {}", query.cyan());
@@ -55,14 +55,13 @@ pub fn run(
                     } else {
                         println!("{}", human::format_line(line, false));
                     }
-                    println!();
                 }
             }
         }
 
         OutputFormat::Json => {
             for line in &lines {
-                println!("{}", json::format_line(line));
+                println!("{}", json::format_line(line, cli.pretty));
             }
         }
 

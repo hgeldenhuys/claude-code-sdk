@@ -24,7 +24,7 @@ pub fn run(
     // Limit results
     let sessions: Vec<_> = sessions.into_iter().take(limit as usize).collect();
 
-    match cli.format {
+    match cli.effective_format() {
         OutputFormat::Human => {
             if sessions.is_empty() {
                 println!("No sessions found");
@@ -41,7 +41,7 @@ pub fn run(
         }
         OutputFormat::Json => {
             for session in &sessions {
-                println!("{}", json::format_session(session));
+                println!("{}", json::format_session(session, cli.pretty));
             }
         }
         OutputFormat::Minimal => {

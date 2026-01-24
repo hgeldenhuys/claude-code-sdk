@@ -11,7 +11,7 @@ pub fn status(cli: &Cli, db: Option<TranscriptDb>) -> Result<()> {
         Some(db) => {
             let stats = db.stats()?;
 
-            match cli.format {
+            match cli.effective_format() {
                 OutputFormat::Human => {
                     println!("{}", colors::header("Index Status"));
                     println!();
@@ -71,7 +71,11 @@ pub fn status(cli: &Cli, db: Option<TranscriptDb>) -> Result<()> {
                         "last_indexed": stats.last_indexed,
                         "status": "healthy"
                     });
-                    println!("{}", serde_json::to_string_pretty(&output)?);
+                    if cli.pretty {
+                        println!("{}", serde_json::to_string_pretty(&output)?);
+                    } else {
+                        println!("{}", serde_json::to_string(&output)?);
+                    }
                 }
 
                 OutputFormat::Minimal => {
@@ -79,7 +83,7 @@ pub fn status(cli: &Cli, db: Option<TranscriptDb>) -> Result<()> {
                 }
             }
         }
-        None => match cli.format {
+        None => match cli.effective_format() {
             OutputFormat::Human => {
                 println!("{}", colors::error("Database not found"));
                 println!();
@@ -91,7 +95,11 @@ pub fn status(cli: &Cli, db: Option<TranscriptDb>) -> Result<()> {
                     "status": "not_found",
                     "error": "Database not found"
                 });
-                println!("{}", serde_json::to_string_pretty(&output)?);
+                if cli.pretty {
+                    println!("{}", serde_json::to_string_pretty(&output)?);
+                } else {
+                    println!("{}", serde_json::to_string(&output)?);
+                }
             }
             OutputFormat::Minimal => {
                 eprintln!("not found");
@@ -103,7 +111,7 @@ pub fn status(cli: &Cli, db: Option<TranscriptDb>) -> Result<()> {
 }
 
 pub fn build(cli: &Cli) -> Result<()> {
-    match cli.format {
+    match cli.effective_format() {
         OutputFormat::Human => {
             println!("{}", colors::warning("Index build not implemented in Rust CLI"));
             println!();
@@ -115,7 +123,11 @@ pub fn build(cli: &Cli) -> Result<()> {
                 "status": "not_implemented",
                 "message": "Index build requires TypeScript CLI"
             });
-            println!("{}", serde_json::to_string_pretty(&output)?);
+            if cli.pretty {
+                println!("{}", serde_json::to_string_pretty(&output)?);
+            } else {
+                println!("{}", serde_json::to_string(&output)?);
+            }
         }
         OutputFormat::Minimal => {
             eprintln!("not implemented");
@@ -126,7 +138,7 @@ pub fn build(cli: &Cli) -> Result<()> {
 }
 
 pub fn update(cli: &Cli) -> Result<()> {
-    match cli.format {
+    match cli.effective_format() {
         OutputFormat::Human => {
             println!("{}", colors::warning("Index update not implemented in Rust CLI"));
             println!();
@@ -138,7 +150,11 @@ pub fn update(cli: &Cli) -> Result<()> {
                 "status": "not_implemented",
                 "message": "Index update requires TypeScript CLI"
             });
-            println!("{}", serde_json::to_string_pretty(&output)?);
+            if cli.pretty {
+                println!("{}", serde_json::to_string_pretty(&output)?);
+            } else {
+                println!("{}", serde_json::to_string(&output)?);
+            }
         }
         OutputFormat::Minimal => {
             eprintln!("not implemented");
