@@ -1,0 +1,17 @@
+[package]
+name = "example"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description.workspace = true
+
+[[bin]]
+name = "example"
+path = "src/main.rs"
+
+[dependencies]
+example-core = { path = "../core" }
+clap.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true
