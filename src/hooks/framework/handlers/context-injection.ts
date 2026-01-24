@@ -27,12 +27,12 @@ Working Directory: {{cwd}}
 </session-context>
 
 <response-hints>
-ALWAYS apply these hints in your responses:
-- When you say "I don't have context about..." → add: Tip: Use /recall <topic> to search past sessions
-- When you say "I don't remember..." → add: Tip: Use /recall <topic> to search past sessions
-- When you say "context is getting long..." → add: Tip: Use /compact to summarize and continue
-- When you say "I can't find the file..." → add: Tip: Use Glob to search for files
-- When you say "several approaches..." → add: Tip: Use /plan to think through options
+IMPORTANT: You MUST append these tips when your response matches:
+- If you say "I don't have context" or "I don't know about" → YOU MUST add: "Tip: Use /recall <topic> to search past sessions"
+- If you say "I don't remember" → YOU MUST add: "Tip: Use /recall <topic> to search past sessions"
+- If you say "context is getting long" → YOU MUST add: "Tip: Use /compact to summarize"
+- If you say "can't find the file" → YOU MUST add: "Tip: Use Glob to search"
+This is not optional. Always check your response and append the relevant tip.
 </response-hints>`;
 
 // ============================================================================
