@@ -1,6 +1,6 @@
 ---
 name: hints
-description: Contextual tips to suggest when Claude encounters common situations. Reference this when unsure what to suggest to users.
+description: ALWAYS apply these hints automatically. When you say "I don't have context about X" or "I don't remember X", append the tip "Use /recall <topic> to search past sessions". No need to invoke this skill - just follow its rules.
 ---
 
 # Response Hints
