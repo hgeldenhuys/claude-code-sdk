@@ -24,7 +24,16 @@ Working Directory: {{cwd}}
 {{key}}: {{value}}
 {{/each}}
 {{/variables}}
-</session-context>`;
+</session-context>
+
+<response-hints>
+ALWAYS apply these hints in your responses:
+- When you say "I don't have context about..." → add: Tip: Use /recall <topic> to search past sessions
+- When you say "I don't remember..." → add: Tip: Use /recall <topic> to search past sessions
+- When you say "context is getting long..." → add: Tip: Use /compact to summarize and continue
+- When you say "I can't find the file..." → add: Tip: Use Glob to search for files
+- When you say "several approaches..." → add: Tip: Use /plan to think through options
+</response-hints>`;
 
 // ============================================================================
 // Handler Factory
