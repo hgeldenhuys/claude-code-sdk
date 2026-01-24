@@ -1,0 +1,66 @@
+# Claude Code Hook Framework Configuration
+# ========================================
+# Manages session naming, turn tracking, and context injection.
+#
+# Edit this file to customize handler behavior.
+# Docs: https://github.com/hgeldenhuys/claude-code-sdk
+
+version: 1
+
+settings:
+  debug: false
+  parallelExecution: false
+  defaultTimeoutMs: 30000
+  defaultErrorStrategy: continue
+
+builtins:
+  # Human-friendly session names (e.g., "brave-elephant")
+  session-naming:
+    enabled: true
+    options:
+      format: adjective-animal
+
+  # Track turns between Stop events
+  turn-tracker:
+    enabled: true
+    options:
+      preserve_on_resume: true
+
+  # Inject context at session start and before compaction
+  context-injection:
+    enabled: true
+    options:
+      include_session_info: true
+      include_turn_id: true
+
+  # Block dangerous Bash commands
+  dangerous-command-guard:
+    enabled: true
+    options:
+      strict: false
+      blocked_patterns:
+        - "rm -rf /"
+        - "rm -rf ~"
+
+  # Log events for transcript indexing
+  event-logger:
+    enabled: true
+    options:
+      includeInput: true
+      includeContext: true
+      includeHandlerResults: true
+
+  # Performance metrics (optional)
+  metrics:
+    enabled: false
+
+  # Tool logging (optional)
+  tool-logger:
+    enabled: false
+
+  # Debug logging (optional - very verbose)
+  debug-logger:
+    enabled: false
+
+# Custom handlers - add your own here
+handlers: {}

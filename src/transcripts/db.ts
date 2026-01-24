@@ -1978,6 +1978,10 @@ export function getSessions(
  * Get a single session by ID or slug
  */
 export function getSession(db: Database, idOrSlug: string): SessionInfo | null {
+  const debug = process.env.DEBUG_SESSION;
+  if (debug) console.error('[getSession] Looking for:', idOrSlug);
+
+  // First try direct lookup by session_id or slug
   const sql = `
     SELECT
       session_id,
@@ -1992,7 +1996,7 @@ export function getSession(db: Database, idOrSlug: string): SessionInfo | null {
     LIMIT 1
   `;
 
-  const row = db.prepare(sql).get(idOrSlug, idOrSlug) as {
+  let row = db.prepare(sql).get(idOrSlug, idOrSlug) as {
     session_id: string;
     slug: string | null;
     file_path: string;
@@ -2001,6 +2005,29 @@ export function getSession(db: Database, idOrSlug: string): SessionInfo | null {
     last_timestamp: string | null;
     indexed_at: string;
   } | null;
+
+  if (debug) console.error('[getSession] Direct lookup result:', row ? 'found' : 'not found');
+
+  // If not found, try looking up by session_name in lines table
+  if (!row) {
+    if (debug) console.error('[getSession] Trying session_name fallback...');
+    const fallbackSql = `
+      SELECT DISTINCT
+        s.session_id,
+        s.slug,
+        s.file_path,
+        s.line_count,
+        s.first_timestamp,
+        s.last_timestamp,
+        s.indexed_at
+      FROM sessions s
+      JOIN lines l ON s.session_id = l.session_id
+      WHERE l.session_name = ?
+      LIMIT 1
+    `;
+    row = db.prepare(fallbackSql).get(idOrSlug) as typeof row;
+    if (debug) console.error('[getSession] Fallback result:', row ? 'found' : 'not found');
+  }
 
   if (!row) return null;
 

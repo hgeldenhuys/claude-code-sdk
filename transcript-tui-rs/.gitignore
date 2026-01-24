@@ -13,3 +13,8 @@ Cargo.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code hooks SDK and local settings
+.claude/claude-code-sdk/
+.claude/bin/
+.claude/settings.local.json
