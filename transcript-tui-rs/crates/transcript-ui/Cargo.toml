@@ -1,0 +1,16 @@
+[package]
+name = "transcript-ui"
+version.workspace = true
+edition.workspace = true
+description = "TUI components for transcript viewer"
+
+[dependencies]
+transcript-core = { path = "../transcript-core" }
+transcript-db = { path = "../transcript-db" }
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+pulldown-cmark = { workspace = true }
+syntect = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }

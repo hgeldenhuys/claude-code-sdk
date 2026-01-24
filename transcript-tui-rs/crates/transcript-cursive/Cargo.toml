@@ -1,0 +1,36 @@
+[package]
+name = "transcript-cursive"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Cursive-based transcript viewer (experimental)"
+
+[[bin]]
+name = "transcript-cursive"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace
+transcript-core = { path = "../transcript-core" }
+transcript-db = { path = "../transcript-db" }
+
+# TUI
+cursive.workspace = true
+
+# Core
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+
+# Clipboard
+arboard = "3"
+
+# Markdown rendering
+termimad = "0.30"
+
+# Diff rendering
+similar = "2.7"
+
+# Syntax highlighting
+syntect = "5.3"

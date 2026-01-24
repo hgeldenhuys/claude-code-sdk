@@ -1,0 +1,11 @@
+[package]
+name = "transcript-db"
+version.workspace = true
+edition.workspace = true
+description = "SQLite database layer for transcript viewer"
+
+[dependencies]
+transcript-core = { path = "../transcript-core" }
+rusqlite = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }

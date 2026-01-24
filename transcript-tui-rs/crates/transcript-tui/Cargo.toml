@@ -1,0 +1,21 @@
+[package]
+name = "transcript-tui"
+version.workspace = true
+edition.workspace = true
+description = "CLI binary for transcript viewer"
+
+[[bin]]
+name = "transcript-tui-rs"
+path = "src/main.rs"
+
+[dependencies]
+transcript-core = { path = "../transcript-core" }
+transcript-db = { path = "../transcript-db" }
+transcript-ui = { path = "../transcript-ui" }
+clap = { workspace = true }
+anyhow = { workspace = true }
+crossterm = { workspace = true }
+ratatui = { workspace = true }
+tokio = { workspace = true }
+arboard = { workspace = true }
+chrono = { workspace = true }

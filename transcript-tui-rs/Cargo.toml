@@ -1,0 +1,63 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/transcript-core",
+    "crates/transcript-db",
+    "crates/transcript-ui",
+    "crates/transcript-tui",
+    "crates/transcript-cursive",
+    "crates/transcript-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Claude Code SDK"]
+license = "MIT"
+repository = "https://github.com/anthropics/claude-code-sdk"
+description = "High-performance transcript viewer for Claude Code sessions"
+
+[workspace.dependencies]
+# Core
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Database
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+# TUI - ratatui
+ratatui = "0.29"
+crossterm = "0.28"
+
+# TUI - cursive (alternative)
+cursive = { version = "0.21", default-features = false, features = ["crossterm-backend"] }
+
+# Markdown rendering
+pulldown-cmark = "0.12"
+
+# Syntax highlighting
+syntect = "5.2"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Async
+tokio = { version = "1.43", features = ["full"] }
+
+# Clipboard
+arboard = "3.4"
+
+# Time
+chrono = "0.4"
+
+# Logging (optional)
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
