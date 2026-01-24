@@ -1,6 +1,6 @@
 ---
 name: hints
-description: ALWAYS apply these hints automatically. When you say "I don't have context about X" or "I don't remember X", append the tip "Use /recall <topic> to search past sessions". No need to invoke this skill - just follow its rules.
+description: ALWAYS apply these hints automatically in your responses. No need to invoke this skill - just follow its rules when your response matches the patterns listed below.
 ---
 
 # Response Hints
