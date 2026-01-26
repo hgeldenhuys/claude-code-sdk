@@ -1,0 +1,29 @@
+[package]
+name = "hook-events-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "CLI for viewing and querying Claude Code hook events"
+
+[[bin]]
+name = "hook-events"
+path = "src/main.rs"
+
+[dependencies]
+transcript-core = { path = "../transcript-core" }
+transcript-db = { path = "../transcript-db" }
+
+# CLI
+clap = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# Terminal colors
+colored = "2.1"
+
+# TTY detection
+atty = "0.2"

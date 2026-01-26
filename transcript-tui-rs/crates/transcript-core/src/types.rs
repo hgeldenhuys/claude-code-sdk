@@ -375,3 +375,171 @@ impl FocusedPane {
         }
     }
 }
+
+// ============================================================================
+// Hook Event Types
+// ============================================================================
+
+/// Sort order for queries
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Order {
+    #[default]
+    Asc,
+    Desc,
+}
+
+/// A single hook event from the database
+#[derive(Debug, Clone)]
+pub struct HookEvent {
+    pub id: i64,
+    pub session_id: String,
+    pub timestamp: String,
+    pub event_type: String,
+    pub tool_use_id: Option<String>,
+    pub tool_name: Option<String>,
+    pub decision: Option<String>,
+    pub handler_results_json: Option<String>,
+    pub input_json: Option<String>,
+    pub context_json: Option<String>,
+    pub file_path: String,
+    pub line_number: i64,
+    pub turn_id: Option<String>,
+    pub turn_sequence: Option<i64>,
+    pub session_name: Option<String>,
+    pub git_hash: Option<String>,
+    pub git_branch: Option<String>,
+    pub git_dirty: Option<bool>,
+}
+
+impl HookEvent {
+    /// Format timestamp as HH:MM:SS
+    pub fn format_time(&self) -> String {
+        if let Some(t_pos) = self.timestamp.find('T') {
+            let time_part = &self.timestamp[t_pos + 1..];
+            time_part.split('.').next().unwrap_or(time_part).to_string()
+        } else {
+            self.timestamp.clone()
+        }
+    }
+
+    /// Get abbreviated event type
+    pub fn event_abbrev(&self) -> &'static str {
+        match self.event_type.as_str() {
+            "PreToolUse" => "Pre",
+            "PostToolUse" => "Post",
+            "UserPromptSubmit" => "Prompt",
+            "UserPromptSubmitHook" => "Prompt",
+            "SessionStart" => "Start",
+            "SessionEnd" => "End",
+            "Stop" => "Stop",
+            "SubagentStop" => "SubStp",
+            "PreSubagentToolUse" => "SubPre",
+            "PostSubagentToolUse" => "SubPst",
+            _ => "???",
+        }
+    }
+
+    /// Calculate context usage percentage from input_json
+    /// Context window is 200K tokens for current Claude models
+    pub fn context_usage(&self) -> Option<(u64, u8)> {
+        const CONTEXT_WINDOW: u64 = 200_000;
+        let input_json = self.input_json.as_deref()?;
+        let input: serde_json::Value = serde_json::from_str(input_json).ok()?;
+
+        // Look for usage in various locations
+        let usage = input.get("tool_response").and_then(|r| r.get("usage"))
+            .or_else(|| input.get("usage"))
+            .or_else(|| input.get("message").and_then(|m| m.get("usage")))?;
+
+        let input_tokens = usage.get("input_tokens").and_then(|v| v.as_u64()).unwrap_or(0);
+        let output_tokens = usage.get("output_tokens").and_then(|v| v.as_u64()).unwrap_or(0);
+        let total = input_tokens + output_tokens;
+        let pct = ((total as f64 / CONTEXT_WINDOW as f64) * 100.0).round() as u8;
+        Some((total, pct))
+    }
+
+    /// Get a preview of the tool input for display
+    pub fn input_preview(&self, max_len: usize) -> Option<String> {
+        let input_json = self.input_json.as_deref()?;
+        let input: serde_json::Value = serde_json::from_str(input_json).ok()?;
+
+        // Tool input preview
+        if let Some(tool_input) = input.get("tool_input") {
+            let s = serde_json::to_string(tool_input).ok()?;
+            return Some(truncate_str(&s, max_len));
+        }
+
+        // Prompt preview
+        if let Some(prompt) = input.get("prompt").and_then(|v| v.as_str()) {
+            return Some(truncate_str(prompt, max_len));
+        }
+
+        None
+    }
+
+    /// Get tool output preview (for PostToolUse events)
+    pub fn output_preview(&self, max_len: usize) -> Option<String> {
+        if self.event_type != "PostToolUse" {
+            return None;
+        }
+        let input_json = self.input_json.as_deref()?;
+        let input: serde_json::Value = serde_json::from_str(input_json).ok()?;
+        let response = input.get("tool_response")?;
+
+        if let Some(stdout) = response.get("stdout").and_then(|v| v.as_str()) {
+            let preview = stdout.replace('\n', "\\n");
+            return Some(truncate_str(&preview, max_len));
+        }
+        if let Some(content) = response.get("content").and_then(|v| v.as_str()) {
+            let preview = content.replace('\n', "\\n");
+            return Some(truncate_str(&preview, max_len));
+        }
+
+        None
+    }
+}
+
+fn truncate_str(s: &str, max_len: usize) -> String {
+    let chars: Vec<char> = s.chars().collect();
+    if chars.len() > max_len {
+        let truncated: String = chars[..max_len.saturating_sub(3)].iter().collect();
+        format!("{}...", truncated)
+    } else {
+        s.to_string()
+    }
+}
+
+/// Session-level hook event metadata (from hook_files table)
+#[derive(Debug, Clone)]
+pub struct HookSession {
+    pub session_id: String,
+    pub file_path: String,
+    pub event_count: i64,
+    pub first_timestamp: Option<String>,
+    pub last_timestamp: Option<String>,
+    pub indexed_at: String,
+    pub session_name: Option<String>,
+}
+
+/// Filter options for querying hook events
+#[derive(Debug, Clone, Default)]
+pub struct HookEventFilter {
+    pub session_id: Option<String>,
+    pub event_types: Option<Vec<String>>,
+    pub tool_names: Option<Vec<String>>,
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+    pub from_time: Option<String>,
+    pub to_time: Option<String>,
+    pub order: Order,
+}
+
+/// File edit aggregation from hook events
+#[derive(Debug, Clone)]
+pub struct FileEdit {
+    pub file_path: String,
+    pub edit_count: i64,
+    pub tools_used: Vec<String>,
+    pub first_timestamp: String,
+    pub last_timestamp: String,
+}

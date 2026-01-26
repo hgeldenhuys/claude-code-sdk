@@ -9,7 +9,7 @@
   "bin": {
     "sesh": "./bin/sesh.ts",
     "hooks": "./bin/hooks.ts",
-    "hook-events": "./bin/hook-events.ts",
+    "hook-events": "./transcript-tui-rs/target/release/hook-events",
     "hook-events-tui": "./bin/hook-events-tui.ts"
   },
   "exports": {
@@ -58,7 +58,8 @@
     "transcript:build": "cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p transcript-cli",
     "sesh": "bun bin/sesh.ts",
     "hooks": "bun bin/hooks.ts",
-    "hook-events": "bun bin/hook-events.ts",
+    "hook-events": "transcript-tui-rs/target/release/hook-events",
+    "hook-events:build": "cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p hook-events-cli",
     "hook-events-tui": "bun bin/hook-events-tui.ts"
   },
   "devDependencies": {

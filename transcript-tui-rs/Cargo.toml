@@ -8,6 +8,7 @@ members = [
     "crates/transcript-tui",
     "crates/transcript-cursive",
     "crates/transcript-cli",
+    "crates/hook-events-cli",
 ]
 
 [workspace.package]

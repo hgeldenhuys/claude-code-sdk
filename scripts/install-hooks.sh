@@ -168,16 +168,16 @@ HOOKS_YAML
   info "Installing SDK dependencies..."
   (cd "$SDK_DIR" && bun install --silent 2>/dev/null) || warn "Could not install dependencies"
 
-  # Build Rust transcript CLI
+  # Build Rust CLIs (transcript + hook-events)
   if command -v cargo &> /dev/null; then
-    info "Building Rust transcript CLI..."
-    if (cd "$SDK_DIR/transcript-tui-rs" && cargo build --release -p transcript-cli 2>/dev/null); then
-      success "Rust transcript CLI built"
+    info "Building Rust CLIs..."
+    if (cd "$SDK_DIR/transcript-tui-rs" && cargo build --release -p transcript-cli -p hook-events-cli 2>/dev/null); then
+      success "Rust CLIs built (transcript, hook-events)"
     else
-      warn "Rust transcript CLI build failed - transcript commands unavailable"
+      warn "Rust CLI build failed - some commands may be unavailable"
     fi
   else
-    warn "Rust toolchain not found - transcript CLI will not be available"
+    warn "Rust toolchain not found - Rust CLIs will not be available"
     warn "Install Rust: https://rustup.rs/"
   fi
 
@@ -285,7 +285,7 @@ SETTINGS_JSON
   mkdir -p .claude/bin
 
   # TypeScript CLIs (Bun-only)
-  for cli in sesh hook-events hook-events-tui hooks; do
+  for cli in sesh hook-events-tui hooks; do
     cat > ".claude/bin/$cli" << EOF
 #!/usr/bin/env bash
 exec bun "\$(dirname "\$0")/../claude-code-sdk/bin/${cli}.ts" "\$@"
@@ -293,17 +293,26 @@ EOF
     chmod +x ".claude/bin/$cli"
   done
 
-  # Rust transcript CLI
-  TRANSCRIPT_BIN="$SDK_DIR/transcript-tui-rs/target/release/transcript"
-  if [ -f "$TRANSCRIPT_BIN" ]; then
-    cat > ".claude/bin/transcript" << EOF
+  # Rust CLIs (transcript + hook-events)
+  local rust_created=0
+  for cli_pair in "transcript:transcript" "hook-events:hook-events"; do
+    local cli_name="${cli_pair%%:*}"
+    local bin_name="${cli_pair##*:}"
+    local bin_path="$SDK_DIR/transcript-tui-rs/target/release/$bin_name"
+    if [ -f "$bin_path" ]; then
+      cat > ".claude/bin/$cli_name" << EOF
 #!/usr/bin/env bash
-exec "\$(dirname "\$0")/../claude-code-sdk/transcript-tui-rs/target/release/transcript" "\$@"
+exec "\$(dirname "\$0")/../claude-code-sdk/transcript-tui-rs/target/release/$bin_name" "\$@"
 EOF
-    chmod +x ".claude/bin/transcript"
-    success "Created CLI wrappers in .claude/bin/ (transcript=Rust, others=Bun)"
+      chmod +x ".claude/bin/$cli_name"
+      ((rust_created++))
+    fi
+  done
+
+  if [ "$rust_created" -gt 0 ]; then
+    success "Created CLI wrappers in .claude/bin/ ($rust_created Rust, others=Bun)"
   else
-    warn "Rust transcript binary not found - transcript wrapper not created"
+    warn "Rust binaries not found - Rust wrappers not created"
     success "Created CLI wrappers in .claude/bin/ (Bun CLIs only)"
   fi
 

@@ -7,5 +7,6 @@ description = "SQLite database layer for transcript viewer"
 [dependencies]
 transcript-core = { path = "../transcript-core" }
 rusqlite = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 chrono = { workspace = true }
