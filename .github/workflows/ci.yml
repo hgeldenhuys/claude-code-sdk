@@ -78,12 +78,12 @@ jobs:
           # Build sesh CLI
           bun build bin/sesh.ts --outfile dist/bin/sesh.js --target node
 
-      - name: Build Rust transcript CLI
-        run: cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p transcript-cli
+      - name: Build Rust CLIs
+        run: cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p transcript-cli -p hook-events-cli
 
       - name: Verify CLIs are executable
         run: |
-          chmod +x bin/sesh.ts bin/hooks.ts bin/hook-events.ts bin/hook-events-tui.ts
+          chmod +x bin/sesh.ts bin/hooks.ts bin/hook-events-tui.ts
 
           # Test hooks CLI
           bun bin/hooks.ts --help
@@ -95,8 +95,8 @@ jobs:
           # Test Rust transcript CLI
           transcript-tui-rs/target/release/transcript --help
 
-          # Test hook-events CLI (Bun-only, uses bun:sqlite)
-          bun bin/hook-events.ts --help
+          # Test Rust hook-events CLI
+          transcript-tui-rs/target/release/hook-events --help
 
           # Test hook-events-tui CLI (Bun-only, uses bun:sqlite)
           bun bin/hook-events-tui.ts --help
@@ -115,4 +115,5 @@ jobs:
           path: |
             dist/
             transcript-tui-rs/target/release/transcript
+            transcript-tui-rs/target/release/hook-events
           retention-days: 7
