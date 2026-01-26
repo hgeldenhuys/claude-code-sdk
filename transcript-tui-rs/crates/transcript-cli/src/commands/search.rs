@@ -2,10 +2,27 @@
 
 use anyhow::Result;
 use colored::Colorize;
+use serde::Serialize;
 use transcript_db::TranscriptDb;
 
 use crate::cli::{Cli, OutputFormat};
-use crate::output::{colors, human, json};
+use crate::output::{colors, human};
+
+/// Structured search result for JSON output (matches TS CLI format)
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SearchResult {
+    session_id: String,
+    slug: Option<String>,
+    session_name: Option<String>,
+    line_number: i64,
+    #[serde(rename = "type")]
+    entry_type: String,
+    timestamp: String,
+    content: Option<String>,
+    matched_text: String,
+    raw: String,
+}
 
 pub fn run(
     cli: &Cli,
@@ -60,8 +77,34 @@ pub fn run(
         }
 
         OutputFormat::Json => {
-            for line in &lines {
-                println!("{}", json::format_line(line, cli.pretty));
+            // Build structured search results matching TS CLI format
+            let results: Vec<SearchResult> = lines
+                .iter()
+                .map(|line| {
+                    // Create matched_text with FTS-style markers
+                    let matched_text = highlight_text_with_markers(
+                        line.content.as_deref().unwrap_or(""),
+                        query,
+                    );
+
+                    SearchResult {
+                        session_id: line.session_id.clone(),
+                        slug: line.slug.clone(),
+                        session_name: line.session_name.clone(),
+                        line_number: line.line_number,
+                        entry_type: line.line_type.to_string(),
+                        timestamp: line.timestamp.clone(),
+                        content: line.content.clone(),
+                        matched_text,
+                        raw: line.raw.clone(),
+                    }
+                })
+                .collect();
+
+            if cli.pretty {
+                println!("{}", serde_json::to_string_pretty(&results)?);
+            } else {
+                println!("{}", serde_json::to_string(&results)?);
             }
         }
 
@@ -75,6 +118,34 @@ pub fn run(
     }
 
     Ok(())
+}
+
+/// Add FTS-style markers around matched terms (for JSON output)
+fn highlight_text_with_markers(content: &str, query: &str) -> String {
+    let terms: Vec<&str> = query.split_whitespace().collect();
+    let mut result = content.to_string();
+
+    for term in terms {
+        // Case-insensitive replacement with markers
+        let term_lower = term.to_lowercase();
+        let mut new_result = String::new();
+        let mut remaining = result.as_str();
+
+        while let Some(pos) = remaining.to_lowercase().find(&term_lower) {
+            // Add text before match
+            new_result.push_str(&remaining[..pos]);
+            // Add marked match (preserve original case)
+            new_result.push_str(">>>>");
+            new_result.push_str(&remaining[pos..pos + term.len()]);
+            new_result.push_str("<<<<");
+            // Continue after match
+            remaining = &remaining[pos + term.len()..];
+        }
+        new_result.push_str(remaining);
+        result = new_result;
+    }
+
+    result
 }
 
 /// Highlight matches in content

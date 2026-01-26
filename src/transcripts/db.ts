@@ -43,6 +43,7 @@ export interface DbSearchOptions {
 export interface DbSearchResult {
   sessionId: string;
   slug: string | null;
+  sessionName: string | null;
   lineNumber: number;
   type: string;
   timestamp: string;
@@ -1263,6 +1264,7 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
     SELECT
       l.session_id,
       l.slug,
+      l.session_name,
       l.line_number,
       l.type,
       l.timestamp,
@@ -1295,6 +1297,7 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
   const rows = stmt.all(...params) as Array<{
     session_id: string;
     slug: string | null;
+    session_name: string | null;
     line_number: number;
     type: string;
     timestamp: string;
@@ -1306,6 +1309,7 @@ export function searchDb(db: Database, options: DbSearchOptions): DbSearchResult
   return rows.map((row) => ({
     sessionId: row.session_id,
     slug: row.slug,
+    sessionName: row.session_name,
     lineNumber: row.line_number,
     type: row.type,
     timestamp: row.timestamp,

@@ -168,6 +168,19 @@ HOOKS_YAML
   info "Installing SDK dependencies..."
   (cd "$SDK_DIR" && bun install --silent 2>/dev/null) || warn "Could not install dependencies"
 
+  # Build Rust transcript CLI
+  if command -v cargo &> /dev/null; then
+    info "Building Rust transcript CLI..."
+    if (cd "$SDK_DIR/transcript-tui-rs" && cargo build --release -p transcript-cli 2>/dev/null); then
+      success "Rust transcript CLI built"
+    else
+      warn "Rust transcript CLI build failed - transcript commands unavailable"
+    fi
+  else
+    warn "Rust toolchain not found - transcript CLI will not be available"
+    warn "Install Rust: https://rustup.rs/"
+  fi
+
   # Create .claude/settings.json with local SDK path
   info "Creating .claude/settings.json..."
   cat > .claude/settings.json << 'SETTINGS_JSON'
@@ -271,14 +284,28 @@ SETTINGS_JSON
   info "Creating CLI wrapper scripts..."
   mkdir -p .claude/bin
 
-  for cli in sesh transcript transcript-tui hook-events hook-events-tui hooks; do
+  # TypeScript CLIs (Bun-only)
+  for cli in sesh hook-events hook-events-tui hooks; do
     cat > ".claude/bin/$cli" << EOF
 #!/usr/bin/env bash
 exec bun "\$(dirname "\$0")/../claude-code-sdk/bin/${cli}.ts" "\$@"
 EOF
     chmod +x ".claude/bin/$cli"
   done
-  success "Created CLI wrappers in .claude/bin/"
+
+  # Rust transcript CLI
+  TRANSCRIPT_BIN="$SDK_DIR/transcript-tui-rs/target/release/transcript"
+  if [ -f "$TRANSCRIPT_BIN" ]; then
+    cat > ".claude/bin/transcript" << EOF
+#!/usr/bin/env bash
+exec "\$(dirname "\$0")/../claude-code-sdk/transcript-tui-rs/target/release/transcript" "\$@"
+EOF
+    chmod +x ".claude/bin/transcript"
+    success "Created CLI wrappers in .claude/bin/ (transcript=Rust, others=Bun)"
+  else
+    warn "Rust transcript binary not found - transcript wrapper not created"
+    success "Created CLI wrappers in .claude/bin/ (Bun CLIs only)"
+  fi
 
   # Symlink individual skills (preserves project-specific skills)
   info "Linking SDK skills..."
@@ -297,44 +324,34 @@ EOF
   done
   success "Linked $linked SDK skills ($skipped already exist)"
 
-  # Manage transcript index and daemon
-  info "Setting up transcript index..."
-  local db_path="$HOME/.claude-code-sdk/transcripts.db"
+  # Manage transcript index
+  if [ -x ".claude/bin/transcript" ]; then
+    info "Setting up transcript index..."
+    local db_path="$HOME/.claude-code-sdk/transcripts.db"
 
-  if [ -f "$db_path" ]; then
-    # Database exists - check if schema version matches
-    local current_version=$(.claude/bin/transcript index version 2>/dev/null || echo "0")
-    local expected_version=$(.claude/bin/transcript index expected-version 2>/dev/null || echo "0")
-
-    if [ "$current_version" = "$expected_version" ] && [ "$current_version" != "0" ]; then
-      # Versions match - just restart daemon, no rebuild needed
-      info "Transcript index up to date (v$current_version)"
-      .claude/bin/transcript index daemon stop 2>/dev/null || true
-      .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
-      success "Transcript daemon restarted"
-    else
-      # Versions don't match - rebuild needed
-      info "Transcript index needs upgrade (v$current_version -> v$expected_version)"
-      .claude/bin/transcript index daemon stop 2>/dev/null || true
-      info "Rebuilding transcript index..."
-      .claude/bin/transcript index rebuild 2>/dev/null || {
-        warn "Index rebuild failed, will try fresh build..."
-        rm -f "$db_path" "$db_path-shm" "$db_path-wal"
-        .claude/bin/transcript index build
+    if [ -f "$db_path" ]; then
+      # Database exists - do a delta update
+      info "Updating transcript index..."
+      .claude/bin/transcript index update 2>/dev/null || {
+        warn "Index update failed, rebuilding..."
+        .claude/bin/transcript index rebuild 2>/dev/null || {
+          warn "Rebuild failed, doing fresh build..."
+          rm -f "$db_path" "$db_path-shm" "$db_path-wal"
+          .claude/bin/transcript index build
+        }
       }
-      success "Transcript index rebuilt"
-      info "Starting transcript daemon..."
-      .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
-      success "Transcript daemon started"
+      success "Transcript index updated"
+    else
+      # First time - build index
+      info "Building transcript index (first time)..."
+      .claude/bin/transcript index build
+      success "Transcript index ready"
     fi
+
+    # Show index status
+    .claude/bin/transcript --minimal index status 2>/dev/null || true
   else
-    # First time - build index
-    info "Building transcript index (first time)..."
-    .claude/bin/transcript index build
-    success "Transcript index ready"
-    info "Starting transcript daemon..."
-    .claude/bin/transcript index daemon start 2>/dev/null || warn "Daemon start failed (may already be running)"
-    success "Transcript daemon started"
+    warn "Transcript CLI not available - skipping index setup"
   fi
 
   # Create external adapters directory
@@ -342,11 +359,6 @@ EOF
   local adapters_dir="$HOME/.claude-code-sdk/adapters"
   mkdir -p "$adapters_dir"
   success "Created $adapters_dir"
-
-  # Check for registered adapters
-  info "Checking registered adapters..."
-  local adapter_count=$(.claude/bin/transcript adapter list --json 2>/dev/null | grep -c '"name"' || echo "0")
-  success "Found $adapter_count registered adapters"
 
   echo ""
   echo -e "${GREEN}Installation complete!${NC}"
@@ -369,8 +381,7 @@ EOF
   echo "Available CLIs (run from project root):"
   echo "  .claude/bin/hooks           - Hook framework (doctor, init, inspect)"
   echo "  .claude/bin/sesh            - Session name manager"
-  echo "  .claude/bin/transcript      - Transcript search/view"
-  echo "  .claude/bin/transcript-tui  - Transcript TUI viewer"
+  echo "  .claude/bin/transcript      - Transcript CLI (Rust - search/view/index/recall)"
   echo "  .claude/bin/hook-events     - Hook event logs"
   echo ""
   echo "Available skills (use /skill-name in Claude):"
@@ -393,6 +404,7 @@ EOF
   echo ""
   echo "To update the SDK later:"
   echo "  cd .claude/claude-code-sdk && git pull && bun install"
+  echo "  cd transcript-tui-rs && cargo build --release -p transcript-cli"
   echo ""
 }
 

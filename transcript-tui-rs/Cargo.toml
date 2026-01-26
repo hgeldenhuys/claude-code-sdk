@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/transcript-core",
     "crates/transcript-db",
+    "crates/transcript-indexer",
     "crates/transcript-ui",
     "crates/transcript-tui",
     "crates/transcript-cursive",
@@ -51,6 +52,11 @@ arboard = "3.4"
 
 # Time
 chrono = "0.4"
+
+# File system
+walkdir = "2.5"
+notify = "7.0"
+notify-debouncer-mini = "0.5"
 
 # Logging (optional)
 tracing = "0.1"

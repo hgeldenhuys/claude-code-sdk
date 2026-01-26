@@ -19,7 +19,8 @@ fn main() -> Result<()> {
         None => TranscriptDb::open_default(),
     };
 
-    // Handle commands that don't require a database
+    // Handle commands that don't require the read-only TranscriptDb
+    // (these use IndexerDb or no DB at all)
     match &cli.command {
         Command::Doctor => {
             return commands::doctor::run(&cli, db.ok());
@@ -27,10 +28,29 @@ fn main() -> Result<()> {
         Command::Index(IndexCommand::Status) => {
             return commands::index::status(&cli, db.ok());
         }
+        Command::Index(IndexCommand::Build) => {
+            return commands::index::build(&cli);
+        }
+        Command::Index(IndexCommand::Update) => {
+            return commands::index::update(&cli);
+        }
+        Command::Index(IndexCommand::Rebuild) => {
+            return commands::index::rebuild(&cli);
+        }
+        Command::Index(IndexCommand::Watch) => {
+            return commands::index::watch(&cli);
+        }
+        Command::Recall {
+            query,
+            max_sessions,
+            max_matches,
+        } => {
+            return commands::recall::run(&cli, query, *max_sessions, *max_matches);
+        }
         _ => {}
     }
 
-    // For other commands, ensure database is available
+    // For query commands, ensure read-only database is available
     let db = db?;
 
     match &cli.command {
@@ -75,12 +95,7 @@ fn main() -> Result<()> {
             context,
         } => commands::search::run(&cli, &db, query, *limit, session.as_deref(), *context),
 
-        Command::Index(cmd) => match cmd {
-            IndexCommand::Status => unreachable!(), // Handled above
-            IndexCommand::Build => commands::index::build(&cli),
-            IndexCommand::Update => commands::index::update(&cli),
-        },
-
-        Command::Doctor => unreachable!(), // Handled above
+        // All other commands handled above
+        _ => unreachable!(),
     }
 }

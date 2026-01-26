@@ -186,6 +186,20 @@ pub enum Command {
     #[command(subcommand)]
     Index(IndexCommand),
 
+    /// Search and recall across sessions grouped by session
+    Recall {
+        /// Search query
+        query: String,
+
+        /// Maximum sessions to show
+        #[arg(long, default_value = "5")]
+        max_sessions: usize,
+
+        /// Maximum matches per session
+        #[arg(long, default_value = "3")]
+        max_matches: usize,
+    },
+
     /// Diagnose transcript indexing pipeline
     Doctor,
 }
@@ -195,9 +209,15 @@ pub enum IndexCommand {
     /// Show index status and statistics
     Status,
 
-    /// Rebuild the entire index (requires daemon)
+    /// Build the full index (transcripts + hooks + correlate)
     Build,
 
-    /// Update index with new content (requires daemon)
+    /// Update index with new content only (delta)
     Update,
+
+    /// Clear and rebuild the entire index
+    Rebuild,
+
+    /// Watch for file changes and auto-index (foreground daemon)
+    Watch,
 }

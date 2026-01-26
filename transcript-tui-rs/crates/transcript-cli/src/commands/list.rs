@@ -40,8 +40,16 @@ pub fn run(
             }
         }
         OutputFormat::Json => {
-            for session in &sessions {
-                println!("{}", json::format_session(session, cli.pretty));
+            // Output as JSON array to match TS CLI format
+            let json_array: Vec<serde_json::Value> = sessions
+                .iter()
+                .map(|s| json::session_to_json(s))
+                .collect();
+
+            if cli.pretty {
+                println!("{}", serde_json::to_string_pretty(&json_array).unwrap_or_default());
+            } else {
+                println!("{}", serde_json::to_string(&json_array).unwrap_or_default());
             }
         }
         OutputFormat::Minimal => {

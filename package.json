@@ -8,8 +8,6 @@
   "type": "module",
   "bin": {
     "sesh": "./bin/sesh.ts",
-    "transcript": "./bin/transcript.ts",
-    "transcript-tui": "./bin/transcript-tui.ts",
     "hooks": "./bin/hooks.ts",
     "hook-events": "./bin/hook-events.ts",
     "hook-events-tui": "./bin/hook-events-tui.ts"
@@ -56,8 +54,8 @@
     "docs:check": "bun src/cli/docs.ts check",
     "docs:fetch": "bun src/cli/docs.ts fetch",
     "docs:status": "bun src/cli/docs.ts status",
-    "transcript": "bun bin/transcript.ts",
-    "transcript-tui": "bun bin/transcript-tui.ts",
+    "transcript": "transcript-tui-rs/target/release/transcript",
+    "transcript:build": "cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p transcript-cli",
     "sesh": "bun bin/sesh.ts",
     "hooks": "bun bin/hooks.ts",
     "hook-events": "bun bin/hook-events.ts",
@@ -76,6 +74,7 @@
     "bin",
     "plugins",
     "docs",
+    "transcript-tui-rs",
     "README.md"
   ],
   "keywords": [

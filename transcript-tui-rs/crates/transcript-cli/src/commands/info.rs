@@ -97,39 +97,37 @@ pub fn run(cli: &Cli, db: &TranscriptDb, session: &str) -> Result<()> {
                 &transcript_db::GetLinesOptions::for_session(&session_info.session_id),
             )?;
 
-            let mut user_count = 0i64;
-            let mut assistant_count = 0i64;
-            let mut system_count = 0i64;
-            let mut other_count = 0i64;
-            let mut total_tokens = 0u64;
-
+            // Build detailed type counts like TS CLI
+            let mut type_counts: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
             for line in &lines {
-                match line.line_type {
-                    transcript_core::LineType::User => user_count += 1,
-                    transcript_core::LineType::Assistant => assistant_count += 1,
-                    transcript_core::LineType::System => system_count += 1,
-                    _ => other_count += 1,
-                }
-                if let Some(usage) = line.usage() {
-                    total_tokens += usage.total();
-                }
+                let type_name = line.line_type.to_string();
+                *type_counts.entry(type_name).or_insert(0) += 1;
             }
 
+            // Get version/cwd/gitBranch from first line
+            let first_line = lines.first();
+            let version = first_line.and_then(|l| {
+                serde_json::from_str::<serde_json::Value>(&l.raw).ok()
+                    .and_then(|v| v.get("version").and_then(|v| v.as_str().map(String::from)))
+            });
+            let cwd = first_line.and_then(|l| l.cwd.clone());
+            let git_branch = first_line.and_then(|l| {
+                serde_json::from_str::<serde_json::Value>(&l.raw).ok()
+                    .and_then(|v| v.get("gitBranch").and_then(|v| v.as_str().map(String::from)))
+            });
+
             let output = serde_json::json!({
-                "session_id": session_info.session_id,
+                "sessionId": session_info.session_id,
                 "slug": session_info.slug,
-                "file_path": session_info.file_path,
-                "line_count": session_info.line_count,
-                "first_timestamp": session_info.first_timestamp,
-                "last_timestamp": session_info.last_timestamp,
-                "indexed_at": session_info.indexed_at,
-                "statistics": {
-                    "user_messages": user_count,
-                    "assistant_messages": assistant_count,
-                    "system_messages": system_count,
-                    "other_messages": other_count,
-                    "total_tokens": total_tokens
-                }
+                "filePath": session_info.file_path,
+                "lineCount": session_info.line_count,
+                "firstTimestamp": session_info.first_timestamp,
+                "lastTimestamp": session_info.last_timestamp,
+                "indexedAt": session_info.indexed_at,
+                "version": version,
+                "cwd": cwd,
+                "gitBranch": git_branch,
+                "statistics": type_counts
             });
             if cli.pretty {
                 println!("{}", serde_json::to_string_pretty(&output)?);

@@ -33,9 +33,16 @@ bun run docs:status  # Show cache status
 bun run docs list    # List all cached documents by category
 bun run docs search <query>  # Search documentation content
 
-# Transcript and hook event viewing (Bun-only)
-bun run transcript             # Transcript CLI
-bun run transcript-tui         # Interactive transcript viewer
+# Transcript CLI (Rust - native binary)
+cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p transcript-cli
+transcript-tui-rs/target/release/transcript --help    # CLI help
+transcript-tui-rs/target/release/transcript list      # List sessions
+transcript-tui-rs/target/release/transcript search    # FTS search
+transcript-tui-rs/target/release/transcript recall    # Session-grouped recall
+transcript-tui-rs/target/release/transcript index build   # Build index
+transcript-tui-rs/target/release/transcript index update  # Delta update
+
+# Hook events viewing (Bun-only)
 bun run hook-events            # Hook events CLI
 bun run hook-events-tui        # Interactive hook events viewer
 
@@ -83,13 +90,18 @@ src/
 │   └── docs.ts        # CLI for documentation management
 └── utils/index.ts     # Shared utilities (version comparison, file ops)
 
-bin/                   # Standalone CLI utilities
+bin/                   # Standalone CLI utilities (TypeScript/Bun)
 ├── sesh.ts            # Session name manager CLI
-├── transcript.ts      # Transcript viewer CLI
-├── transcript-tui.ts  # Transcript interactive TUI
 ├── hooks.ts           # Hooks framework CLI (run handlers)
 ├── hook-events.ts     # Hook events viewer CLI
 └── hook-events-tui.ts # Hook events interactive TUI
+
+transcript-tui-rs/     # Rust workspace for transcript CLI
+├── crates/
+│   ├── transcript-core/     # Shared types (LineType, TranscriptLine)
+│   ├── transcript-db/       # Read-only SQLite queries
+│   ├── transcript-indexer/  # Write ops (schema, indexing, correlation)
+│   └── transcript-cli/      # Binary: transcript (list/view/search/recall/index)
 
 skills/                # Distributable skills for Claude Code development
 └── writing-skills/    # Guide for creating effective skills
@@ -163,35 +175,41 @@ sesh rename old-name new-name
 sesh info my-project
 ```
 
-**transcript** - Transcript and hook event indexer with SQLite FTS:
+**transcript** - Rust-native transcript CLI with SQLite FTS:
 
 ```bash
+# Alias (after cargo build --release in transcript-tui-rs/)
+alias transcript='transcript-tui-rs/target/release/transcript'
+
 # Build/rebuild unified index (transcripts + hook events)
-bun run bin/transcript.ts index build
-bun run bin/transcript.ts index rebuild
+transcript index build
+transcript index rebuild
 
 # Check index status
-bun run bin/transcript.ts index status
+transcript index status
 
 # Delta update (only new content)
-bun run bin/transcript.ts index update
+transcript index update
 
-# Background daemon (watches for changes)
-bun run bin/transcript.ts index daemon start
-bun run bin/transcript.ts index daemon status
-bun run bin/transcript.ts index daemon stop
+# Foreground file watcher (auto-indexes changes)
+transcript index watch
 
 # Search transcripts
-bun run bin/transcript.ts search "keyword"
+transcript search "keyword"
 
-# Memory retrieval (grouped by session, with related skills)
-bun run bin/transcript.ts recall "caching strategy"
-bun run bin/transcript.ts recall "error handling" --max-sessions 3
+# Memory retrieval (grouped by session)
+transcript recall "caching strategy"
+transcript recall "error handling" --max-sessions 3
 
-# TUI viewer
-bun run bin/transcript.ts tui
-bun run transcript-tui tender-spider --live -o       # Text-only, live mode
-bun run transcript-tui "tender-spider,earnest-lion"  # Multi-session view
+# List and view sessions
+transcript list
+transcript list --days 7
+transcript info <session>
+transcript view <session>
+transcript view <session> --last 20
+
+# Diagnostic
+transcript doctor
 ```
 
 **transcript-tui** features:

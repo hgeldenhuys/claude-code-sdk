@@ -1,0 +1,33 @@
+[package]
+name = "transcript-indexer"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Indexing pipeline for Claude Code transcript database"
+
+[dependencies]
+transcript-core = { path = "../transcript-core" }
+
+# Core
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Database
+rusqlite = { workspace = true }
+
+# File system
+walkdir = { workspace = true }
+notify = { workspace = true }
+notify-debouncer-mini = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.14"

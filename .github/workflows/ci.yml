@@ -19,14 +19,25 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: transcript-tui-rs
+
       - name: Install dependencies
         run: bun install
 
       - name: Run linter
         run: bun run lint
 
-      - name: Run tests
+      - name: Run TypeScript tests
         run: bun test
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path transcript-tui-rs/Cargo.toml -p transcript-indexer
 
   build:
     runs-on: ubuntu-latest
@@ -41,6 +52,14 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: transcript-tui-rs
+
       - name: Install dependencies
         run: bun install
 
@@ -50,7 +69,7 @@ jobs:
       - name: Build CLIs for Node.js
         run: |
           # Build Node.js-compatible CLIs (hooks, sesh)
-          # Note: transcript and hook-events CLIs use Bun-specific APIs (bun:sqlite) and are Bun-only
+          # Note: hook-events CLIs use Bun-specific APIs (bun:sqlite) and are Bun-only
           mkdir -p dist/bin
 
           # Build hooks CLI
@@ -59,9 +78,12 @@ jobs:
           # Build sesh CLI
           bun build bin/sesh.ts --outfile dist/bin/sesh.js --target node
 
+      - name: Build Rust transcript CLI
+        run: cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p transcript-cli
+
       - name: Verify CLIs are executable
         run: |
-          chmod +x bin/sesh.ts bin/transcript.ts bin/transcript-tui.ts bin/hooks.ts bin/hook-events.ts bin/hook-events-tui.ts
+          chmod +x bin/sesh.ts bin/hooks.ts bin/hook-events.ts bin/hook-events-tui.ts
 
           # Test hooks CLI
           bun bin/hooks.ts --help
@@ -70,11 +92,8 @@ jobs:
           # Test sesh CLI
           bun bin/sesh.ts --version
 
-          # Test transcript CLI
-          bun bin/transcript.ts --help
-
-          # Test transcript-tui CLI
-          bun bin/transcript-tui.ts --help
+          # Test Rust transcript CLI
+          transcript-tui-rs/target/release/transcript --help
 
           # Test hook-events CLI (Bun-only, uses bun:sqlite)
           bun bin/hook-events.ts --help
@@ -93,5 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: |
+            dist/
+            transcript-tui-rs/target/release/transcript
           retention-days: 7

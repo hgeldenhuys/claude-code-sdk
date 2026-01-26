@@ -17,17 +17,22 @@ pub fn format_line(line: &TranscriptLine, pretty: bool) -> String {
     line.raw.clone()
 }
 
-/// Output a session as JSON
-pub fn format_session(session: &SessionInfo, pretty: bool) -> String {
-    let json = serde_json::json!({
-        "session_id": session.session_id,
+/// Output a session as JSON value (for use in arrays)
+pub fn session_to_json(session: &SessionInfo) -> serde_json::Value {
+    serde_json::json!({
+        "sessionId": session.session_id,
         "slug": session.slug,
-        "file_path": session.file_path,
-        "line_count": session.line_count,
-        "first_timestamp": session.first_timestamp,
-        "last_timestamp": session.last_timestamp,
-        "indexed_at": session.indexed_at
-    });
+        "filePath": session.file_path,
+        "lineCount": session.line_count,
+        "firstTimestamp": session.first_timestamp,
+        "lastTimestamp": session.last_timestamp,
+        "indexedAt": session.indexed_at
+    })
+}
+
+/// Output a session as JSON string (deprecated, use session_to_json for arrays)
+pub fn format_session(session: &SessionInfo, pretty: bool) -> String {
+    let json = session_to_json(session);
 
     if pretty {
         serde_json::to_string_pretty(&json).unwrap_or_else(|_| json.to_string())
