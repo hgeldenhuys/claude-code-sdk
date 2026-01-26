@@ -921,7 +921,9 @@ describe('JSON Syntax Highlighting', () => {
 // ============================================================================
 
 describe('CLI Integration', () => {
-  test('help command shows usage', async () => {
+  // hook-events CLI tests skipped - migrated from TypeScript to Rust (hook-events-cli crate)
+  // Rust binary is verified in CI build step with: hook-events --help
+  test.skip('help command shows usage (migrated to Rust)', async () => {
     const proc = Bun.spawn(['bun', 'run', 'bin/hook-events.ts', '--help'], {
       cwd: join(import.meta.dir, '..'),
       stdout: 'pipe',
@@ -937,7 +939,7 @@ describe('CLI Integration', () => {
     expect(output).toContain('--tool');
   });
 
-  test('list command runs without error or reports missing index', async () => {
+  test.skip('list command runs without error or reports missing index (migrated to Rust)', async () => {
     const proc = Bun.spawn(['bun', 'run', 'bin/hook-events.ts', 'list'], {
       cwd: join(import.meta.dir, '..'),
       stdout: 'pipe',

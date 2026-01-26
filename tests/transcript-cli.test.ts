@@ -500,7 +500,8 @@ describe('Transcript Viewer Module', () => {
 // CLI Integration Tests
 // ============================================================================
 
-describe('Transcript CLI', () => {
+// CLI integration tests skipped - bin/transcript.ts migrated to Rust (transcript-tui-rs/crates/transcript-cli)
+describe.skip('Transcript CLI', () => {
   const cliPath = join(
     process.cwd(),
     'bin/transcript.ts'
@@ -669,7 +670,8 @@ describe('Transcript CLI', () => {
 // These tests define the expected behavior for new features.
 // They will fail until the features are implemented by transcript-dev.
 
-describe('TRANSCRIPT-002: New CLI Features', () => {
+// CLI integration tests skipped - bin/transcript.ts migrated to Rust
+describe.skip('TRANSCRIPT-002: New CLI Features', () => {
   const cliPath = join(process.cwd(), 'bin/transcript.ts');
 
   describe('AC-001: --output flag for file export', () => {
@@ -822,7 +824,8 @@ describe('TRANSCRIPT-002: New CLI Features', () => {
 // Edge Cases and Error Handling
 // ============================================================================
 
-describe('Edge Cases', () => {
+// CLI integration tests skipped - bin/transcript.ts migrated to Rust
+describe.skip('Edge Cases', () => {
   const cliPath = join(process.cwd(), 'bin/transcript.ts');
 
   test('handles empty transcript file', async () => {
