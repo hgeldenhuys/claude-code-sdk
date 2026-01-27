@@ -10,7 +10,8 @@
     "sesh": "./bin/sesh.ts",
     "hooks": "./bin/hooks.ts",
     "hook-events": "./transcript-tui-rs/target/release/hook-events",
-    "hook-events-tui": "./bin/hook-events-tui.ts"
+    "hook-events-tui": "./bin/hook-events-tui.ts",
+    "agent-daemon": "./bin/agent-daemon.ts"
   },
   "exports": {
     ".": {
@@ -60,7 +61,8 @@
     "hooks": "bun bin/hooks.ts",
     "hook-events": "transcript-tui-rs/target/release/hook-events",
     "hook-events:build": "cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p hook-events-cli",
-    "hook-events-tui": "bun bin/hook-events-tui.ts"
+    "hook-events-tui": "bun bin/hook-events-tui.ts",
+    "agent-daemon": "bun bin/agent-daemon.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",

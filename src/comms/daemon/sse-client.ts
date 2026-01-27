@@ -1,0 +1,410 @@
+/**
+ * SSE Subscription Client
+ *
+ * Subscribes to a SignalDB Server-Sent Events stream for real-time
+ * message delivery. Uses raw fetch with ReadableStream (no EventSource
+ * polyfill needed in Bun).
+ *
+ * Features:
+ * - Custom SSE text protocol parsing (data:, id:, event: fields)
+ * - Exponential backoff reconnection (1s, 2s, 4s, 8s, max 30s)
+ * - Last-Event-ID tracking for resume after reconnect
+ * - Callback-based message delivery
+ */
+
+import type { Message } from '../protocol/types';
+import type { SSEConfig, SSEEvent } from './types';
+
+// ============================================================================
+// Types
+// ============================================================================
+
+/** Callback invoked when a parsed Message arrives from the SSE stream. */
+export type SSEMessageCallback = (message: Message) => void;
+
+/** Callback invoked when SSE connection status changes. */
+export type SSEStatusCallback = (connected: boolean) => void;
+
+/** Callback invoked on connection errors. */
+export type SSEErrorCallback = (error: Error) => void;
+
+// ============================================================================
+// SSE Text Protocol Parser
+// ============================================================================
+
+/**
+ * Parse a single SSE frame (delimited by double newline) into an SSEEvent.
+ *
+ * SSE format:
+ *   id: <event-id>\n
+ *   event: <event-type>\n
+ *   data: <json-payload>\n
+ *   \n
+ *
+ * Fields can appear in any order. Multiple "data:" lines are joined with newlines.
+ */
+function parseSSEFrame(frame: string): SSEEvent | null {
+  let id: string | null = null;
+  let event = 'message';
+  const dataLines: string[] = [];
+
+  const lines = frame.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line === undefined || line === '') continue;
+
+    // Skip comments
+    if (line.startsWith(':')) continue;
+
+    const colonIdx = line.indexOf(':');
+    if (colonIdx === -1) continue;
+
+    const field = line.slice(0, colonIdx);
+    // Value starts after colon + optional space
+    const rawValue = line.slice(colonIdx + 1);
+    const value = rawValue.startsWith(' ') ? rawValue.slice(1) : rawValue;
+
+    switch (field) {
+      case 'id':
+        id = value;
+        break;
+      case 'event':
+        event = value;
+        break;
+      case 'data':
+        dataLines.push(value);
+        break;
+      // retry: field is handled at connection level, not per-event
+    }
+  }
+
+  // No data means no event to emit
+  if (dataLines.length === 0) {
+    return null;
+  }
+
+  const rawData = dataLines.join('\n');
+  let data: unknown;
+  try {
+    data = JSON.parse(rawData);
+  } catch {
+    // If not valid JSON, pass as raw string
+    data = rawData;
+  }
+
+  return { id, event, data };
+}
+
+// ============================================================================
+// SSEClient
+// ============================================================================
+
+/**
+ * Server-Sent Events client for SignalDB message streams.
+ *
+ * Uses raw fetch with ReadableStream for Bun compatibility.
+ * Implements exponential backoff reconnection with Last-Event-ID resume.
+ *
+ * @example
+ * ```typescript
+ * const sse = new SSEClient(
+ *   'https://my-project.signaldb.live',
+ *   'sk_live_...',
+ *   { endpoint: '/v1/messages/stream', ... },
+ *   { machineId: 'mac-001' },
+ * );
+ *
+ * sse.onMessage((msg) => console.log('Got message:', msg.id));
+ * sse.onStatus((connected) => console.log('SSE connected:', connected));
+ * await sse.connect();
+ * ```
+ */
+export class SSEClient {
+  private readonly apiUrl: string;
+  private readonly projectKey: string;
+  private readonly config: SSEConfig;
+  private readonly queryParams: Record<string, string>;
+
+  private messageCallbacks: SSEMessageCallback[] = [];
+  private statusCallbacks: SSEStatusCallback[] = [];
+  private errorCallbacks: SSEErrorCallback[] = [];
+
+  private abortController: AbortController | null = null;
+  private connected = false;
+  private reconnecting = false;
+  private shouldReconnect = true;
+  private currentBackoffMs: number;
+  private lastEventId: string | null;
+
+  constructor(
+    apiUrl: string,
+    projectKey: string,
+    config: SSEConfig,
+    queryParams?: Record<string, string>,
+  ) {
+    this.apiUrl = apiUrl.replace(/\/+$/, '');
+    this.projectKey = projectKey;
+    this.config = config;
+    this.queryParams = queryParams ?? {};
+    this.currentBackoffMs = config.reconnectBaseMs;
+    this.lastEventId = config.lastEventId;
+  }
+
+  // --------------------------------------------------------------------------
+  // Public API
+  // --------------------------------------------------------------------------
+
+  /**
+   * Register a callback for incoming messages.
+   */
+  onMessage(cb: SSEMessageCallback): void {
+    this.messageCallbacks.push(cb);
+  }
+
+  /**
+   * Register a callback for connection status changes.
+   */
+  onStatus(cb: SSEStatusCallback): void {
+    this.statusCallbacks.push(cb);
+  }
+
+  /**
+   * Register a callback for connection errors.
+   */
+  onError(cb: SSEErrorCallback): void {
+    this.errorCallbacks.push(cb);
+  }
+
+  /**
+   * Whether the client is currently connected to the SSE stream.
+   */
+  get isConnected(): boolean {
+    return this.connected;
+  }
+
+  /**
+   * The last received event ID (for diagnostics / resume).
+   */
+  get resumeId(): string | null {
+    return this.lastEventId;
+  }
+
+  /**
+   * Connect to the SSE stream.
+   * Returns when the initial connection is established or fails.
+   * Reconnection happens automatically in the background.
+   */
+  async connect(): Promise<void> {
+    this.shouldReconnect = true;
+    await this.doConnect();
+  }
+
+  /**
+   * Disconnect from the SSE stream and stop reconnecting.
+   */
+  disconnect(): void {
+    this.shouldReconnect = false;
+    this.reconnecting = false;
+
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+
+    if (this.connected) {
+      this.connected = false;
+      this.emitStatus(false);
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Connection Logic
+  // --------------------------------------------------------------------------
+
+  private async doConnect(): Promise<void> {
+    // Build URL with query params
+    const params = new URLSearchParams();
+    for (const key of Object.keys(this.queryParams)) {
+      const value = this.queryParams[key];
+      if (value !== undefined) {
+        params.set(key, value);
+      }
+    }
+
+    const qs = params.toString();
+    const url = `${this.apiUrl}${this.config.endpoint}${qs ? '?' + qs : ''}`;
+
+    // Set up headers
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.projectKey}`,
+      Accept: 'text/event-stream',
+      'Cache-Control': 'no-cache',
+    };
+
+    if (this.lastEventId) {
+      headers['Last-Event-ID'] = this.lastEventId;
+    }
+
+    // Create abort controller for this connection
+    this.abortController = new AbortController();
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        signal: this.abortController.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`SSE connection failed: ${response.status} ${response.statusText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('SSE response has no body');
+      }
+
+      // Connected successfully - reset backoff
+      this.connected = true;
+      this.currentBackoffMs = this.config.reconnectBaseMs;
+      this.emitStatus(true);
+
+      // Process the stream
+      await this.processStream(response.body);
+    } catch (err) {
+      // Ignore abort errors during intentional disconnect
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+
+      this.connected = false;
+      this.emitStatus(false);
+      this.emitError(err instanceof Error ? err : new Error(String(err)));
+
+      // Schedule reconnect if allowed
+      if (this.shouldReconnect) {
+        await this.scheduleReconnect();
+      }
+    }
+  }
+
+  /**
+   * Process the ReadableStream from the SSE response.
+   * Buffers incoming chunks and splits on double-newline boundaries.
+   */
+  private async processStream(body: ReadableStream<Uint8Array>): Promise<void> {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          // Stream ended (server closed connection)
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Split on double-newline (SSE frame delimiter)
+        let delimIdx: number;
+        while ((delimIdx = buffer.indexOf('\n\n')) !== -1) {
+          const frame = buffer.slice(0, delimIdx);
+          buffer = buffer.slice(delimIdx + 2);
+
+          const event = parseSSEFrame(frame);
+          if (event) {
+            // Track last event ID for resumption
+            if (event.id !== null) {
+              this.lastEventId = event.id;
+            }
+
+            // Emit message if it looks like a Message object
+            if (event.event === 'message' && event.data && typeof event.data === 'object') {
+              const msg = event.data as Message;
+              if (msg.id && msg.content !== undefined) {
+                this.emitMessage(msg);
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // Ignore abort errors
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      throw err;
+    } finally {
+      reader.releaseLock();
+    }
+
+    // Stream ended - reconnect if allowed
+    this.connected = false;
+    this.emitStatus(false);
+
+    if (this.shouldReconnect) {
+      await this.scheduleReconnect();
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Reconnection with Exponential Backoff
+  // --------------------------------------------------------------------------
+
+  private async scheduleReconnect(): Promise<void> {
+    if (this.reconnecting || !this.shouldReconnect) return;
+    this.reconnecting = true;
+
+    const delay = this.currentBackoffMs;
+
+    // Calculate next backoff (exponential with cap)
+    this.currentBackoffMs = Math.min(
+      this.currentBackoffMs * this.config.reconnectMultiplier,
+      this.config.reconnectMaxMs,
+    );
+
+    await Bun.sleep(delay);
+
+    this.reconnecting = false;
+
+    if (this.shouldReconnect) {
+      await this.doConnect();
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Event Emission
+  // --------------------------------------------------------------------------
+
+  private emitMessage(message: Message): void {
+    for (let i = 0; i < this.messageCallbacks.length; i++) {
+      try {
+        this.messageCallbacks[i]!(message);
+      } catch {
+        // Don't let callback errors kill the stream
+      }
+    }
+  }
+
+  private emitStatus(connected: boolean): void {
+    for (let i = 0; i < this.statusCallbacks.length; i++) {
+      try {
+        this.statusCallbacks[i]!(connected);
+      } catch {
+        // Ignore callback errors
+      }
+    }
+  }
+
+  private emitError(error: Error): void {
+    for (let i = 0; i < this.errorCallbacks.length; i++) {
+      try {
+        this.errorCallbacks[i]!(error);
+      } catch {
+        // Ignore callback errors
+      }
+    }
+  }
+}

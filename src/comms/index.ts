@@ -84,3 +84,27 @@ export {
 
 // Schema
 export { SCHEMA_SQL } from './schema/index';
+
+// Daemon: local agent lifecycle, SSE, message routing
+export {
+  AgentDaemon,
+  SSEClient,
+  MessageRouter,
+  discoverSessions,
+  createDefaultConfig,
+} from './daemon/index';
+
+export type {
+  DaemonConfig,
+  DaemonState,
+  DaemonCallbacks,
+  LocalSession,
+  SSEConfig,
+  SSEEvent,
+  MessageRouteResult,
+  MessageRouteSuccess,
+  MessageRouteFailure,
+  SSEMessageCallback,
+  SSEStatusCallback,
+  SSEErrorCallback,
+} from './daemon/index';
