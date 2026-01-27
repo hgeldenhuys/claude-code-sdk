@@ -14,6 +14,7 @@ export * from './types/index.ts';
 export * from './utils/index.ts';
 export * from './transcripts/index.ts';
 export * from './hooks/index.ts';
+export * from './comms/index.ts';
 
 import { DocsTracker } from './docs/index.ts';
 import type { DocsTrackerConfig } from './docs/types.ts';
