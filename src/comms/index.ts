@@ -108,3 +108,23 @@ export type {
   SSEStatusCallback,
   SSEErrorCallback,
 } from './daemon/index';
+
+// Channels: real-time bidirectional messaging
+export {
+  ChannelClient,
+  ChannelManager,
+  MessagePublisher,
+  MessageSubscriber,
+  MessageQuery,
+  OfflineQueue,
+} from './channels/index';
+
+export type {
+  ChannelConfig,
+  ChannelSubscription,
+  PublishOptions,
+  QueryOptions,
+  ChannelInfo,
+  ThreadSummary,
+  QueuedMessageCallback,
+} from './channels/index';
