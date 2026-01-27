@@ -93,3 +93,24 @@ CREATE INDEX IF NOT EXISTS idx_pastes_creator_id ON pastes (creator_id);
 CREATE INDEX IF NOT EXISTS idx_pastes_recipient_id ON pastes (recipient_id);
 CREATE INDEX IF NOT EXISTS idx_pastes_expires_at ON pastes (expires_at);
 CREATE INDEX IF NOT EXISTS idx_pastes_access_type ON pastes (access_type);
+
+-- ============================================================================
+-- audit_log: Security audit trail for all agent commands
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  sender_id TEXT NOT NULL,
+  receiver_id TEXT NOT NULL DEFAULT '',
+  command TEXT NOT NULL,
+  result TEXT NOT NULL,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  machine_id TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log (timestamp);
+CREATE INDEX IF NOT EXISTS idx_audit_log_sender_id ON audit_log (sender_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_receiver_id ON audit_log (receiver_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_machine_id ON audit_log (machine_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_result ON audit_log (result);

@@ -128,3 +128,36 @@ export type {
   ThreadSummary,
   QueuedMessageCallback,
 } from './channels/index';
+
+// Security: guardrails, authentication, rate limiting, audit
+export {
+  SecurityManager,
+  DirectoryGuard,
+  ToolPolicyEngine,
+  AuditLogger,
+  RLSPolicyGenerator,
+  JWTManager,
+  RateLimiter,
+  MessageValidator,
+  createDefaultSecurityConfig,
+} from './security/index';
+
+export type {
+  SecurityConfig,
+  ToolPolicy,
+  RateLimitAction,
+  RateLimitConfig,
+  RateLimitState,
+  RateLimitResult,
+  JWTConfig,
+  JWTPayload,
+  AuditLogConfig,
+  AuditEntry,
+  SecurityViolation,
+  DirectoryViolation,
+  ToolViolation,
+  RateLimitViolation,
+  AuthViolation,
+  ContentViolation,
+  ValidationResult,
+} from './security/index';
