@@ -14,7 +14,8 @@
     "agent-daemon": "./bin/agent-daemon.ts",
     "comms-audit": "./bin/comms-audit.ts",
     "comms-memo": "./bin/comms-memo.ts",
-    "comms-paste": "./bin/comms-paste.ts"
+    "comms-paste": "./bin/comms-paste.ts",
+    "comms": "./bin/comms.ts"
   },
   "exports": {
     ".": {
@@ -68,7 +69,8 @@
     "agent-daemon": "bun bin/agent-daemon.ts",
     "comms-audit": "bun bin/comms-audit.ts",
     "comms-memo": "bun bin/comms-memo.ts",
-    "comms-paste": "bun bin/comms-paste.ts"
+    "comms-paste": "bun bin/comms-paste.ts",
+    "comms": "bun bin/comms.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
