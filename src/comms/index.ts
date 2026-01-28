@@ -205,3 +205,31 @@ export type {
   PasteFilter,
   PasteConfig,
 } from './pastes/index';
+
+// Remote: administration and command execution
+export {
+  RemoteClient,
+  CommandExecutor,
+  CommandHandler,
+  ReceiptTracker,
+  ResponseFormatter,
+  getTemplate,
+} from './remote/index';
+
+export type {
+  RemoteCommandType,
+  ReceiptStatus,
+  RemoteCommand,
+  ExecutionReceipt,
+  CommandResult,
+  RemoteConfig,
+  ReceiptFilter,
+  ReceiptCallback,
+  CommandTemplate,
+  DeployParams,
+  StatusParams,
+  ConfigParams,
+  DiagnosticParams,
+  RestartParams,
+  FormattedResponse,
+} from './remote/index';
