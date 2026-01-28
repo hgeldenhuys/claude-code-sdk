@@ -49,3 +49,6 @@ export { OfflineQueue, type QueuedMessageCallback } from './offline-queue';
 
 // Unified facade
 export { ChannelClient } from './channel-client';
+
+// Secure wrapper
+export { SecureChannelClient } from './secure-channel-client';

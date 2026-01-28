@@ -13,7 +13,8 @@
     "hook-events-tui": "./bin/hook-events-tui.ts",
     "agent-daemon": "./bin/agent-daemon.ts",
     "comms-audit": "./bin/comms-audit.ts",
-    "comms-memo": "./bin/comms-memo.ts"
+    "comms-memo": "./bin/comms-memo.ts",
+    "comms-paste": "./bin/comms-paste.ts"
   },
   "exports": {
     ".": {
@@ -66,7 +67,8 @@
     "hook-events-tui": "bun bin/hook-events-tui.ts",
     "agent-daemon": "bun bin/agent-daemon.ts",
     "comms-audit": "bun bin/comms-audit.ts",
-    "comms-memo": "bun bin/comms-memo.ts"
+    "comms-memo": "bun bin/comms-memo.ts",
+    "comms-paste": "bun bin/comms-paste.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",

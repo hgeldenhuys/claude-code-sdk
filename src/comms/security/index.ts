@@ -56,5 +56,8 @@ export { JWTManager } from './jwt-manager';
 export { RateLimiter } from './rate-limiter';
 export { MessageValidator } from './message-validator';
 
+// Middleware
+export { SecurityMiddleware, RateLimitError, ContentValidationError, DirectoryGuardError } from './middleware';
+
 // Facade
 export { SecurityManager } from './security-manager';

@@ -117,6 +117,7 @@ export {
   MessageSubscriber,
   MessageQuery,
   OfflineQueue,
+  SecureChannelClient,
 } from './channels/index';
 
 export type {
@@ -132,6 +133,10 @@ export type {
 // Security: guardrails, authentication, rate limiting, audit
 export {
   SecurityManager,
+  SecurityMiddleware,
+  RateLimitError,
+  ContentValidationError,
+  DirectoryGuardError,
   DirectoryGuard,
   ToolPolicyEngine,
   AuditLogger,
@@ -170,6 +175,7 @@ export {
   MemoClaimer,
   MemoThreading,
   messageToMemoView,
+  SecureMemoClient,
 } from './memos/index';
 
 export type {
@@ -182,3 +188,20 @@ export type {
   ThreadSummary as MemoThreadSummary,
   MemoConfig,
 } from './memos/index';
+
+// Pastes: ephemeral content sharing with TTL and read-once
+export {
+  PasteClient,
+  PasteManager,
+  PasteSharing,
+  SecurePasteClient,
+  pasteToView,
+} from './pastes/index';
+
+export type {
+  PasteContentType,
+  PasteCompose,
+  PasteView,
+  PasteFilter,
+  PasteConfig,
+} from './pastes/index';
