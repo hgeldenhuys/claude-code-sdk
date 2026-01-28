@@ -161,3 +161,24 @@ export type {
   ContentViolation,
   ValidationResult,
 } from './security/index';
+
+// Memos: async knowledge sharing between agents
+export {
+  MemoClient,
+  MemoComposer,
+  MemoInbox,
+  MemoClaimer,
+  MemoThreading,
+  messageToMemoView,
+} from './memos/index';
+
+export type {
+  MemoCategory,
+  MemoPriority,
+  MemoCompose,
+  MemoView,
+  MemoFilter,
+  ClaimResult,
+  ThreadSummary as MemoThreadSummary,
+  MemoConfig,
+} from './memos/index';

@@ -12,7 +12,8 @@
     "hook-events": "./transcript-tui-rs/target/release/hook-events",
     "hook-events-tui": "./bin/hook-events-tui.ts",
     "agent-daemon": "./bin/agent-daemon.ts",
-    "comms-audit": "./bin/comms-audit.ts"
+    "comms-audit": "./bin/comms-audit.ts",
+    "comms-memo": "./bin/comms-memo.ts"
   },
   "exports": {
     ".": {
@@ -64,7 +65,8 @@
     "hook-events:build": "cargo build --release --manifest-path transcript-tui-rs/Cargo.toml -p hook-events-cli",
     "hook-events-tui": "bun bin/hook-events-tui.ts",
     "agent-daemon": "bun bin/agent-daemon.ts",
-    "comms-audit": "bun bin/comms-audit.ts"
+    "comms-audit": "bun bin/comms-audit.ts",
+    "comms-memo": "bun bin/comms-memo.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
