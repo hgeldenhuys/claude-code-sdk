@@ -15,7 +15,11 @@
     "comms-audit": "./bin/comms-audit.ts",
     "comms-memo": "./bin/comms-memo.ts",
     "comms-paste": "./bin/comms-paste.ts",
-    "comms": "./bin/comms.ts"
+    "comms": "./bin/comms.ts",
+    "comms-uat": "./bin/comms-uat.ts",
+    "comms-demo": "./bin/comms-demo.ts",
+    "comms-dashboard": "./bin/comms-dashboard.ts",
+    "comms-e2e-test": "./bin/comms-e2e-test.ts"
   },
   "exports": {
     ".": {
@@ -70,7 +74,11 @@
     "comms-audit": "bun bin/comms-audit.ts",
     "comms-memo": "bun bin/comms-memo.ts",
     "comms-paste": "bun bin/comms-paste.ts",
-    "comms": "bun bin/comms.ts"
+    "comms": "bun bin/comms.ts",
+    "comms-uat": "bun bin/comms-uat.ts",
+    "comms-demo": "bun bin/comms-demo.ts",
+    "comms-dashboard": "bun bin/comms-dashboard.ts",
+    "comms-e2e-test": "bun bin/comms-e2e-test.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
