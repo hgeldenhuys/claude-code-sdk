@@ -11,6 +11,8 @@
  *   status     Show connected agents with presence state
  *   agents     List registered agents with full details
  *   send       Send a message to an address
+ *   chat       Send a message and wait for response
+ *   spawn      Spawn a fresh Claude collaborator in a directory
  *   listen     Subscribe to real-time channel messages
  *   channels   Manage channels (list, create, join, leave, archive)
  *   memo       Manage memos (list, compose, read, reply, archive)
@@ -26,6 +28,8 @@
 import { execute as executeStatus } from '../src/comms/bridges/cli/commands/status';
 import { execute as executeAgents } from '../src/comms/bridges/cli/commands/agents';
 import { execute as executeSend } from '../src/comms/bridges/cli/commands/send';
+import { execute as executeChat } from '../src/comms/bridges/cli/commands/chat';
+import { execute as executeSpawn } from '../src/comms/bridges/cli/commands/spawn';
 import { execute as executeListen } from '../src/comms/bridges/cli/commands/listen';
 import { execute as executeChannels } from '../src/comms/bridges/cli/commands/channels';
 import { execute as executeMemo } from '../src/comms/bridges/cli/commands/memo';
@@ -68,6 +72,14 @@ const commands: Record<string, CommandEntry> = {
   send: {
     description: 'Send a message to an address',
     execute: executeSend,
+  },
+  chat: {
+    description: 'Send a message and wait for response',
+    execute: executeChat,
+  },
+  spawn: {
+    description: 'Spawn a fresh Claude collaborator in a directory',
+    execute: executeSpawn,
   },
   listen: {
     description: 'Subscribe to real-time channel messages',
@@ -116,6 +128,11 @@ ${bold('Environment:')}
 ${bold('Examples:')}
   comms status
   comms agents --json
+  comms chat realtime-db "run ls -l"
+  comms chat --continue <threadId> "follow up question"
+  comms chat witty-bison "what tests are failing?" --timeout 120
+  comms spawn /path/to/project "run the test suite"
+  comms spawn . "investigate the memory leak" --timeout 600
   comms send broadcast://dev-team "Build complete"
   echo "Test results" | comms send agent://mac-1/agent-2
   comms listen dev-team
