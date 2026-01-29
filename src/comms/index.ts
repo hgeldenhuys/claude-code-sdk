@@ -234,6 +234,26 @@ export type {
   FormattedResponse,
 } from './remote/index';
 
+// Config: Multi-environment configuration for Tapestry
+export {
+  loadTapestryConfig,
+  getEnvironmentConfig,
+  getCurrentEnvironmentConfig,
+  toSignalDBConfig,
+  toDaemonConfig,
+  listConfiguredEnvironments,
+  validateEnvironments,
+  getEnvironmentInfo,
+  EnvironmentConfigError,
+} from './config/index';
+
+export type {
+  TapestryEnvironment,
+  EnvironmentConfig,
+  TapestryConfig,
+  EnvironmentInfo,
+} from './config/index';
+
 // Discord Bridge: Discord <-> SignalDB message bridging
 export {
   DiscordBot,

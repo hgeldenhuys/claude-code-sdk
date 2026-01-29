@@ -268,8 +268,13 @@ export class SSEClient {
       this.currentBackoffMs = this.config.reconnectBaseMs;
       this.emitStatus(true);
 
-      // Process the stream
-      await this.processStream(response.body);
+      // Process the stream in background (don't await - let caller continue)
+      this.processStream(response.body).catch((err) => {
+        // Handle stream errors
+        if (!(err instanceof DOMException && err.name === 'AbortError')) {
+          this.emitError(err instanceof Error ? err : new Error(String(err)));
+        }
+      });
     } catch (err) {
       // Ignore abort errors during intentional disconnect
       if (err instanceof DOMException && err.name === 'AbortError') {
@@ -320,11 +325,32 @@ export class SSEClient {
               this.lastEventId = event.id;
             }
 
-            // Emit message if it looks like a Message object
-            if (event.event === 'message' && event.data && typeof event.data === 'object') {
-              const msg = event.data as Message;
-              if (msg.id && msg.content !== undefined) {
-                this.emitMessage(msg);
+            // Emit message if it's an insert event from SignalDB
+            // SignalDB sends: event: insert, data: {id, data: {...message fields}, ts}
+            // Note: SignalDB uses snake_case, but Message interface uses camelCase
+            if (event.event === 'insert' && event.data && typeof event.data === 'object') {
+              const wrapper = event.data as { id?: string; data?: Record<string, unknown>; ts?: number };
+              if (wrapper.id && wrapper.data) {
+                // Convert snake_case keys to camelCase
+                const msg: Message = {
+                  id: wrapper.id,
+                  channelId: (wrapper.data.channel_id ?? '') as string,
+                  senderId: (wrapper.data.sender_id ?? '') as string,
+                  targetType: (wrapper.data.target_type ?? '') as string,
+                  targetAddress: (wrapper.data.target_address ?? '') as string,
+                  messageType: (wrapper.data.message_type ?? 'chat') as Message['messageType'],
+                  content: (wrapper.data.content ?? '') as string,
+                  metadata: (wrapper.data.metadata ?? {}) as Record<string, unknown>,
+                  status: (wrapper.data.status ?? 'pending') as Message['status'],
+                  claimedBy: (wrapper.data.claimed_by ?? null) as string | null,
+                  claimedAt: (wrapper.data.claimed_at ?? null) as string | null,
+                  threadId: (wrapper.data.thread_id ?? null) as string | null,
+                  createdAt: (wrapper.data.created_at ?? new Date().toISOString()) as string,
+                  expiresAt: (wrapper.data.expires_at ?? null) as string | null,
+                };
+                if (msg.content !== undefined) {
+                  this.emitMessage(msg);
+                }
               }
             }
           }

@@ -9,6 +9,8 @@
  * message via the client.
  */
 
+import * as path from 'node:path';
+import * as os from 'node:os';
 import type { SignalDBClient } from '../client/signaldb';
 import type { Message } from '../protocol/types';
 import type { LocalSession, MessageRouteResult } from './types';
@@ -19,6 +21,9 @@ import type { LocalSession, MessageRouteResult } from './types';
 
 /** Maximum time to wait for a Claude response (5 minutes) */
 const ROUTE_TIMEOUT_MS = 5 * 60 * 1000;
+
+/** Path to the claude binary (resolved from typical install locations) */
+const CLAUDE_BINARY = path.join(os.homedir(), '.local', 'bin', 'claude');
 
 // ============================================================================
 // MessageRouter
@@ -97,7 +102,7 @@ export class MessageRouter {
 
     // Route the message to the Claude session
     try {
-      const response = await this.deliverToSession(targetSession.sessionId, message.content);
+      const response = await this.deliverToSession(targetSession.sessionId, message.content, targetSession.projectPath);
 
       // Post the response back to SignalDB
       if (targetSession.agentId) {
@@ -132,6 +137,11 @@ export class MessageRouter {
 
   /**
    * Resolve which local session should receive this message.
+   *
+   * Resolution order for agent addresses:
+   * 1. Match by agent ID (database UUID)
+   * 2. Match by session ID (Claude Code session UUID)
+   * 3. Match by session name (human-friendly name like "tender-mongoose")
    */
   private resolveTarget(
     message: Message,
@@ -150,6 +160,10 @@ export class MessageRouter {
         }
         // Also try matching by session ID in the address
         if (targetAddr.includes(session.sessionId)) {
+          return session;
+        }
+        // Also try matching by session name (e.g., "agent://machine/tender-mongoose")
+        if (session.sessionName && targetAddr.includes(session.sessionName)) {
           return session;
         }
       }
@@ -196,12 +210,17 @@ export class MessageRouter {
    * Spawns: `claude --resume <sessionId> -p <content>`
    * Captures stdout as the response.
    *
+   * IMPORTANT: Must run from the session's projectPath directory for
+   * `claude --resume` to find the session.
+   *
    * @param sessionId - Claude Code session UUID to resume
    * @param content - Message content to deliver as a prompt
+   * @param projectPath - The project directory path for the session
    * @returns The Claude response text
    */
-  private async deliverToSession(sessionId: string, content: string): Promise<string> {
-    const proc = Bun.spawn(['claude', '--resume', sessionId, '-p', content], {
+  private async deliverToSession(sessionId: string, content: string, projectPath: string): Promise<string> {
+    const proc = Bun.spawn([CLAUDE_BINARY, '--resume', sessionId, '-p', content], {
+      cwd: projectPath,
       stdout: 'pipe',
       stderr: 'pipe',
       env: { ...process.env },

@@ -12,6 +12,9 @@
  * 6. Graceful shutdown on SIGINT/SIGTERM
  */
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
 import type { SignalDBClient } from '../client/signaldb';
 import { AgentRegistry } from '../registry/agent-registry';
 import type { Message } from '../protocol/types';
@@ -67,6 +70,12 @@ export class AgentDaemon {
 
   /** Signal handler cleanup references */
   private signalHandlers: Array<{ signal: string; handler: () => void }> = [];
+
+  /** Session discovery polling interval */
+  private discoveryInterval: ReturnType<typeof setInterval> | null = null;
+
+  /** Discovery polling interval in ms (5 seconds for near-realtime) */
+  private readonly discoveryIntervalMs: number = 5_000;
 
   constructor(
     client: SignalDBClient,
@@ -124,6 +133,9 @@ export class AgentDaemon {
       // 5. Connect SSE for real-time messages
       await this.connectSSE();
 
+      // 6. Start session discovery polling (5s interval)
+      this.startDiscoveryPolling();
+
       this.setState('running');
       this.log('Daemon running');
     } catch (err) {
@@ -145,7 +157,13 @@ export class AgentDaemon {
 
     this.setState('stopping');
 
-    // 1. Disconnect SSE
+    // 1. Stop discovery polling
+    if (this.discoveryInterval) {
+      clearInterval(this.discoveryInterval);
+      this.discoveryInterval = null;
+    }
+
+    // 2. Disconnect SSE
     if (this.sseClient) {
       this.sseClient.disconnect();
       this.sseClient = null;
@@ -241,6 +259,66 @@ export class AgentDaemon {
 
     this.heartbeats.set(sessionId, cleanup);
     this.log(`Started heartbeat for agent ${agentId.slice(0, 8)} (interval: ${this.config.heartbeatIntervalMs}ms)`);
+  }
+
+  // --------------------------------------------------------------------------
+  // Session Discovery Polling
+  // --------------------------------------------------------------------------
+
+  /**
+   * Start polling for session changes every 5 seconds.
+   * Discovers new sessions and deregisters stale ones.
+   */
+  private startDiscoveryPolling(): void {
+    this.discoveryInterval = setInterval(async () => {
+      try {
+        const discovered = await discoverSessions(this.config.machineId);
+        const discoveredIds = new Set(discovered.map(s => s.sessionId));
+
+        // Find new sessions (discovered but not yet registered)
+        for (const session of discovered) {
+          if (!this.sessions.has(session.sessionId)) {
+            this.log(`New session: ${session.sessionId.slice(0, 8)} (${session.sessionName ?? 'unnamed'})`);
+            await this.registerSession(session);
+
+            // Start heartbeat for the new session
+            const registered = this.sessions.get(session.sessionId);
+            if (registered?.agentId) {
+              this.startHeartbeat(session.sessionId, registered.agentId);
+            }
+          }
+        }
+
+        // Find stale sessions (registered but no longer discovered)
+        for (const [sessionId, session] of this.sessions) {
+          if (!discoveredIds.has(sessionId)) {
+            this.log(`Session stale: ${sessionId.slice(0, 8)} (${session.sessionName ?? 'unnamed'})`);
+
+            // Stop heartbeat
+            const cleanup = this.heartbeats.get(sessionId);
+            if (cleanup) {
+              cleanup();
+              this.heartbeats.delete(sessionId);
+            }
+
+            // Deregister agent
+            if (session.agentId) {
+              try {
+                await this.registry.deregister(session.agentId);
+              } catch {
+                // Ignore deregistration errors
+              }
+            }
+
+            this.sessions.delete(sessionId);
+          }
+        }
+      } catch {
+        // Silently ignore polling errors - next poll will retry
+      }
+    }, this.discoveryIntervalMs);
+
+    this.log(`Started discovery polling (${this.discoveryIntervalMs}ms)`);
   }
 
   // --------------------------------------------------------------------------

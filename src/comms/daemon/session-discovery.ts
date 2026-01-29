@@ -5,10 +5,9 @@
  * the ~/.claude/projects/ directory structure and parsing JSONL transcript
  * files for active session IDs.
  *
- * Directory structure:
- *   ~/.claude/projects/<encoded-project-path>/<session-uuid>/
- *     transcript.jsonl
- *     ...
+ * Actual directory structure:
+ *   ~/.claude/projects/<encoded-project-path>/<session-uuid>.jsonl
+ *   ~/.claude/global-sessions.json  (contains session names)
  */
 
 import * as fs from 'node:fs';
@@ -23,6 +22,9 @@ import type { LocalSession } from './types';
 /** Root directory for Claude Code project data */
 const CLAUDE_PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
 
+/** Global sessions file containing session names */
+const GLOBAL_SESSIONS_PATH = path.join(os.homedir(), '.claude', 'global-sessions.json');
+
 /** UUID v4 pattern used by Claude Code session IDs */
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -31,6 +33,67 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  * Sessions whose transcript was last modified more than 1 hour ago are excluded.
  */
 const ACTIVE_THRESHOLD_MS = 60 * 60 * 1000;
+
+// ============================================================================
+// Session Names Store
+// ============================================================================
+
+interface GlobalSessionEntry {
+  name: string;
+  currentSessionId: string;
+  machineId?: string;
+  cwd?: string;
+  history?: Array<{ sessionId: string; timestamp: string; source: string }>;
+}
+
+interface GlobalSessionsFile {
+  version: string;
+  names: Record<string, GlobalSessionEntry>;
+}
+
+/** Session metadata returned from global-sessions.json */
+interface SessionMetadata {
+  name: string;
+  cwd: string | null;
+}
+
+/**
+ * Load session metadata from ~/.claude/global-sessions.json
+ * Returns a map of sessionId -> { name, cwd }
+ */
+function loadSessionMetadata(): Map<string, SessionMetadata> {
+  const metaMap = new Map<string, SessionMetadata>();
+
+  try {
+    if (!fs.existsSync(GLOBAL_SESSIONS_PATH)) {
+      return metaMap;
+    }
+
+    const content = fs.readFileSync(GLOBAL_SESSIONS_PATH, 'utf-8');
+    const data = JSON.parse(content) as GlobalSessionsFile;
+
+    if (data.names && typeof data.names === 'object') {
+      for (const [name, entry] of Object.entries(data.names)) {
+        const cwd = entry.cwd ?? null;
+        if (entry.currentSessionId) {
+          metaMap.set(entry.currentSessionId, { name, cwd });
+        }
+        // Also check history for past session IDs
+        if (Array.isArray(entry.history)) {
+          for (const historyEntry of entry.history) {
+            if (historyEntry.sessionId) {
+              metaMap.set(historyEntry.sessionId, { name, cwd });
+            }
+          }
+        }
+      }
+    }
+  } catch {
+    // Can't read or parse global sessions file
+  }
+
+  return metaMap;
+}
 
 // ============================================================================
 // Helpers
@@ -52,56 +115,31 @@ function decodeProjectPath(encodedName: string): string {
 }
 
 /**
- * Check whether a session directory has recent activity.
- * Looks at the modification time of transcript.jsonl.
+ * Check whether a transcript file has recent activity.
+ * Looks at the modification time of the .jsonl file.
  */
-function isSessionActive(sessionDir: string): boolean {
-  const transcriptPath = path.join(sessionDir, 'transcript.jsonl');
+function isTranscriptActive(transcriptPath: string): boolean {
   try {
     const stat = fs.statSync(transcriptPath);
     const elapsed = Date.now() - stat.mtimeMs;
     return elapsed < ACTIVE_THRESHOLD_MS;
   } catch {
-    // No transcript file or can't stat - not active
+    // Can't stat file - not active
     return false;
   }
 }
 
 /**
- * Extract the session name from the last few lines of a transcript.
- * Claude Code writes session metadata at the start of the transcript.
- * The session name may appear in a SessionStart hook event or summary line.
+ * Extract session ID from a transcript filename.
+ * Transcript files are named: <session-uuid>.jsonl
  */
-function extractSessionName(sessionDir: string): string | null {
-  const transcriptPath = path.join(sessionDir, 'transcript.jsonl');
-  try {
-    const content = fs.readFileSync(transcriptPath, 'utf-8');
-    const lines = content.split('\n');
+function extractSessionId(filename: string): string | null {
+  if (!filename.endsWith('.jsonl')) return null;
 
-    // Scan first 50 lines for session name metadata
-    const scanLimit = Math.min(lines.length, 50);
-    for (let i = 0; i < scanLimit; i++) {
-      const line = lines[i];
-      if (!line || !line.trim()) continue;
+  const sessionId = filename.slice(0, -6); // Remove .jsonl
+  if (!UUID_PATTERN.test(sessionId)) return null;
 
-      try {
-        const entry = JSON.parse(line);
-        // Check for session name in various formats
-        if (entry.sessionName && typeof entry.sessionName === 'string') {
-          return entry.sessionName;
-        }
-        // Check in message content for session naming hook results
-        if (entry.type === 'system' && entry.message?.sessionName) {
-          return entry.message.sessionName;
-        }
-      } catch {
-        // Skip malformed JSON lines
-      }
-    }
-  } catch {
-    // Can't read transcript
-  }
-  return null;
+  return sessionId;
 }
 
 // ============================================================================
@@ -111,10 +149,10 @@ function extractSessionName(sessionDir: string): string | null {
 /**
  * Discover active Claude Code sessions on this machine.
  *
- * Scans ~/.claude/projects/ for session directories with recently-modified
- * transcript files. Returns a LocalSession for each active session found.
+ * Scans ~/.claude/projects/ for .jsonl transcript files with recent modification
+ * times. Returns a LocalSession for each active session found.
  *
- * @param machineId - The machine identifier to tag sessions with (not used for discovery, but included in results)
+ * @param machineId - The machine identifier to tag sessions with
  * @returns Array of locally-discovered sessions, may be empty
  */
 export async function discoverSessions(machineId: string): Promise<LocalSession[]> {
@@ -124,6 +162,9 @@ export async function discoverSessions(machineId: string): Promise<LocalSession[
   if (!fs.existsSync(CLAUDE_PROJECTS_DIR)) {
     return sessions;
   }
+
+  // Load session metadata (name + cwd) from global sessions file
+  const sessionMeta = loadSessionMetadata();
 
   // Read project directories
   let projectEntries: fs.Dirent[];
@@ -137,29 +178,36 @@ export async function discoverSessions(machineId: string): Promise<LocalSession[
     if (!projectEntry.isDirectory()) continue;
 
     const projectDir = path.join(CLAUDE_PROJECTS_DIR, projectEntry.name);
-    const projectPath = decodeProjectPath(projectEntry.name);
+    // Fallback decoded path (may be incorrect for hyphenated directories)
+    const fallbackProjectPath = decodeProjectPath(projectEntry.name);
 
-    // Read session directories within this project
-    let sessionEntries: fs.Dirent[];
+    // Read files within this project directory
+    let fileEntries: fs.Dirent[];
     try {
-      sessionEntries = fs.readdirSync(projectDir, { withFileTypes: true });
+      fileEntries = fs.readdirSync(projectDir, { withFileTypes: true });
     } catch {
       continue;
     }
 
-    for (const sessionEntry of sessionEntries) {
-      if (!sessionEntry.isDirectory()) continue;
+    for (const fileEntry of fileEntries) {
+      // Look for .jsonl files (not directories)
+      if (!fileEntry.isFile()) continue;
+      if (!fileEntry.name.endsWith('.jsonl')) continue;
 
-      // Session directories are named by UUID
-      if (!UUID_PATTERN.test(sessionEntry.name)) continue;
+      // Skip non-UUID files like sessions-index.json
+      const sessionId = extractSessionId(fileEntry.name);
+      if (!sessionId) continue;
 
-      const sessionDir = path.join(projectDir, sessionEntry.name);
+      const transcriptPath = path.join(projectDir, fileEntry.name);
 
       // Only include sessions with recent activity
-      if (!isSessionActive(sessionDir)) continue;
+      if (!isTranscriptActive(transcriptPath)) continue;
 
-      const sessionId = sessionEntry.name;
-      const sessionName = extractSessionName(sessionDir);
+      // Look up session metadata from global sessions store
+      const meta = sessionMeta.get(sessionId);
+      const sessionName = meta?.name ?? null;
+      // Prefer cwd from global-sessions.json (accurate) over decoded path (may be wrong)
+      const projectPath = meta?.cwd ?? fallbackProjectPath;
 
       sessions.push({
         sessionId,

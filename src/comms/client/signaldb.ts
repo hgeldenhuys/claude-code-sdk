@@ -40,6 +40,54 @@ export class SignalDBError extends Error {
 }
 
 // ============================================================================
+// Case Conversion Utilities
+// ============================================================================
+
+/**
+ * Convert snake_case string to camelCase.
+ */
+function snakeToCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Field aliases for type compatibility.
+ * SignalDB uses different field names than our protocol types.
+ */
+const FIELD_ALIASES: Record<string, string> = {
+  createdAt: 'registeredAt', // Agent.registeredAt <- created_at
+};
+
+/**
+ * Convert all keys in an object from snake_case to camelCase (recursive).
+ * Also applies field aliases for type compatibility.
+ */
+function convertKeysToCamelCase<T>(obj: unknown): T {
+  if (obj === null || obj === undefined) {
+    return obj as T;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertKeysToCamelCase(item)) as T;
+  }
+
+  if (typeof obj === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj as Record<string, unknown>)) {
+      let camelKey = snakeToCamel(key);
+      // Apply field alias if exists
+      if (FIELD_ALIASES[camelKey]) {
+        camelKey = FIELD_ALIASES[camelKey];
+      }
+      result[camelKey] = convertKeysToCamelCase((obj as Record<string, unknown>)[key]);
+    }
+    return result as T;
+  }
+
+  return obj as T;
+}
+
+// ============================================================================
 // Client Configuration
 // ============================================================================
 
@@ -148,7 +196,16 @@ export class SignalDBClient {
       return undefined as T;
     }
 
-    return response.json() as Promise<T>;
+    const json = await response.json();
+
+    // SignalDB wraps list responses in { data: [...], meta: {...} }
+    // Unwrap if we detect this format
+    if (json && typeof json === 'object' && 'data' in json && Array.isArray(json.data)) {
+      return convertKeysToCamelCase<T>(json.data);
+    }
+
+    // Convert snake_case keys to camelCase
+    return convertKeysToCamelCase<T>(json);
   }
 }
 
@@ -161,9 +218,21 @@ class AgentOperations {
 
   /**
    * Register a new agent in the system.
+   * Sets initial heartbeat and active status.
    */
   async register(data: AgentRegistration): Promise<Agent> {
-    return this.client.request<Agent>('POST', '/v1/agents', data);
+    // Convert camelCase to snake_case for SignalDB (only send snake_case keys)
+    return this.client.request<Agent>('POST', '/v1/agents', {
+      machine_id: data.machineId,
+      session_id: data.sessionId,
+      session_name: data.sessionName,
+      project_path: data.projectPath,
+      capabilities: data.capabilities ?? {},
+      metadata: data.metadata ?? {},
+      // Set initial status and heartbeat
+      status: 'active',
+      heartbeat_at: new Date().toISOString(),
+    });
   }
 
   /**
@@ -175,41 +244,54 @@ class AgentOperations {
 
   /**
    * Update an agent's heartbeat timestamp.
+   * Uses PATCH for partial update to preserve other fields.
    */
   async heartbeat(id: string): Promise<Agent> {
-    return this.client.request<Agent>('PATCH', `/v1/agents/${id}/heartbeat`);
+    return this.client.request<Agent>('PATCH', `/v1/agents/${id}`, {
+      heartbeat_at: new Date().toISOString(),
+      status: 'active',
+    });
   }
 
   /**
    * Find agents by machine ID.
+   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
    */
   async findByMachineId(machineId: string): Promise<Agent[]> {
-    return this.client.request<Agent[]>('GET', '/v1/agents', undefined, {
-      machine_id: machineId,
-    });
+    const agents = await this.list();
+    return agents.filter(a => a.machineId === machineId);
   }
 
   /**
    * Find an agent by session ID.
+   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
    */
   async findBySessionId(sessionId: string): Promise<Agent[]> {
-    return this.client.request<Agent[]>('GET', '/v1/agents', undefined, {
-      session_id: sessionId,
-    });
+    const agents = await this.list();
+    return agents.filter(a => a.sessionId === sessionId);
   }
 
   /**
    * List agents with optional filters.
+   * Note: SignalDB only supports limit/offset/orderBy/order params.
+   * All other filters are applied client-side.
    */
   async list(filters?: AgentFilter): Promise<Agent[]> {
-    const params: Record<string, string | undefined> = {};
-    if (filters) {
-      if (filters.machineId) params.machine_id = filters.machineId;
-      if (filters.sessionId) params.session_id = filters.sessionId;
-      if (filters.projectPath) params.project_path = filters.projectPath;
-      if (filters.status) params.status = filters.status;
+    // SignalDB only supports pagination params, not column filters
+    const agents = await this.client.request<Agent[]>('GET', '/v1/agents');
+
+    if (!filters) {
+      return agents;
     }
-    return this.client.request<Agent[]>('GET', '/v1/agents', undefined, params);
+
+    // Apply filters client-side
+    return agents.filter(agent => {
+      if (filters.machineId && agent.machineId !== filters.machineId) return false;
+      if (filters.sessionId && agent.sessionId !== filters.sessionId) return false;
+      if (filters.projectPath && agent.projectPath !== filters.projectPath) return false;
+      if (filters.status && agent.status !== filters.status) return false;
+      return true;
+    });
   }
 }
 
@@ -224,7 +306,14 @@ class ChannelOperations {
    * Create a new channel.
    */
   async create(data: ChannelCreate): Promise<Channel> {
-    return this.client.request<Channel>('POST', '/v1/channels', data);
+    // Convert camelCase to snake_case for SignalDB
+    return this.client.request<Channel>('POST', '/v1/channels', {
+      name: data.name,
+      type: data.type,
+      members: data.members ?? [],
+      created_by: data.createdBy,
+      metadata: data.metadata ?? {},
+    });
   }
 
   /**
@@ -245,28 +334,56 @@ class ChannelOperations {
 
   /**
    * List channels with optional filters.
+   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
    */
   async list(filters?: ChannelFilter): Promise<Channel[]> {
-    const params: Record<string, string | undefined> = {};
-    if (filters) {
-      if (filters.type) params.type = filters.type;
-      if (filters.name) params.name = filters.name;
+    const channels = await this.client.request<Channel[]>('GET', '/v1/channels');
+
+    if (!filters) {
+      return channels;
     }
-    return this.client.request<Channel[]>('GET', '/v1/channels', undefined, params);
+
+    // Apply filters client-side
+    return channels.filter(channel => {
+      if (filters.type && channel.type !== filters.type) return false;
+      if (filters.name && channel.name !== filters.name) return false;
+      return true;
+    });
   }
 
   /**
    * Add a member to a channel.
+   * Note: SignalDB doesn't have a /members endpoint, so we use PUT to update the channel.
    */
   async addMember(channelId: string, agentId: string): Promise<Channel> {
-    return this.client.request<Channel>('POST', `/v1/channels/${channelId}/members`, { agentId });
+    // First get the current channel to get existing members
+    const channel = await this.get(channelId);
+    const members = channel.members || [];
+
+    // Add the new member if not already present
+    if (!members.includes(agentId)) {
+      members.push(agentId);
+    }
+
+    // Update the channel with new members list
+    return this.client.request<Channel>('PUT', `/v1/channels/${channelId}`, {
+      members,
+    });
   }
 
   /**
    * Remove a member from a channel.
+   * Note: SignalDB doesn't have a /members endpoint, so we use PUT to update the channel.
    */
   async removeMember(channelId: string, agentId: string): Promise<Channel> {
-    return this.client.request<Channel>('DELETE', `/v1/channels/${channelId}/members/${agentId}`);
+    // First get the current channel
+    const channel = await this.get(channelId);
+    const members = (channel.members || []).filter(id => id !== agentId);
+
+    // Update the channel with filtered members list
+    return this.client.request<Channel>('PUT', `/v1/channels/${channelId}`, {
+      members,
+    });
   }
 }
 
@@ -281,66 +398,130 @@ class MessageOperations {
    * Send a new message.
    */
   async send(data: MessageSend): Promise<Message> {
-    return this.client.request<Message>('POST', '/v1/messages', data);
+    // Convert camelCase to snake_case for SignalDB
+    return this.client.request<Message>('POST', '/v1/messages', {
+      channel_id: data.channelId,
+      sender_id: data.senderId,
+      target_type: data.targetType,
+      target_address: data.targetAddress,
+      message_type: data.messageType,
+      content: data.content,
+      metadata_json: data.metadata ?? {},
+      status: 'pending',
+      thread_id: data.threadId,
+    });
   }
 
   /**
    * Claim a pending message for processing.
+   * Note: SignalDB doesn't have a /claim endpoint, so we use PUT.
+   * We first GET the message to preserve all existing fields.
    */
   async claim(id: string, agentId: string): Promise<Message> {
-    return this.client.request<Message>('PATCH', `/v1/messages/${id}/claim`, {
-      agentId,
+    // Get the existing message to preserve all fields
+    const existing = await this.client.request<Message>('GET', `/v1/messages/${id}`);
+
+    // Update with claim info while preserving all existing fields
+    return this.client.request<Message>('PUT', `/v1/messages/${id}`, {
+      channel_id: existing.channelId,
+      sender_id: existing.senderId,
+      target_type: existing.targetType,
+      target_address: existing.targetAddress,
+      message_type: existing.messageType,
+      content: existing.content,
+      metadata_json: existing.metadata ?? {},
+      thread_id: existing.threadId,
+      claimed_by: agentId,
+      claimed_at: new Date().toISOString(),
+      status: 'claimed',
     });
   }
 
   /**
    * Update a message's delivery status.
+   * Note: SignalDB doesn't have a /status endpoint, so we use PUT.
+   * We first GET the message to preserve all existing fields.
    */
   async updateStatus(id: string, status: MessageStatus): Promise<Message> {
-    return this.client.request<Message>('PATCH', `/v1/messages/${id}/status`, {
+    // Get the existing message to preserve all fields
+    const existing = await this.client.request<Message>('GET', `/v1/messages/${id}`);
+
+    // Update status while preserving all existing fields
+    return this.client.request<Message>('PUT', `/v1/messages/${id}`, {
+      channel_id: existing.channelId,
+      sender_id: existing.senderId,
+      target_type: existing.targetType,
+      target_address: existing.targetAddress,
+      message_type: existing.messageType,
+      content: existing.content,
+      metadata_json: existing.metadata ?? {},
+      thread_id: existing.threadId,
+      claimed_by: existing.claimedBy,
+      claimed_at: existing.claimedAt,
       status,
     });
   }
 
   /**
+   * List all messages.
+   * Note: Requests a higher limit since SignalDB's default is 100.
+   */
+  async list(): Promise<Message[]> {
+    return this.client.request<Message[]>('GET', '/v1/messages', undefined, {
+      limit: '500',
+      orderBy: 'created_at',
+      order: 'desc',
+    });
+  }
+
+  /**
    * List messages by channel with optional filters.
+   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
    */
   async listByChannel(channelId: string, filters?: MessageFilter): Promise<Message[]> {
-    const params: Record<string, string | undefined> = {
-      channel_id: channelId,
-    };
-    if (filters) {
-      if (filters.status) params.status = filters.status;
-      if (filters.messageType) params.message_type = filters.messageType;
-      if (filters.limit !== undefined) params.limit = String(filters.limit);
-      if (filters.offset !== undefined) params.offset = String(filters.offset);
-    }
-    return this.client.request<Message[]>('GET', '/v1/messages', undefined, params);
+    const messages = await this.list();
+
+    return messages.filter(msg => {
+      if (msg.channelId !== channelId) return false;
+      if (filters?.status && msg.status !== filters.status) return false;
+      if (filters?.messageType && msg.messageType !== filters.messageType) return false;
+      return true;
+    });
   }
 
   /**
    * List messages targeted at a specific agent.
+   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
+   * Matches messages where the agent is either the sender or recipient.
+   *
+   * @param agentId The database ID of the agent
+   * @param filters Optional message filters
+   * @param sessionId Optional session ID to match in targetAddress (needed since targetAddress uses sessionId, not database ID)
    */
-  async listForAgent(agentId: string, filters?: MessageFilter): Promise<Message[]> {
-    const params: Record<string, string | undefined> = {
-      target_agent_id: agentId,
-    };
-    if (filters) {
-      if (filters.status) params.status = filters.status;
-      if (filters.messageType) params.message_type = filters.messageType;
-      if (filters.limit !== undefined) params.limit = String(filters.limit);
-      if (filters.offset !== undefined) params.offset = String(filters.offset);
-    }
-    return this.client.request<Message[]>('GET', '/v1/messages', undefined, params);
+  async listForAgent(agentId: string, filters?: MessageFilter, sessionId?: string): Promise<Message[]> {
+    const messages = await this.list();
+
+    return messages.filter(msg => {
+      // Match by sender OR target address containing agent ID or session info
+      // The targetAddress format is: agent://{machineId}/{sessionId}
+      const isRecipient = msg.targetAddress?.includes(agentId) ||
+        (sessionId && msg.targetAddress?.includes(sessionId));
+      const isSender = msg.senderId === agentId;
+
+      if (!isRecipient && !isSender) return false;
+      if (filters?.status && msg.status !== filters.status) return false;
+      if (filters?.messageType && msg.messageType !== filters.messageType) return false;
+      return true;
+    });
   }
 
   /**
    * List messages in a conversation thread.
+   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
    */
   async listByThread(threadId: string): Promise<Message[]> {
-    return this.client.request<Message[]>('GET', '/v1/messages', undefined, {
-      thread_id: threadId,
-    });
+    const messages = await this.list();
+    return messages.filter(msg => msg.threadId === threadId);
   }
 }
 
@@ -355,16 +536,75 @@ class PasteOperations {
    * Create a new paste.
    */
   async create(data: PasteCreate): Promise<Paste> {
-    return this.client.request<Paste>('POST', '/v1/pastes', data);
+    // Calculate expires_at for TTL pastes
+    let expiresAt: string | undefined;
+    if (data.accessType === 'ttl' && data.ttlSeconds) {
+      const expiry = new Date();
+      expiry.setSeconds(expiry.getSeconds() + data.ttlSeconds);
+      expiresAt = expiry.toISOString();
+    }
+
+    // Convert camelCase to snake_case for SignalDB
+    return this.client.request<Paste>('POST', '/v1/pastes', {
+      creator_id: data.creatorId,
+      content: data.content,
+      content_type: data.contentType ?? 'text/plain',
+      access_type: data.accessType,
+      ttl_seconds: data.ttlSeconds,
+      recipient_id: data.recipientId,
+      expires_at: expiresAt,
+    });
   }
 
   /**
-   * Read a paste (marks as read for read_once pastes).
+   * Read a paste.
+   * Note: For read_once pastes, we need to update the paste after reading.
+   * For TTL pastes, we check expiration client-side since SignalDB doesn't enforce it.
    */
   async read(id: string, readerId: string): Promise<Paste> {
-    return this.client.request<Paste>('GET', `/v1/pastes/${id}`, undefined, {
-      reader_id: readerId,
-    });
+    // First get the paste
+    const paste = await this.client.request<Paste>('GET', `/v1/pastes/${id}`);
+
+    // Normalize readBy to always be an array
+    if (!paste.readBy) {
+      paste.readBy = [];
+    } else if (!Array.isArray(paste.readBy)) {
+      paste.readBy = [paste.readBy as unknown as string];
+    }
+
+    // Check if TTL paste is expired (client-side enforcement)
+    if (paste.accessType === 'ttl' && paste.expiresAt) {
+      const expiresAt = new Date(paste.expiresAt);
+      if (expiresAt <= new Date()) {
+        // Return paste with deleted indicator
+        paste.content = '';
+        paste.deletedAt = new Date().toISOString();
+        return paste;
+      }
+    }
+
+    // If read_once, mark as read and return original content
+    if (paste.accessType === 'read_once' && !paste.readAt) {
+      // Update the paste to mark as read
+      await this.client.request<Paste>('PUT', `/v1/pastes/${id}`, {
+        read_at: new Date().toISOString(),
+        read_by: [readerId],
+      });
+      // Return the original paste content with read info
+      // (PUT may return partial data, so we use the original content)
+      paste.readAt = new Date().toISOString();
+      paste.readBy = [readerId];
+      return paste;
+    }
+
+    // If read_once and already read, return empty content
+    if (paste.accessType === 'read_once' && paste.readAt) {
+      paste.content = '';
+      paste.deletedAt = paste.readAt;
+      return paste;
+    }
+
+    return paste;
   }
 
   /**
@@ -375,11 +615,20 @@ class PasteOperations {
   }
 
   /**
+   * List all pastes.
+   */
+  async list(): Promise<Paste[]> {
+    return this.client.request<Paste[]>('GET', '/v1/pastes');
+  }
+
+  /**
    * List pastes created by or addressed to an agent.
+   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
    */
   async listForAgent(agentId: string): Promise<Paste[]> {
-    return this.client.request<Paste[]>('GET', '/v1/pastes', undefined, {
-      agent_id: agentId,
-    });
+    const pastes = await this.list();
+    return pastes.filter(paste =>
+      paste.creatorId === agentId || paste.recipientId === agentId,
+    );
   }
 }
