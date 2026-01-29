@@ -10,25 +10,27 @@
  *   agent-daemon [options]
  *
  * Options:
- *   --api-url <url>              SignalDB API URL (or SIGNALDB_API_URL env)
- *   --project-key <key>          SignalDB project key (or SIGNALDB_PROJECT_KEY env)
+ *   --env <name>                 Tapestry environment: dev|test|live (default: from .env.tapestry)
+ *   --api-url <url>              SignalDB API URL (overrides env config)
+ *   --project-key <key>          SignalDB project key (overrides env config)
  *   --machine-id <id>            Machine identifier (default: hostname)
  *   --heartbeat-interval <ms>    Heartbeat interval in ms (default: 10000)
  *   --help, -h                   Show help
  *   --version, -v                Show version
  *
  * Environment variables:
- *   SIGNALDB_API_URL             SignalDB API base URL
- *   SIGNALDB_PROJECT_KEY         SignalDB project API key
- *   MACHINE_ID                   Machine identifier override
+ *   TAPESTRY_ENV                 Active environment (dev|test|live)
+ *   TAPESTRY_MACHINE_ID          Machine identifier override
+ *   TAPESTRY_LIVE_API_URL        SignalDB API URL for live env
+ *   TAPESTRY_LIVE_PROJECT_KEY    SignalDB project key for live env
+ *   SIGNALDB_API_URL             Legacy: SignalDB API base URL
+ *   SIGNALDB_PROJECT_KEY         Legacy: SignalDB project API key
  *
  * Examples:
- *   # Using environment variables
- *   export SIGNALDB_API_URL=https://my-project.signaldb.live
- *   export SIGNALDB_PROJECT_KEY=sk_live_...
- *   agent-daemon
+ *   # Using .env.tapestry (recommended)
+ *   agent-daemon --env live
  *
- *   # Using CLI arguments
+ *   # Using CLI arguments (overrides env config)
  *   agent-daemon --api-url https://my-project.signaldb.live --project-key sk_live_...
  *
  *   # Custom heartbeat interval
@@ -40,6 +42,12 @@ import { SignalDBClient } from '../src/comms/client/signaldb';
 import { AgentDaemon } from '../src/comms/daemon/agent-daemon';
 import { createDefaultConfig } from '../src/comms/daemon/types';
 import type { DaemonState } from '../src/comms/daemon/types';
+import {
+  loadTapestryConfig,
+  toDaemonConfig,
+  toSignalDBConfig,
+  type TapestryEnvironment,
+} from '../src/comms/config/environments';
 
 // ============================================================================
 // Constants
@@ -52,6 +60,7 @@ const VERSION = '0.1.0';
 // ============================================================================
 
 interface CLIArgs {
+  env: TapestryEnvironment | null;
   apiUrl: string | null;
   projectKey: string | null;
   machineId: string;
@@ -62,6 +71,7 @@ interface CLIArgs {
 
 function parseArgs(argv: string[]): CLIArgs {
   const args: CLIArgs = {
+    env: null,
     apiUrl: process.env.SIGNALDB_API_URL ?? null,
     projectKey: process.env.SIGNALDB_PROJECT_KEY ?? null,
     machineId: process.env.MACHINE_ID ?? os.hostname(),
@@ -74,6 +84,13 @@ function parseArgs(argv: string[]): CLIArgs {
     const arg = argv[i];
 
     switch (arg) {
+      case '--env': {
+        const val = argv[++i];
+        if (val && ['dev', 'test', 'live'].includes(val)) {
+          args.env = val as TapestryEnvironment;
+        }
+        break;
+      }
       case '--api-url': {
         const val = argv[++i];
         if (val) args.apiUrl = val;
@@ -126,23 +143,21 @@ Usage:
   agent-daemon [options]
 
 Options:
-  --api-url <url>              SignalDB API URL (or SIGNALDB_API_URL env)
-  --project-key <key>          SignalDB project key (or SIGNALDB_PROJECT_KEY env)
+  --env <name>                 Tapestry environment: dev|test|live (default: from .env.tapestry)
+  --api-url <url>              SignalDB API URL (overrides env config)
+  --project-key <key>          SignalDB project key (overrides env config)
   --machine-id <id>            Machine identifier (default: hostname)
   --heartbeat-interval <ms>    Heartbeat interval in ms (default: 10000)
   --help, -h                   Show help
   --version, -v                Show version
 
-Environment variables:
-  SIGNALDB_API_URL             SignalDB API base URL
-  SIGNALDB_PROJECT_KEY         SignalDB project API key
-  MACHINE_ID                   Machine identifier override
+Configuration:
+  Reads .env.tapestry from cwd or ~ for environment-specific settings.
+  CLI flags --api-url/--project-key override environment config.
 
 Examples:
-  # Using environment variables
-  export SIGNALDB_API_URL=https://my-project.signaldb.live
-  export SIGNALDB_PROJECT_KEY=sk_live_...
-  agent-daemon
+  # Using .env.tapestry (recommended)
+  agent-daemon --env live
 
   # Using CLI arguments
   agent-daemon --api-url https://my-project.signaldb.live --project-key sk_live_...
@@ -186,28 +201,55 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  // Resolve configuration: --env (Tapestry config) or --api-url/--project-key (explicit)
+  let apiUrl = args.apiUrl;
+  let projectKey = args.projectKey;
+  let machineId = args.machineId;
+
+  if (args.env || (!apiUrl && !projectKey)) {
+    // Try loading from .env.tapestry
+    try {
+      const tapestryConfig = loadTapestryConfig(args.env || 'live');
+      const envName = args.env || tapestryConfig.current;
+      const envConfig = tapestryConfig[envName];
+
+      if (envConfig) {
+        // Env config provides defaults; CLI flags override
+        if (!apiUrl) apiUrl = envConfig.apiUrl;
+        if (!projectKey) projectKey = envConfig.projectKey;
+        machineId = envConfig.machineId || machineId;
+        if (args.heartbeatIntervalMs === 10_000) {
+          args.heartbeatIntervalMs = envConfig.heartbeatIntervalMs;
+        }
+        console.log(`  Env:       ${envName}`);
+      }
+    } catch {
+      // Fall through to validation below
+    }
+  }
+
   // Validate required arguments
-  if (!args.apiUrl) {
-    console.error('error: --api-url or SIGNALDB_API_URL is required');
+  if (!apiUrl) {
+    console.error('error: --api-url, SIGNALDB_API_URL, or --env with .env.tapestry is required');
     return 1;
   }
 
-  if (!args.projectKey) {
-    console.error('error: --project-key or SIGNALDB_PROJECT_KEY is required');
+  if (!projectKey) {
+    console.error('error: --project-key, SIGNALDB_PROJECT_KEY, or --env with .env.tapestry is required');
     return 1;
   }
 
   // Create client
   const client = new SignalDBClient({
-    apiUrl: args.apiUrl,
-    projectKey: args.projectKey,
+    apiUrl,
+    projectKey,
   });
 
   // Create config
   const config = createDefaultConfig(
-    args.apiUrl,
-    args.projectKey,
-    args.machineId,
+    apiUrl,
+    projectKey,
+    machineId,
   );
   config.heartbeatIntervalMs = args.heartbeatIntervalMs;
 
@@ -236,8 +278,8 @@ async function main(): Promise<number> {
 
   // Print startup info
   console.log(`agent-daemon v${VERSION}`);
-  console.log(`  API:       ${args.apiUrl}`);
-  console.log(`  Machine:   ${args.machineId}`);
+  console.log(`  API:       ${apiUrl}`);
+  console.log(`  Machine:   ${machineId}`);
   console.log(`  Heartbeat: ${args.heartbeatIntervalMs}ms`);
   console.log('');
 

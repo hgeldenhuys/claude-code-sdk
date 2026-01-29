@@ -10,6 +10,7 @@ Claude Code SDK is a TypeScript library for:
 - **Plugin marketplace** for discovering, installing, and managing Claude Code extensions
 - **Plugin management** for skills, tools, hooks, commands, and MCP servers
 - **Hooks SDK** - Utilities for building Claude Code hooks with session naming
+- **COMMS** - Inter-agent communication via SignalDB (agent daemon, SSE, message routing, channels, memos)
 
 ## Commands
 
@@ -94,7 +95,16 @@ bin/                   # Standalone CLI utilities (TypeScript/Bun)
 ├── sesh.ts            # Session name manager CLI
 ├── hooks.ts           # Hooks framework CLI (run handlers)
 ├── hook-events.ts     # Hook events viewer CLI
-└── hook-events-tui.ts # Hook events interactive TUI
+├── hook-events-tui.ts # Hook events interactive TUI
+├── agent-daemon.ts    # COMMS agent daemon entry point
+├── comms.ts           # COMMS CLI bridge (send, listen, agents, etc.)
+├── comms-audit.ts     # COMMS audit log viewer
+├── comms-memo.ts      # COMMS memo management CLI
+├── comms-paste.ts     # COMMS paste sharing CLI
+├── comms-uat.ts       # COMMS UAT test suite runner
+├── comms-demo.ts      # COMMS interactive demo
+├── comms-dashboard.ts # COMMS terminal dashboard
+└── comms-e2e-test.ts  # COMMS E2E test runner
 
 transcript-tui-rs/     # Rust workspace for transcript CLI
 ├── crates/
@@ -501,6 +511,140 @@ Cached docs location: `.claude-code-sdk/docs-cache/`
 Plugins are defined with a `PluginType`: `'skill' | 'tool' | 'hook' | 'command' | 'mcp-server'`
 
 Each plugin has a manifest with: id, name, version, description, author, type, entryPoint, and optional dependencies/config.
+
+### COMMS (Agent Communication System)
+
+The `src/comms/` module provides inter-agent communication via SignalDB (Tapestry):
+
+```
+src/comms/
+├── index.ts               # CommsSDK barrel export
+├── client/                # SignalDB HTTP client
+│   ├── index.ts           # Barrel export
+│   └── signaldb.ts        # SignalDBClient - REST + SSE, snake_case conversion
+├── config/                # Multi-environment configuration
+│   ├── index.ts           # Barrel export
+│   └── environments.ts    # loadTapestryConfig(), dev/test/live profiles
+├── daemon/                # Agent daemon (runs as background process)
+│   ├── index.ts           # Barrel export
+│   ├── agent-daemon.ts    # AgentDaemon - orchestrates lifecycle, heartbeat, SSE
+│   ├── message-router.ts  # MessageRouter - delivers messages to local sessions
+│   ├── session-discovery.ts # discoverSessions() - finds active Claude sessions
+│   ├── sse-client.ts      # SSEClient - real-time message subscription
+│   └── types.ts           # DaemonConfig, DaemonState, LocalSession
+├── protocol/              # Communication protocol types
+│   ├── address.ts         # Agent address parsing (agent://machine/session)
+│   ├── presence.ts        # Presence status management
+│   └── types.ts           # Message, Agent, Channel types
+├── registry/              # Agent registration
+│   └── agent-registry.ts  # AgentRegistry - register/deregister/heartbeat
+├── schema/                # SignalDB collection schemas
+│   └── index.ts           # Schema definitions
+├── channels/              # Pub/sub channel messaging
+│   ├── channel-client.ts  # ChannelClient - create/join/leave channels
+│   ├── channel-manager.ts # ChannelManager - lifecycle management
+│   ├── publisher.ts       # Publish messages to channels
+│   ├── subscriber.ts      # Subscribe to channel messages
+│   └── types.ts           # Channel types
+├── memos/                 # Async knowledge sharing
+│   ├── memo-client.ts     # MemoClient - create/read/claim memos
+│   ├── inbox.ts           # Memo inbox management
+│   ├── composer.ts        # Memo composition helpers
+│   └── types.ts           # Memo types
+├── pastes/                # Ephemeral content sharing
+│   ├── paste-client.ts    # PasteClient - create/read/expire pastes
+│   ├── paste-manager.ts   # PasteManager - lifecycle management
+│   └── types.ts           # Paste types
+├── security/              # 7 composable guardrail components
+│   ├── middleware.ts      # Security middleware pipeline
+│   ├── jwt-manager.ts     # JWT token management
+│   ├── rate-limiter.ts    # Request rate limiting
+│   ├── audit-logger.ts    # Audit trail logging
+│   └── types.ts           # Security types
+├── bridges/               # External system bridges
+│   ├── cli/               # Terminal CLI bridge (comms command)
+│   │   ├── index.ts       # CLI entry point
+│   │   └── commands/      # send, listen, agents, channels, memo, paste, status
+│   └── discord/           # Discord bot bridge
+│       ├── discord-bot.ts # Bot lifecycle
+│       ├── gateway.ts     # Discord Gateway WebSocket
+│       └── message-bridge.ts # Bidirectional message mapping
+└── remote/                # Remote administration
+    ├── command-executor.ts # Execute commands on remote agents
+    ├── receipt-tracker.ts  # Track execution receipts
+    └── templates/          # Predefined command templates (deploy, restart, status)
+```
+
+**COMMS Commands:**
+
+```bash
+# Agent daemon (background process)
+bun run agent-daemon              # Start agent daemon
+
+# CLI bridge
+bun run comms send <target> <msg> # Send message to agent
+bun run comms agents              # List registered agents
+bun run comms channels            # List channels
+bun run comms listen              # Listen for incoming messages
+bun run comms status              # Show connection status
+
+# Testing & monitoring
+bun run comms-uat                 # Run UAT test suite
+bun run comms-e2e-test            # Run E2E communication tests
+bun run comms-dashboard           # Terminal-based agent dashboard
+bun run comms-demo                # Interactive demo walkthrough
+
+# Tapestry Observer (web UI)
+cd apps/tapestry-observer && bun dev  # Real-time web dashboard
+```
+
+**COMMS Data Flow:**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Agent Communication Flow                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Local Machine                          SignalDB Cloud              │
+│  ┌────────────────┐                     ┌─────────────────┐        │
+│  │ Claude Session  │                     │ Tapestry API    │        │
+│  │ (project dir)   │◄──message-router──┐ │ (signaldb.co)   │        │
+│  └────────────────┘                    │ └───────┬─────────┘        │
+│                                        │         │                  │
+│  ┌────────────────┐    ┌──────────┐    │         │ SSE stream       │
+│  │ Session         │    │ Agent    │    │    ┌────▼──────┐           │
+│  │ Discovery       │───►│ Daemon   │────┼───►│ SSEClient │           │
+│  │ (global-        │    │          │    │    └───────────┘           │
+│  │  sessions.json) │    │ register │    │                           │
+│  └────────────────┘    │ heartbeat│    │    Messages collection     │
+│                        │ route    │    │    Agents collection       │
+│                        └──────────┘    │    Channels collection     │
+│                                        │                           │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Discoveries (Pitfalls):**
+
+- **SignalDB SSE format**: SSE events use `event: insert` (not default `message`). Data is nested as `{id, data: {...}, ts}`, not flat objects. The SSEClient must parse `event:` lines and unwrap `.data`.
+- **snake_case conversion**: SignalDB returns `snake_case` fields (e.g., `machine_id`, `created_at`). The `SignalDBClient` auto-converts to `camelCase` and applies field aliases (`createdAt` → `registeredAt`).
+- **Session discovery**: `decodeProjectPath()` fails for hyphenated directory names. Use `cwd` from `~/.claude/global-sessions.json` instead.
+- **`claude --resume` requires cwd**: The `claude --resume <session-id>` command must run from the session's original project directory, otherwise it fails silently.
+
+**Environment Configuration:**
+
+The COMMS system uses `.env.tapestry` files with per-environment prefixes:
+
+```bash
+# .env.tapestry
+TAPESTRY_ENV=live                          # Active environment
+TAPESTRY_MACHINE_ID=m4.local               # Machine identifier
+TAPESTRY_LIVE_API_URL=https://signaldb.co  # SignalDB API
+TAPESTRY_LIVE_PROJECT_KEY=sk_live_...      # Project API key
+```
+
+Environments: `dev` (local, throwaway), `test` (UAT/CI), `live` (production).
+
+Load with: `loadTapestryConfig()` from `src/comms/config/environments.ts`.
 
 ## Code Style
 
