@@ -242,36 +242,46 @@ else
 fi
 
 # ============================================================================
-# Create Convenience Scripts
+# PM2 Setup
 # ============================================================================
 
 echo ""
-log_info "Creating convenience scripts..."
+log_info "Setting up pm2 process management..."
 
-# Start daemon script
-cat > "$INSTALL_DIR/start-daemon.sh" << 'EOF'
-#!/usr/bin/env bash
-cd "$(dirname "$0")"
-source .env.tapestry
-exec bun run agent-daemon \
-    --api-url "$TAPESTRY_TEST_API_URL" \
-    --project-key "$TAPESTRY_TEST_PROJECT_KEY" \
-    --machine-id "$TAPESTRY_MACHINE_ID"
-EOF
-chmod +x "$INSTALL_DIR/start-daemon.sh"
+# Check for pm2
+if ! check_command pm2; then
+    log_warn "pm2 not found. Installing globally..."
+    npm install -g pm2 2>/dev/null || sudo npm install -g pm2
+    if ! check_command pm2; then
+        log_error "Failed to install pm2. Install manually: npm install -g pm2"
+        exit 1
+    fi
+fi
+log_success "pm2 $(pm2 --version)"
 
-# Dashboard script
-cat > "$INSTALL_DIR/start-dashboard.sh" << 'EOF'
-#!/usr/bin/env bash
-cd "$(dirname "$0")"
-source .env.tapestry
-exec bun run comms-dashboard \
-    --api-url "$TAPESTRY_TEST_API_URL" \
-    --project-key "$TAPESTRY_TEST_PROJECT_KEY"
-EOF
-chmod +x "$INSTALL_DIR/start-dashboard.sh"
+# Stop existing daemon if running
+pm2 stop comms-daemon 2>/dev/null || true
+pm2 delete comms-daemon 2>/dev/null || true
 
-log_success "Created start-daemon.sh and start-dashboard.sh"
+# Start daemon with pm2 using ecosystem config
+log_info "Starting COMMS daemon with pm2..."
+cd "$INSTALL_DIR"
+pm2 start ecosystem.config.cjs
+pm2 save
+
+log_success "COMMS daemon running via pm2"
+
+# Offer pm2 startup
+echo ""
+echo -e "${YELLOW}Optional: Enable pm2 startup on boot?${NC}"
+read -p "  Run 'pm2 startup'? [y/N]: " setup_startup
+if [[ "$setup_startup" =~ ^[Yy]$ ]]; then
+    pm2 startup
+    pm2 save
+    log_success "pm2 startup configured"
+else
+    log_info "Skipped pm2 startup. Run 'pm2 startup' later to enable."
+fi
 
 # ============================================================================
 # Summary
@@ -286,17 +296,20 @@ echo "  Location:    $INSTALL_DIR"
 echo "  Machine ID:  $TAPESTRY_MACHINE_ID"
 echo "  API URL:     $TAPESTRY_TEST_API_URL"
 echo ""
-echo -e "  ${CYAN}Quick Start:${NC}"
+echo -e "  ${CYAN}Manage the daemon:${NC}"
 echo ""
-echo "    # Start the COMMS daemon (background service)"
-echo "    $INSTALL_DIR/start-daemon.sh"
+echo "    pm2 status comms-daemon      # Check status"
+echo "    pm2 logs comms-daemon        # View logs"
+echo "    pm2 restart comms-daemon     # Restart"
+echo "    pm2 stop comms-daemon        # Stop"
 echo ""
-echo "    # Or run directly"
-echo "    cd $INSTALL_DIR && source .env.tapestry"
-echo "    bun run agent-daemon --api-url \$TAPESTRY_TEST_API_URL --project-key \$TAPESTRY_TEST_PROJECT_KEY"
+echo -e "  ${CYAN}Monitor:${NC}"
 echo ""
-echo "    # Monitor with dashboard"
-echo "    $INSTALL_DIR/start-dashboard.sh"
+echo "    cd $INSTALL_DIR && bun run comms-dashboard   # Terminal dashboard"
+echo ""
+echo -e "  ${CYAN}Health check:${NC}"
+echo ""
+echo "    $INSTALL_DIR/scripts/comms-doctor.sh          # Run diagnostics"
 echo ""
 echo -e "${CYAN}  The daemon will automatically discover active Claude Code sessions${NC}"
 echo -e "${CYAN}  and register them with SignalDB for cross-machine communication.${NC}"
