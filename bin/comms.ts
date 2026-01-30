@@ -25,6 +25,7 @@
  *   SIGNALDB_AGENT_ID       This agent's ID (not needed for status/agents)
  */
 
+import { DAEMON_VERSION } from '../src/comms/daemon/agent-daemon';
 import { execute as executeStatus } from '../src/comms/bridges/cli/commands/status';
 import { execute as executeAgents } from '../src/comms/bridges/cli/commands/agents';
 import { execute as executeSend } from '../src/comms/bridges/cli/commands/send';
@@ -96,6 +97,10 @@ const commands: Record<string, CommandEntry> = {
   paste: {
     description: 'Manage pastes (create, read, delete, list, shared)',
     execute: executePaste,
+  },
+  version: {
+    description: 'Show COMMS daemon version',
+    execute: async () => { console.log(DAEMON_VERSION); },
   },
 };
 

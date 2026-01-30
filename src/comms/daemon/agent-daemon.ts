@@ -34,6 +34,9 @@ import type {
 
 const log = createLogger('daemon');
 
+/** Daemon version for deployment verification */
+export const DAEMON_VERSION = '2.1.0-hard';
+
 // ============================================================================
 // AgentDaemon
 // ============================================================================
@@ -143,6 +146,8 @@ export class AgentDaemon {
 
     this.setState('starting');
     this.startedAt = Date.now();
+
+    log.info('Daemon starting', { version: DAEMON_VERSION, machineId: this.config.machineId });
 
     try {
       // 1. Install signal handlers
@@ -356,6 +361,7 @@ export class AgentDaemon {
         sessionName: session.sessionName ?? undefined,
         projectPath: session.projectPath,
         capabilities: { daemon: true },
+        metadata: { daemonVersion: DAEMON_VERSION },
       });
 
       // Update session with the assigned agent ID

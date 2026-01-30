@@ -28,7 +28,7 @@ const log = createLogger('router');
 const ROUTE_TIMEOUT_MS = 5 * 60 * 1000;
 
 /** Path to the claude binary (resolved from typical install locations) */
-const CLAUDE_BINARY = path.join(os.homedir(), '.local', 'bin', 'claude');
+const CLAUDE_BINARY = process.env.CLAUDE_BINARY ?? path.join(os.homedir(), '.local', 'bin', 'claude');
 
 // ============================================================================
 // MessageRouter
@@ -323,10 +323,11 @@ export class MessageRouter {
   private async deliverToSession(sessionId: string, message: Message, projectPath: string): Promise<string> {
     const systemPrompt = this.buildSystemPrompt(message);
 
-    log.debug('Spawning claude process', {
+    log.info('Spawning claude process', {
       sessionId: sessionId.slice(0, 8),
       messageId: message.id.slice(0, 8),
       projectPath,
+      binary: CLAUDE_BINARY,
     });
 
     const proc = Bun.spawn(
