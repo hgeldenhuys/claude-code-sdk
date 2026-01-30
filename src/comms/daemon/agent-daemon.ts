@@ -749,6 +749,13 @@ export class AgentDaemon {
     // Push (default): route to session immediately
     const localSessions = Array.from(this.sessions.values());
 
+    log.info('Routing push message', {
+      messageId: message.id.slice(0, 8),
+      targetAddress: message.targetAddress?.slice(0, 40),
+      targetType: message.targetType,
+      localSessionCount: localSessions.length,
+    });
+
     // Route asynchronously - don't block the SSE stream
     this.router.route(message, localSessions).then((result) => {
       if (result.ok) {
