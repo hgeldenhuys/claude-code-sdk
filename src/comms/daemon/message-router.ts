@@ -62,6 +62,21 @@ export class MessageRouter {
   private readonly security: SecurityMiddleware | null;
   private readonly machineId: string;
 
+  /**
+   * Session branch tracking for conversation memory continuity.
+   *
+   * Maps SignalDB threadId → forked session ID.
+   *
+   * When a headless Claude process resumes a large session (e.g., the agent's
+   * main interactive session with 200K+ context), auto-compaction can drop
+   * recent headless turns, causing memory loss between Discord messages.
+   *
+   * To fix this, the first message in a thread forks a lightweight session
+   * via `--fork-session`. Subsequent messages resume the fork, building a
+   * small, focused context where memory persists across turns.
+   */
+  private readonly sessionBranches: Map<string, string> = new Map();
+
   constructor(client: SignalDBClient, security?: SecurityMiddleware, machineId?: string) {
     this.client = client;
     this.security = security ?? null;
@@ -176,14 +191,35 @@ export class MessageRouter {
       }
     }
 
-    // Route the message to the Claude session
+    // Route the message to the Claude session with session branching
     try {
-      const response = await this.deliverToSession(targetSession.sessionId, message, targetSession.projectPath);
+      // Determine the effective threadId for branch tracking.
+      // The thread root message's ID is used as the key.
+      const threadId = message.threadId ?? message.id;
+
+      // Check if we already have a branch session for this conversation thread
+      const existingBranch = this.sessionBranches.get(threadId);
+
+      const result = await this.deliverToSession(
+        targetSession.sessionId,
+        message,
+        targetSession.projectPath,
+        existingBranch,
+      );
+
+      // Update the branch mapping with the session ID returned by Claude.
+      // On first message: this is the newly forked session.
+      // On subsequent messages: this is the same branch session.
+      if (result.branchSessionId) {
+        this.sessionBranches.set(threadId, result.branchSessionId);
+      }
 
       log.info('Message delivered successfully', {
         messageId: message.id.slice(0, 8),
         sessionId: targetSession.sessionId.slice(0, 8),
-        responseLength: response.length,
+        branchSessionId: result.branchSessionId?.slice(0, 8),
+        threadId: threadId.slice(0, 8),
+        responseLength: result.response.length,
       });
 
       // Post the response back to SignalDB with session branching metadata
@@ -191,8 +227,8 @@ export class MessageRouter {
         await this.postResponse(
           message,
           targetSession.agentId,
-          response,
-          targetSession.sessionId,
+          result.response,
+          result.branchSessionId ?? targetSession.sessionId,
           targetSession.projectPath,
         );
       }
@@ -206,8 +242,9 @@ export class MessageRouter {
 
       return {
         ok: true,
-        response,
+        response: result.response,
         messageId: message.id,
+        branchSessionId: result.branchSessionId,
       };
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
@@ -370,47 +407,72 @@ export class MessageRouter {
   /**
    * Deliver a message to a local Claude session via the `claude` CLI.
    *
-   * Spawns: `claude --resume <sessionId> --dangerously-skip-permissions --append-system-prompt <context> -p <content>`
-   * Captures stdout as the response.
+   * Uses session branching for conversation memory continuity:
+   * - First message in a thread: `--resume <original> --fork-session` creates
+   *   a lightweight branch inheriting the agent's full context
+   * - Subsequent messages: `--resume <branch>` continues the branch session
+   *
+   * Uses `--output-format json` to capture the session_id from each invocation,
+   * which tracks whether a fork occurred and provides structured response data.
    *
    * IMPORTANT: Must run from the session's projectPath directory for
    * `claude --resume` to find the session.
    *
-   * @param sessionId - Claude Code session UUID to resume
+   * @param sessionId - Original Claude Code session UUID (the agent's main session)
    * @param message - Full message object (for context injection)
    * @param projectPath - The project directory path for the session
-   * @returns The Claude response text
+   * @param branchSessionId - Existing branch session ID for this thread (if any)
+   * @returns Object with response text and the branch session ID
    */
-  private async deliverToSession(sessionId: string, message: Message, projectPath: string): Promise<string> {
+  private async deliverToSession(
+    sessionId: string,
+    message: Message,
+    projectPath: string,
+    branchSessionId?: string,
+  ): Promise<{ response: string; branchSessionId: string | null }> {
     const systemPrompt = this.buildSystemPrompt(message);
+
+    // Decide which session to resume and whether to fork:
+    // - If we have a branch session from a prior turn, resume it (no fork)
+    // - Otherwise, fork from the original session to create a new branch
+    const resumeId = branchSessionId ?? sessionId;
+    const shouldFork = !branchSessionId;
+
+    const args = [
+      CLAUDE_BINARY,
+      '--resume', resumeId,
+      '--dangerously-skip-permissions',
+      '--output-format', 'json',
+      '--append-system-prompt', systemPrompt,
+      '-p', message.content,
+    ];
+
+    if (shouldFork) {
+      // Insert --fork-session before -p to create a new branch session
+      args.splice(args.indexOf('-p'), 0, '--fork-session');
+    }
 
     log.info('Spawning claude process', {
       sessionId: sessionId.slice(0, 8),
+      resumeId: resumeId.slice(0, 8),
+      forking: shouldFork,
       messageId: message.id.slice(0, 8),
       projectPath,
       binary: CLAUDE_BINARY,
     });
 
-    const proc = Bun.spawn(
-      [
-        CLAUDE_BINARY,
-        '--resume', sessionId,
-        '--dangerously-skip-permissions',
-        '--append-system-prompt', systemPrompt,
-        '-p', message.content,
-      ],
-      {
-        cwd: projectPath,
-        stdout: 'pipe',
-        stderr: 'pipe',
-        env: { ...process.env },
-      },
-    );
+    const proc = Bun.spawn(args, {
+      cwd: projectPath,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      env: { ...process.env },
+    });
 
     // Set up timeout
     const timeoutId = setTimeout(() => {
       log.warn('Claude process timed out, killing', {
         sessionId: sessionId.slice(0, 8),
+        resumeId: resumeId.slice(0, 8),
         messageId: message.id.slice(0, 8),
         timeoutMs: ROUTE_TIMEOUT_MS,
       });
@@ -430,7 +492,40 @@ export class MessageRouter {
         throw new Error(`Claude process failed: ${errorDetail}`);
       }
 
-      return stdout.trim();
+      // Parse JSON output to extract response and session_id
+      const trimmed = stdout.trim();
+      try {
+        const json = JSON.parse(trimmed) as {
+          result?: string;
+          session_id?: string;
+          is_error?: boolean;
+        };
+
+        const response = json.result ?? trimmed;
+        const returnedSessionId = json.session_id ?? null;
+
+        if (json.is_error) {
+          throw new Error(`Claude returned error: ${response}`);
+        }
+
+        log.debug('Parsed JSON response', {
+          sessionId: returnedSessionId?.slice(0, 8),
+          forked: shouldFork,
+          responseLength: response.length,
+        });
+
+        return { response, branchSessionId: returnedSessionId };
+      } catch (parseErr) {
+        // If JSON parsing fails, fall back to raw text output.
+        // This can happen if Claude outputs non-JSON (e.g., older CLI version).
+        if (parseErr instanceof SyntaxError) {
+          log.warn('Failed to parse JSON output, falling back to raw text', {
+            messageId: message.id.slice(0, 8),
+          });
+          return { response: trimmed, branchSessionId: null };
+        }
+        throw parseErr;
+      }
     } catch (err) {
       clearTimeout(timeoutId);
       throw err;

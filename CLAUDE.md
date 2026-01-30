@@ -630,10 +630,30 @@ cd apps/tapestry-observer && bun dev  # Real-time web dashboard
 - **Session discovery**: `decodeProjectPath()` fails for hyphenated directory names. Use `cwd` from `~/.claude/global-sessions.json` instead.
 - **`claude --resume` requires cwd**: The `claude --resume <session-id>` command must run from the session's original project directory, otherwise it fails silently.
 - **Heartbeat masks SSE death**: Heartbeat runs independently. A healthy heartbeat doesn't mean the SSE stream is alive. The daemon now checks `isConnected` every 5s.
+- **Auto-compaction drops headless turns**: When resuming a large session (200K+ context) headlessly, auto-compaction can silently drop recent small headless turns, causing memory loss between routed messages. Solution: fork a lightweight branch session.
+- **`--fork-session` creates branch sessions**: `claude --resume <id> --fork-session` creates a new session inheriting the parent's context but with its own transcript. Combined with `--output-format json`, the forked session ID is returned in the `session_id` field.
+- **`--output-format json` structured output**: Returns `{result, session_id, is_error, duration_ms, usage}` instead of raw text. Essential for programmatic CLI usage.
 
 **System Prompt Injection:**
 
 When routing messages to Claude sessions, the daemon injects COMMS context via `--append-system-prompt`. This tells Claude the message came from COMMS, who sent it, and that the response will be auto-routed back. See `message-router.ts:buildSystemPrompt()`.
+
+**Session Branching (Conversation Memory):**
+
+The `MessageRouter` uses session branching to maintain memory across message turns
+in a conversation thread (e.g., Discord threads). Without branching, each `claude --resume`
+call against the agent's main session (200K+ context) causes auto-compaction that silently
+drops recent headless turns.
+
+```
+Thread starts:  Discord msg → --resume <original> --fork-session → branch session created
+Follow-up:      Discord msg → --resume <branch>                  → memory preserved
+Follow-up:      Discord msg → --resume <branch>                  → memory preserved
+```
+
+Branch tracking is in-memory (`Map<threadId, branchSessionId>`) in `message-router.ts`.
+The `--output-format json` flag captures the `session_id` from each invocation to track
+whether a fork occurred. JSON parse failures fall back to raw text (SyntaxError guard).
 
 **Structured Logging:**
 

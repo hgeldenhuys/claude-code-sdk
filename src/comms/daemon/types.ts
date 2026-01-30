@@ -92,6 +92,11 @@ export interface MessageRouteSuccess {
   response: string;
   /** The original message that was routed */
   messageId: string;
+  /** The branch session ID used for this conversation thread.
+   *  On first message: the newly forked session ID.
+   *  On subsequent messages: the existing branch session ID.
+   *  Null if session branching couldn't be determined. */
+  branchSessionId?: string | null;
 }
 
 /**
