@@ -268,8 +268,9 @@ async function main(): Promise<number> {
     onMessageError: (result) => {
       console.error(`  ! Route failed for ${result.messageId.slice(0, 8)}: ${result.error}`);
     },
-    onSSEStatus: (connected) => {
-      console.log(`  ~ SSE: ${connected ? 'connected' : 'disconnected'}`);
+    onSSEStatus: (_connected) => {
+      // SSE flaps every ~11s (server timeout) -- suppress to reduce log noise.
+      // Periodic polling (10s) handles reliability; SSE is just a fast-path.
     },
     onError: (error) => {
       console.error(`  ! Error: ${error.message}`);
