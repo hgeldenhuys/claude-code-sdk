@@ -569,6 +569,15 @@ export class AgentDaemon {
     this.sseClient.onStatus((connected: boolean) => {
       this.callbacks.onSSEStatus?.(connected);
       log.info('SSE status changed', { connected });
+
+      // Poll for missed messages on every reconnect
+      if (connected) {
+        this.pollPendingMessages().catch((err) => {
+          log.warn('Pending message poll failed', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
     });
 
     this.sseClient.onError((error: Error) => {
@@ -599,10 +608,95 @@ export class AgentDaemon {
   }
 
   // --------------------------------------------------------------------------
+  // Polling Fallback (catches messages missed during SSE reconnect gaps)
+  // --------------------------------------------------------------------------
+
+  /** Set of message IDs already processed, to avoid double-handling */
+  private processedMessageIds = new Set<string>();
+
+  /**
+   * Poll SignalDB for pending messages targeted at this machine's agents.
+   * Called on every SSE reconnect to catch messages that arrived during the gap.
+   */
+  private async pollPendingMessages(): Promise<void> {
+    try {
+      const allMessages = await this.client.messages.list();
+
+      // Filter for pending messages targeted at this machine's agents
+      let polledCount = 0;
+      for (let i = 0; i < allMessages.length; i++) {
+        const msg = allMessages[i]!;
+
+        // Only process pending (unclaimed) messages
+        if (msg.status !== 'pending') continue;
+
+        // Skip already-processed messages
+        if (this.processedMessageIds.has(msg.id)) continue;
+
+        // Check if targeted at one of our agents
+        const targetAddr = msg.targetAddress ?? '';
+        let isForUs = false;
+        if (targetAddr.includes(this.config.machineId)) {
+          isForUs = true;
+        } else {
+          // Check if any of our session IDs are in the target
+          for (const [sessionId] of this.sessions) {
+            if (targetAddr.includes(sessionId)) {
+              isForUs = true;
+              break;
+            }
+          }
+          // Check agent IDs
+          if (!isForUs) {
+            for (const [, session] of this.sessions) {
+              if (session.agentId && targetAddr.includes(session.agentId)) {
+                isForUs = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (isForUs) {
+          polledCount++;
+          this.processedMessageIds.add(msg.id);
+          log.info('Polled pending message', {
+            messageId: msg.id.slice(0, 8),
+            senderId: msg.senderId.slice(0, 12),
+            type: msg.messageType,
+          });
+          this.handleIncomingMessage(msg);
+        }
+      }
+
+      if (polledCount > 0) {
+        log.info('Polled pending messages', { found: polledCount });
+      }
+
+      // Prune old processed IDs to prevent memory leak (keep last 500)
+      if (this.processedMessageIds.size > 500) {
+        const ids = Array.from(this.processedMessageIds);
+        this.processedMessageIds = new Set(ids.slice(ids.length - 250));
+      }
+    } catch (err) {
+      log.warn('Failed to poll pending messages', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  // --------------------------------------------------------------------------
   // Message Handling
   // --------------------------------------------------------------------------
 
   private handleIncomingMessage(message: Message): void {
+    // Deduplicate: SSE and polling can both deliver the same message
+    if (this.processedMessageIds.has(message.id)) {
+      log.debug('Skipping already-processed message', { messageId: message.id.slice(0, 8) });
+      return;
+    }
+    this.processedMessageIds.add(message.id);
+
     log.info('Received message', {
       messageId: message.id.slice(0, 8),
       type: message.messageType,
