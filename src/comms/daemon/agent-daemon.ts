@@ -16,6 +16,10 @@
 import type { SignalDBClient } from '../client/signaldb';
 import { AgentRegistry } from '../registry/agent-registry';
 import type { Message } from '../protocol/types';
+import { SecurityManager } from '../security/security-manager';
+import { SecurityMiddleware } from '../security/middleware';
+import { JWTManager } from '../security/jwt-manager';
+import { RLSFilter } from '../security/row-level-security';
 import { discoverSessions } from './session-discovery';
 import { SSEClient } from './sse-client';
 import { MessageRouter } from './message-router';
@@ -82,6 +86,21 @@ export class AgentDaemon {
   /** Timestamp when daemon was started */
   private startedAt: number = 0;
 
+  /** JWT manager for agent token creation and refresh */
+  private jwtManager: JWTManager | null = null;
+
+  /** Current JWT token (refreshed on heartbeat cycle) */
+  private currentToken: string | null = null;
+
+  /** SecurityManager facade (when security config is provided) */
+  private securityManager: SecurityManager | null = null;
+
+  /** Audit auto-flush cleanup function */
+  private auditFlushCleanup: (() => void) | null = null;
+
+  /** Client-side RLS filter for SSE messages */
+  private rlsFilter: RLSFilter | null = null;
+
   constructor(
     client: SignalDBClient,
     config: DaemonConfig,
@@ -90,8 +109,23 @@ export class AgentDaemon {
     this.client = client;
     this.config = config;
     this.registry = new AgentRegistry(client);
-    this.router = new MessageRouter(client);
     this.callbacks = callbacks ?? {};
+
+    // Initialize security if config is provided
+    if (config.security) {
+      this.securityManager = new SecurityManager(config.security, client);
+      this.jwtManager = this.securityManager.jwt;
+
+      // Create SecurityMiddleware and inject into MessageRouter
+      const middleware = new SecurityMiddleware(
+        this.securityManager,
+        config.machineId,
+        config.machineId,
+      );
+      this.router = new MessageRouter(client, middleware);
+    } else {
+      this.router = new MessageRouter(client);
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -114,6 +148,23 @@ export class AgentDaemon {
       // 1. Install signal handlers
       this.installSignalHandlers();
 
+      // 1b. Create JWT token on startup and attach to client headers
+      if (this.jwtManager) {
+        this.currentToken = this.jwtManager.createToken(
+          this.config.machineId,
+          this.config.machineId,
+          ['daemon', 'route', 'heartbeat'],
+        );
+        this.client.setHeader('X-Agent-Token', this.currentToken);
+        log.info('JWT token created and attached to client headers');
+      }
+
+      // 1c. Start audit auto-flush if security is enabled
+      if (this.securityManager) {
+        this.auditFlushCleanup = this.securityManager.startAuditAutoFlush();
+        log.debug('Audit auto-flush started');
+      }
+
       // 2. Discover local sessions
       const discovered = await discoverSessions(this.config.machineId);
 
@@ -128,6 +179,19 @@ export class AgentDaemon {
         const session = discovered[i]!;
         await this.registerSession(session);
       }
+
+      // 3b. Create RLS filter with initial session IDs
+      const sessionIds = new Set<string>();
+      for (const [sessionId] of this.sessions) {
+        sessionIds.add(sessionId);
+      }
+      this.rlsFilter = new RLSFilter(
+        this.config.machineId,
+        this.config.machineId,
+        new Set<string>(), // channel memberships populated dynamically
+        sessionIds,
+      );
+      log.info('RLS filter initialized', { sessionIds: sessionIds.size });
 
       // 4. Start heartbeat loops for all registered agents
       for (const [sessionId, session] of this.sessions) {
@@ -202,7 +266,17 @@ export class AgentDaemon {
     }
     this.sessions.clear();
 
-    // 5. Remove signal handlers
+    // 5. Cleanup security resources
+    if (this.auditFlushCleanup) {
+      this.auditFlushCleanup();
+      this.auditFlushCleanup = null;
+    }
+    if (this.securityManager) {
+      this.securityManager.shutdown();
+    }
+    this.currentToken = null;
+
+    // 6. Remove signal handlers
     this.removeSignalHandlers();
 
     this.setState('stopped');
@@ -236,6 +310,38 @@ export class AgentDaemon {
   getUptime(): number {
     if (this.startedAt === 0) return 0;
     return Date.now() - this.startedAt;
+  }
+
+  /**
+   * Get the current JWT token (for diagnostics/testing).
+   */
+  getCurrentToken(): string | null {
+    return this.currentToken;
+  }
+
+  /**
+   * Get the SecurityManager instance (for diagnostics/testing).
+   */
+  getSecurityManager(): SecurityManager | null {
+    return this.securityManager;
+  }
+
+  /**
+   * Get the RLS filter instance (for diagnostics/testing).
+   */
+  getRLSFilter(): RLSFilter | null {
+    return this.rlsFilter;
+  }
+
+  /**
+   * Update RLS channel memberships.
+   * Call when channel subscriptions change (join/leave).
+   */
+  updateChannelMemberships(channels: Set<string>): void {
+    if (this.rlsFilter) {
+      this.rlsFilter.updateMemberships(channels);
+      log.info('Updated RLS channel memberships', { count: channels.size });
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -280,16 +386,69 @@ export class AgentDaemon {
   // --------------------------------------------------------------------------
 
   private startHeartbeat(sessionId: string, agentId: string): void {
-    const cleanup = this.registry.startHeartbeatLoop(
+    const registryCleanup = this.registry.startHeartbeatLoop(
       agentId,
       this.config.heartbeatIntervalMs,
     );
+
+    // If JWT is enabled, add a parallel interval that refreshes the token
+    let jwtRefreshInterval: ReturnType<typeof setInterval> | null = null;
+    if (this.jwtManager && this.currentToken) {
+      jwtRefreshInterval = setInterval(() => {
+        this.refreshJWTToken();
+      }, this.config.heartbeatIntervalMs);
+    }
+
+    const cleanup = () => {
+      registryCleanup();
+      if (jwtRefreshInterval) {
+        clearInterval(jwtRefreshInterval);
+      }
+    };
 
     this.heartbeats.set(sessionId, cleanup);
     log.debug('Started heartbeat', {
       agentId: agentId.slice(0, 8),
       intervalMs: this.config.heartbeatIntervalMs,
+      jwtRefreshEnabled: this.jwtManager !== null,
     });
+  }
+
+  /**
+   * Attempt to refresh the JWT token. If the token is within the rotation
+   * window, a new token is issued and the client header is updated.
+   * If the token cannot be refreshed (not in rotation window), no action is taken.
+   * If the token is invalid/expired, a brand new token is created.
+   */
+  private refreshJWTToken(): void {
+    if (!this.jwtManager || !this.currentToken) {
+      return;
+    }
+
+    // Try to refresh within rotation window
+    const refreshed = this.jwtManager.refreshToken(this.currentToken);
+    if (refreshed) {
+      this.currentToken = refreshed;
+      this.client.setHeader('X-Agent-Token', refreshed);
+      log.debug('JWT token refreshed via rotation');
+      return;
+    }
+
+    // If refresh failed, check if token is still valid
+    const payload = this.jwtManager.validateToken(this.currentToken);
+    if (payload) {
+      // Token is still valid but not in rotation window yet -- no action needed
+      return;
+    }
+
+    // Token is expired or invalid -- create a brand new one
+    this.currentToken = this.jwtManager.createToken(
+      this.config.machineId,
+      this.config.machineId,
+      ['daemon', 'route', 'heartbeat'],
+    );
+    this.client.setHeader('X-Agent-Token', this.currentToken);
+    log.info('JWT token expired, created new token');
   }
 
   // --------------------------------------------------------------------------
@@ -353,6 +512,15 @@ export class AgentDaemon {
 
             this.sessions.delete(sessionId);
           }
+        }
+
+        // Keep RLS filter session IDs in sync
+        if (this.rlsFilter) {
+          const currentSessionIds = new Set<string>();
+          for (const [sid] of this.sessions) {
+            currentSessionIds.add(sid);
+          }
+          this.rlsFilter.updateSessionIds(currentSessionIds);
         }
       } catch (err) {
         log.warn('Discovery polling error', {
@@ -434,6 +602,16 @@ export class AgentDaemon {
       type: message.messageType,
       senderId: message.senderId.slice(0, 8),
     });
+
+    // Apply client-side RLS filter before any routing
+    if (this.rlsFilter && !this.rlsFilter.shouldDeliver(message)) {
+      log.info('RLS filter dropped message', {
+        messageId: message.id.slice(0, 8),
+        targetAddress: message.targetAddress?.slice(0, 20) || '(none)',
+        channelId: message.channelId?.slice(0, 8) || '(none)',
+      });
+      return;
+    }
 
     const deliveryMode = (message.metadata?.deliveryMode as string) || 'push';
 

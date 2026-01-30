@@ -99,6 +99,8 @@ export interface SignalDBClientConfig {
   apiUrl: string;
   /** Project API key for authentication */
   projectKey: string;
+  /** Optional extra headers to include in every request (e.g. X-Agent-Token) */
+  extraHeaders?: Record<string, string>;
 }
 
 // ============================================================================
@@ -124,6 +126,7 @@ export interface SignalDBClientConfig {
 export class SignalDBClient {
   private readonly apiUrl: string;
   private readonly projectKey: string;
+  private extraHeaders: Record<string, string>;
 
   /** Agent CRUD operations */
   readonly agents: AgentOperations;
@@ -137,11 +140,27 @@ export class SignalDBClient {
   constructor(config: SignalDBClientConfig) {
     this.apiUrl = config.apiUrl.replace(/\/+$/, '');
     this.projectKey = config.projectKey;
+    this.extraHeaders = config.extraHeaders ? { ...config.extraHeaders } : {};
 
     this.agents = new AgentOperations(this);
     this.channels = new ChannelOperations(this);
     this.messages = new MessageOperations(this);
     this.pastes = new PasteOperations(this);
+  }
+
+  /**
+   * Set an extra header to include in all subsequent requests.
+   * Use this for JWT token attachment and refresh.
+   */
+  setHeader(name: string, value: string): void {
+    this.extraHeaders[name] = value;
+  }
+
+  /**
+   * Remove an extra header.
+   */
+  removeHeader(name: string): void {
+    delete this.extraHeaders[name];
   }
 
   /**
@@ -172,6 +191,7 @@ export class SignalDBClient {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.projectKey}`,
       'Content-Type': 'application/json',
+      ...this.extraHeaders,
     };
 
     const init: RequestInit = { method, headers };

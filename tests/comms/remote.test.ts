@@ -40,7 +40,7 @@ describe('DeployTemplate', () => {
 
   test('builds command with defaults', () => {
     const cmd = template.buildCommand({ app: 'my-api' });
-    expect(cmd).toBe('cd /app && git pull origin main && bun install && bun run build && pm2 restart my-api');
+    expect(cmd).toBe('cd . && git pull origin main && bun install && bun run build && pm2 restart my-api');
   });
 
   test('builds command with custom parameters', () => {
@@ -151,7 +151,7 @@ describe('ConfigTemplate', () => {
   test('rejects shell injection in keys', () => {
     expect(() => template.validateParams({
       envVars: { 'KEY;rm -rf /': 'value' },
-    })).toThrow('shell injection characters');
+    })).toThrow('must be alphanumeric with underscores');
   });
 
   test('rejects shell injection in values', () => {
@@ -169,7 +169,7 @@ describe('ConfigTemplate', () => {
   test('rejects ampersand in keys', () => {
     expect(() => template.validateParams({
       envVars: { 'KEY&echo bad': 'value' },
-    })).toThrow('shell injection characters');
+    })).toThrow('must be alphanumeric with underscores');
   });
 
   test('rejects backtick in values', () => {
@@ -203,7 +203,9 @@ describe('DiagnosticTemplate', () => {
 
   test('builds memory check command', () => {
     const cmd = template.buildCommand({ checks: ['memory'] });
-    expect(cmd).toBe('free -m');
+    // Platform-specific: macOS uses vm_stat, Linux uses free -m
+    const expected = process.platform === 'darwin' ? 'vm_stat' : 'free -m';
+    expect(cmd).toBe(expected);
   });
 
   test('builds processes check command', () => {
@@ -230,7 +232,8 @@ describe('DiagnosticTemplate', () => {
     const cmd = template.buildCommand({
       checks: ['disk', 'memory'],
     });
-    expect(cmd).toBe('df -h && free -m');
+    const memCmd = process.platform === 'darwin' ? 'vm_stat' : 'free -m';
+    expect(cmd).toBe(`df -h && ${memCmd}`);
   });
 
   test('validates requires checks', () => {
@@ -264,9 +267,9 @@ describe('RestartTemplate', () => {
     expect(cmd).toBe('pm2 restart my-api');
   });
 
-  test('builds systemd restart command', () => {
-    const cmd = template.buildCommand({ app: 'my-api', manager: 'systemd' });
-    expect(cmd).toBe('systemctl restart my-api');
+  test('builds launchd restart command', () => {
+    const cmd = template.buildCommand({ app: 'my-api', manager: 'launchd' });
+    expect(cmd).toBe('launchctl kickstart -k system/my-api');
   });
 
   test('validates requires app', () => {
@@ -277,11 +280,11 @@ describe('RestartTemplate', () => {
     expect(() => template.validateParams({ app: 'my-api' })).toThrow('"manager" parameter is required');
   });
 
-  test('validates manager must be pm2 or systemd', () => {
+  test('validates manager must be pm2 or launchd', () => {
     expect(() => template.validateParams({
       app: 'my-api',
       manager: 'docker',
-    })).toThrow('"manager" parameter is required and must be "pm2" or "systemd"');
+    })).toThrow('"manager" parameter is required and must be "pm2" or "launchd"');
   });
 });
 
@@ -662,9 +665,9 @@ describe('DeployTemplate (extended)', () => {
     expect(cmd).toContain('git pull origin main');
   });
 
-  test('uses default deployDir /app when not specified', () => {
+  test('uses default deployDir "." when not specified', () => {
     const cmd = template.buildCommand({ app: 'svc' });
-    expect(cmd).toContain('cd /app');
+    expect(cmd).toContain('cd .');
   });
 
   test('uses default buildCmd bun install && bun run build', () => {
@@ -674,7 +677,7 @@ describe('DeployTemplate (extended)', () => {
 
   test('overrides only branch, keeps other defaults', () => {
     const cmd = template.buildCommand({ app: 'svc', branch: 'develop' });
-    expect(cmd).toContain('cd /app');
+    expect(cmd).toContain('cd .');
     expect(cmd).toContain('git pull origin develop');
     expect(cmd).toContain('bun install && bun run build');
     expect(cmd).toContain('pm2 restart svc');
@@ -688,7 +691,7 @@ describe('DeployTemplate (extended)', () => {
 
   test('overrides only buildCmd, keeps other defaults', () => {
     const cmd = template.buildCommand({ app: 'svc', buildCmd: 'make all' });
-    expect(cmd).toContain('cd /app');
+    expect(cmd).toContain('cd .');
     expect(cmd).toContain('make all');
     expect(cmd).not.toContain('bun install');
   });
@@ -792,7 +795,7 @@ describe('ConfigTemplate (extended shell injection)', () => {
   test('rejects ${ in key', () => {
     expect(() => template.validateParams({
       envVars: { '${PATH}': 'value' },
-    })).toThrow('shell injection characters');
+    })).toThrow('must be alphanumeric with underscores');
   });
 
   test('rejects ${ in value', () => {
@@ -804,7 +807,7 @@ describe('ConfigTemplate (extended shell injection)', () => {
   test('rejects $( in key', () => {
     expect(() => template.validateParams({
       envVars: { '$(id)': 'value' },
-    })).toThrow('shell injection characters');
+    })).toThrow('must be alphanumeric with underscores');
   });
 
   test('rejects semicolon in value', () => {
@@ -822,13 +825,13 @@ describe('ConfigTemplate (extended shell injection)', () => {
   test('rejects pipe in key', () => {
     expect(() => template.validateParams({
       envVars: { 'KEY|tee': 'value' },
-    })).toThrow('shell injection characters');
+    })).toThrow('must be alphanumeric with underscores');
   });
 
   test('rejects backtick in key', () => {
     expect(() => template.validateParams({
       envVars: { '`id`': 'value' },
-    })).toThrow('shell injection characters');
+    })).toThrow('must be alphanumeric with underscores');
   });
 
   test('accepts safe special characters in values (dash, underscore, dot, slash, colon)', () => {
@@ -889,7 +892,9 @@ describe('DiagnosticTemplate (extended)', () => {
       checks: ['disk', 'memory', 'processes', 'storage'],
     });
     expect(cmd).toContain('df -h');
-    expect(cmd).toContain('free -m');
+    // Platform-specific: macOS uses vm_stat, Linux uses free -m
+    const memCmd = process.platform === 'darwin' ? 'vm_stat' : 'free -m';
+    expect(cmd).toContain(memCmd);
     expect(cmd).toContain('ps aux');
     expect(cmd).toContain('du -sh');
   });
@@ -925,7 +930,12 @@ describe('DiagnosticTemplate (extended)', () => {
 
   test('processes check sorts by memory', () => {
     const cmd = template.buildCommand({ checks: ['processes'] });
-    expect(cmd).toContain('--sort=-%mem');
+    // Platform-specific: macOS uses -m flag, Linux uses --sort=-%mem
+    if (process.platform === 'darwin') {
+      expect(cmd).toContain('ps aux -m');
+    } else {
+      expect(cmd).toContain('--sort=-%mem');
+    }
   });
 
   test('validates multiple invalid checks', () => {
@@ -955,7 +965,8 @@ describe('DiagnosticTemplate (extended)', () => {
     const parts = cmd.split(' && ');
     expect(parts.length).toBe(3);
     expect(parts[0]).toBe('df -h');
-    expect(parts[1]).toBe('free -m');
+    const memCmd = process.platform === 'darwin' ? 'vm_stat' : 'free -m';
+    expect(parts[1]).toBe(memCmd);
     expect(parts[2]).toContain('ps aux');
   });
 });
@@ -1000,9 +1011,9 @@ describe('RestartTemplate (extended)', () => {
     expect(cmd).toBe('pm2 restart worker-process');
   });
 
-  test('builds correct systemd command with different app name', () => {
-    const cmd = template.buildCommand({ app: 'nginx', manager: 'systemd' });
-    expect(cmd).toBe('systemctl restart nginx');
+  test('builds correct launchd command with different app name', () => {
+    const cmd = template.buildCommand({ app: 'nginx', manager: 'launchd' });
+    expect(cmd).toBe('launchctl kickstart -k system/nginx');
   });
 });
 

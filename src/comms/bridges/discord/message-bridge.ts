@@ -3,6 +3,14 @@
  *
  * Bidirectional message routing between Discord and SignalDB.
  * Handles rate limiting, formatting, and thread mapping.
+ *
+ * Uses two maps for efficient bidirectional channel lookup:
+ *   - discordToMapping: Discord channel ID -> DiscordChannelMapping
+ *   - signalDBToDiscord: SignalDB channel ID -> Discord channel ID
+ *
+ * Flow:
+ *   Discord -> SignalDB: rate limit check, format, thread map, publish
+ *   SignalDB -> Discord: skip echo, format, thread map/create, post
  */
 
 import type { ChannelClient } from '../../channels/channel-client';
@@ -35,6 +43,10 @@ const DISCORD_API_BASE = 'https://discord.com/api/v10';
  * - Discord -> SignalDB: Rate limit, format, map thread, publish
  * - SignalDB -> Discord: Format, map thread, post to Discord
  *
+ * Maintains bidirectional maps for efficient lookup in both directions:
+ *   - discordToMapping: Discord channel ID -> mapping (for Discord->SignalDB)
+ *   - signalDBToDiscord: SignalDB channel ID -> Discord channel ID (for SignalDB->Discord)
+ *
  * @example
  * ```typescript
  * const bridge = new MessageBridge(
@@ -47,11 +59,11 @@ const DISCORD_API_BASE = 'https://discord.com/api/v10';
  *   channelMappings,
  * );
  *
- * await bridge.start();
+ * bridge.start();
  *
  * // Bridge automatically routes messages in both directions
  *
- * await bridge.stop();
+ * bridge.stop();
  * ```
  */
 export class MessageBridge {
@@ -61,7 +73,12 @@ export class MessageBridge {
   private readonly threadMapper: ThreadMapper;
   private readonly formatter: MessageFormatter;
   private readonly rateLimiter: DiscordRateLimiter;
-  private readonly channelMappings: Map<string, DiscordChannelMapping>;
+
+  /** Discord channel ID -> full mapping object (for Discord->SignalDB lookup) */
+  private readonly discordToMapping: Map<string, DiscordChannelMapping>;
+
+  /** SignalDB channel ID -> Discord channel ID (for SignalDB->Discord reverse lookup) */
+  private readonly signalDBToDiscord: Map<string, string>;
 
   private isRunning = false;
   private messagesFromDiscord = 0;
@@ -83,12 +100,14 @@ export class MessageBridge {
     this.formatter = formatter;
     this.rateLimiter = rateLimiter;
 
-    // Index channel mappings by Discord channel ID
-    this.channelMappings = new Map();
+    // Initialize bidirectional channel maps
+    this.discordToMapping = new Map();
+    this.signalDBToDiscord = new Map();
+
     if (channelMappings) {
       for (let i = 0; i < channelMappings.length; i++) {
         const mapping = channelMappings[i]!;
-        this.channelMappings.set(mapping.discordChannelId, mapping);
+        this.indexMapping(mapping);
       }
     }
   }
@@ -138,29 +157,28 @@ export class MessageBridge {
     // Check rate limit
     const limitResult = this.rateLimiter.checkLimit(message.author.id);
     if (!limitResult.allowed) {
-      // Could send ephemeral rate limit warning
+      // Silently drop rate-limited messages
       return;
     }
 
     // Record the message for rate limiting
     this.rateLimiter.recordMessage(message.author.id);
 
-    // Find channel mapping
+    // Find channel mapping -- check thread parent first, then direct channel
     const channelId = message.thread?.parent_id || message.channel_id;
-    const mapping = this.channelMappings.get(channelId);
+    const mapping = this.discordToMapping.get(channelId);
 
-    // Determine SignalDB channel
-    let signalDBChannelId: string;
-    if (mapping) {
-      // Check if direction allows Discord -> SignalDB
-      if (mapping.direction === 'signaldb-to-discord') {
-        return; // Not allowed in this direction
-      }
-      signalDBChannelId = mapping.signalDBChannelId;
-    } else {
-      // No mapping, use default channel or skip
+    if (!mapping) {
+      // No mapping for this Discord channel
       return;
     }
+
+    // Check if direction allows Discord -> SignalDB
+    if (mapping.direction === 'signaldb-to-discord') {
+      return;
+    }
+
+    const signalDBChannelId = mapping.signalDBChannelId;
 
     // Format message for SignalDB
     const content = this.formatter.formatForSignalDB(message);
@@ -200,25 +218,22 @@ export class MessageBridge {
   async handleSignalDBMessage(message: Message): Promise<void> {
     if (!this.isRunning) return;
 
-    // Skip messages that originated from Discord
+    // Skip messages that originated from Discord (echo prevention)
     if (message.metadata?.source === 'discord') {
       return;
     }
 
-    // Find reverse channel mapping (SignalDB -> Discord)
-    let discordChannelId: string | null = null;
-    for (const [discordId, mapping] of this.channelMappings) {
-      if (
-        mapping.signalDBChannelId === message.channelId &&
-        mapping.direction !== 'discord-to-signaldb'
-      ) {
-        discordChannelId = discordId;
-        break;
-      }
-    }
+    // Find reverse channel mapping using the bidirectional map (O(1) lookup)
+    const discordChannelId = this.signalDBToDiscord.get(message.channelId);
 
     if (!discordChannelId) {
       // No mapping for this SignalDB channel
+      return;
+    }
+
+    // Verify direction allows SignalDB -> Discord
+    const mapping = this.discordToMapping.get(discordChannelId);
+    if (mapping && mapping.direction === 'discord-to-signaldb') {
       return;
     }
 
@@ -230,10 +245,10 @@ export class MessageBridge {
 
     if (message.threadId) {
       // Check if we have a Discord thread for this SignalDB thread
-      const discordThreadId = this.threadMapper.mapSignalDBToDiscord(message.threadId);
+      const existingThreadId = this.threadMapper.mapSignalDBToDiscord(message.threadId);
 
-      if (discordThreadId) {
-        targetChannelId = discordThreadId;
+      if (existingThreadId) {
+        targetChannelId = existingThreadId;
       } else {
         // Create a new Discord thread for this conversation
         try {
@@ -261,21 +276,25 @@ export class MessageBridge {
   }
 
   /**
-   * Add a channel mapping.
+   * Add a channel mapping (updates both bidirectional maps).
    *
    * @param mapping - Channel mapping configuration
    */
   addChannelMapping(mapping: DiscordChannelMapping): void {
-    this.channelMappings.set(mapping.discordChannelId, mapping);
+    this.indexMapping(mapping);
   }
 
   /**
-   * Remove a channel mapping.
+   * Remove a channel mapping (cleans up both bidirectional maps).
    *
    * @param discordChannelId - Discord channel ID to remove
    */
   removeChannelMapping(discordChannelId: string): void {
-    this.channelMappings.delete(discordChannelId);
+    const existing = this.discordToMapping.get(discordChannelId);
+    if (existing) {
+      this.signalDBToDiscord.delete(existing.signalDBChannelId);
+    }
+    this.discordToMapping.delete(discordChannelId);
   }
 
   /**
@@ -285,17 +304,31 @@ export class MessageBridge {
     messagesFromDiscord: number;
     messagesFromSignalDB: number;
     channelMappings: number;
+    threadMappings: number;
   } {
     return {
       messagesFromDiscord: this.messagesFromDiscord,
       messagesFromSignalDB: this.messagesFromSignalDB,
-      channelMappings: this.channelMappings.size,
+      channelMappings: this.discordToMapping.size,
+      threadMappings: this.threadMapper.getMappingCount(),
     };
   }
 
   // ==========================================================================
   // Private Helpers
   // ==========================================================================
+
+  /**
+   * Index a channel mapping in both bidirectional maps.
+   */
+  private indexMapping(mapping: DiscordChannelMapping): void {
+    this.discordToMapping.set(mapping.discordChannelId, mapping);
+
+    // Only index reverse mapping if direction allows SignalDB -> Discord
+    if (mapping.direction !== 'discord-to-signaldb') {
+      this.signalDBToDiscord.set(mapping.signalDBChannelId, mapping.discordChannelId);
+    }
+  }
 
   /**
    * Post a message to a Discord channel via REST API.

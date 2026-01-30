@@ -51,7 +51,7 @@ export { createDefaultSecurityConfig } from './types';
 export { DirectoryGuard } from './directory-guard';
 export { ToolPolicyEngine } from './tool-policy';
 export { AuditLogger } from './audit-logger';
-export { RLSPolicyGenerator } from './row-level-security';
+export { RLSPolicyGenerator, RLSFilter } from './row-level-security';
 export { JWTManager } from './jwt-manager';
 export { RateLimiter } from './rate-limiter';
 export { MessageValidator } from './message-validator';

@@ -15,12 +15,17 @@ import type { CommandTemplate } from './types';
 // Types
 export type {
   CommandTemplate,
+  StepResult,
+  StructuredCommandResult,
   DeployParams,
   StatusParams,
   ConfigParams,
   DiagnosticParams,
   RestartParams,
 } from './types';
+
+// Utilities
+export { runStep, INJECTION_CHARS } from './types';
 
 // Template classes
 export { DeployTemplate } from './deploy';

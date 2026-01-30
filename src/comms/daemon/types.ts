@@ -6,6 +6,7 @@
  */
 
 import type { Agent, Message } from '../protocol/types';
+import type { SecurityConfig } from '../security/types';
 
 // ============================================================================
 // Configuration
@@ -25,6 +26,8 @@ export interface DaemonConfig {
   heartbeatIntervalMs: number;
   /** SSE connection configuration */
   sse: SSEConfig;
+  /** Optional security configuration (enables JWT, rate limiting, etc.) */
+  security?: SecurityConfig;
 }
 
 /**

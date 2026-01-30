@@ -1,10 +1,23 @@
 /**
- * Row-Level Security Policy Generator
+ * Row-Level Security
  *
- * Generates PostgreSQL RLS policies for the SignalDB schema.
- * Enforces that agents can only read messages addressed to them
- * and cannot modify other agents' records.
+ * Two complementary RLS mechanisms:
+ *
+ * 1. **RLSPolicyGenerator** - Generates PostgreSQL RLS policies for the
+ *    SignalDB schema. Enforces server-side that agents can only read
+ *    messages addressed to them and cannot modify other agents' records.
+ *
+ * 2. **RLSFilter** - Client-side message filter applied in the agent
+ *    daemon before routing. Enforces that SSE-delivered messages are
+ *    only forwarded to sessions that should receive them:
+ *    - Direct messages: only if targetAddress matches this agent/session/machine
+ *    - Channel messages: only if the agent is a member of the channel
+ *    - Broadcast messages: always delivered
+ *    - No target: dropped (unknown routing = reject)
  */
+
+import type { Message } from '../protocol/types';
+import { createLogger } from '../daemon/logger';
 
 // ============================================================================
 // RLS Policy Generator
@@ -188,5 +201,181 @@ CREATE POLICY paste_insert ON pastes
     ];
 
     return sections.join('\n');
+  }
+}
+
+// ============================================================================
+// Client-Side RLS Filter
+// ============================================================================
+
+const rlsLog = createLogger('rls-filter');
+
+/**
+ * Client-side Row-Level Security filter for SSE messages.
+ *
+ * Applied in the agent daemon BEFORE routing to ensure that only
+ * messages intended for this agent/session/machine are delivered.
+ *
+ * Filter rules:
+ * - **Direct messages**: deliver only if targetAddress matches agentId,
+ *   any registered sessionId, or machineId
+ * - **Channel messages**: deliver only if channelId is in channelMemberships
+ * - **Broadcast messages**: always deliver (metadata.deliveryMode === 'broadcast')
+ * - **No target**: drop (unknown routing = reject)
+ *
+ * @example
+ * ```typescript
+ * const filter = new RLSFilter('agent-001', 'machine-001', new Set(['ch-general']));
+ *
+ * if (filter.shouldDeliver(message)) {
+ *   router.route(message, sessions);
+ * }
+ * ```
+ */
+export class RLSFilter {
+  private readonly agentId: string;
+  private readonly machineId: string;
+  private channelMemberships: Set<string>;
+  private sessionIds: Set<string>;
+
+  constructor(
+    agentId: string,
+    machineId: string,
+    channelMemberships: Set<string> = new Set(),
+    sessionIds: Set<string> = new Set(),
+  ) {
+    this.agentId = agentId;
+    this.machineId = machineId;
+    this.channelMemberships = new Set(channelMemberships);
+    this.sessionIds = new Set(sessionIds);
+  }
+
+  // ==========================================================================
+  // Public API
+  // ==========================================================================
+
+  /**
+   * Determine whether a message should be delivered to this agent.
+   *
+   * @param message - The incoming SSE message
+   * @returns true if the message should be delivered, false to drop
+   */
+  shouldDeliver(message: Message): boolean {
+    const deliveryMode = (message.metadata?.deliveryMode as string) || '';
+
+    // Rule (c): Broadcast messages are always delivered
+    if (deliveryMode === 'broadcast') {
+      rlsLog.debug('RLS pass: broadcast', { messageId: message.id.slice(0, 8) });
+      return true;
+    }
+
+    // Rule (b): Channel messages - deliver if agent is a member
+    if (message.channelId && !message.targetAddress) {
+      const isMember = this.channelMemberships.has(message.channelId);
+      if (isMember) {
+        rlsLog.debug('RLS pass: channel member', {
+          messageId: message.id.slice(0, 8),
+          channelId: message.channelId.slice(0, 8),
+        });
+      } else {
+        rlsLog.debug('RLS drop: not channel member', {
+          messageId: message.id.slice(0, 8),
+          channelId: message.channelId.slice(0, 8),
+        });
+      }
+      return isMember;
+    }
+
+    // Rule (a): Direct messages - deliver if targetAddress matches
+    if (message.targetAddress) {
+      const matches = this.matchesTarget(message.targetAddress);
+      if (matches) {
+        rlsLog.debug('RLS pass: direct target match', {
+          messageId: message.id.slice(0, 8),
+          targetAddress: message.targetAddress.slice(0, 20),
+        });
+      } else {
+        rlsLog.debug('RLS drop: target mismatch', {
+          messageId: message.id.slice(0, 8),
+          targetAddress: message.targetAddress.slice(0, 20),
+        });
+      }
+      return matches;
+    }
+
+    // Rule (d): No target and not broadcast - drop
+    rlsLog.debug('RLS drop: no target, not broadcast', {
+      messageId: message.id.slice(0, 8),
+    });
+    return false;
+  }
+
+  /**
+   * Update the set of channels this agent is a member of.
+   * Called when channel subscriptions change dynamically.
+   *
+   * @param channels - Updated set of channel IDs
+   */
+  updateMemberships(channels: Set<string>): void {
+    this.channelMemberships = new Set(channels);
+    rlsLog.debug('Channel memberships updated', {
+      count: this.channelMemberships.size,
+    });
+  }
+
+  /**
+   * Update the set of session IDs this agent represents.
+   * Called when new sessions are discovered or stale ones removed.
+   *
+   * @param sessions - Updated set of session IDs
+   */
+  updateSessionIds(sessions: Set<string>): void {
+    this.sessionIds = new Set(sessions);
+    rlsLog.debug('Session IDs updated', {
+      count: this.sessionIds.size,
+    });
+  }
+
+  /**
+   * Get the current channel memberships (for diagnostics).
+   */
+  getMemberships(): Set<string> {
+    return new Set(this.channelMemberships);
+  }
+
+  /**
+   * Get the current session IDs (for diagnostics).
+   */
+  getSessionIds(): Set<string> {
+    return new Set(this.sessionIds);
+  }
+
+  // ==========================================================================
+  // Private Helpers
+  // ==========================================================================
+
+  /**
+   * Check if a target address matches this agent's identity.
+   * Matches against agentId, any registered sessionId, or machineId.
+   */
+  private matchesTarget(targetAddress: string): boolean {
+    // Match against agent ID
+    if (targetAddress.includes(this.agentId)) {
+      return true;
+    }
+
+    // Match against machine ID
+    if (targetAddress.includes(this.machineId)) {
+      return true;
+    }
+
+    // Match against any registered session ID
+    for (const sessionId of this.sessionIds) {
+      if (targetAddress.includes(sessionId)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

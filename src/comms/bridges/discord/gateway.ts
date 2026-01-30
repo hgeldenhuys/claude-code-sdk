@@ -1,8 +1,24 @@
 /**
  * Discord Gateway Client
  *
- * WebSocket client for Discord Gateway API with auto-reconnection.
+ * WebSocket client for Discord Gateway API v10 with auto-reconnection.
  * Also manages SignalDB SSE connection for bidirectional bridging.
+ *
+ * Protocol flow:
+ *   1. Connect to wss://gateway.discord.gg/?v=10&encoding=json
+ *   2. Receive HELLO (op 10) with heartbeat_interval
+ *   3. Send initial heartbeat after jitter delay (random * heartbeat_interval)
+ *   4. Send IDENTIFY (op 2) with token, intents, and client properties
+ *   5. Receive READY (op 0, t=READY) with session_id and resume_gateway_url
+ *   6. Maintain heartbeat loop at heartbeat_interval
+ *   7. Track heartbeat ACK (op 11) for zombie connection detection
+ *
+ * Reconnection:
+ *   - Exponential backoff: 1s -> 2s -> 4s -> 8s -> 16s -> 30s (max)
+ *   - Jitter added to backoff to prevent thundering herd
+ *   - On RECONNECT (op 7): close and reconnect using resume_gateway_url
+ *   - On INVALID_SESSION (op 9): clear session, full re-identify
+ *   - Resume with session_id and last sequence if available
  */
 
 import { SSEClient } from '../../daemon/sse-client';
@@ -28,14 +44,29 @@ import { DiscordGatewayOpcode, DiscordIntent } from './types';
 /** Discord Gateway URL (v10) */
 const DISCORD_GATEWAY_URL = 'wss://gateway.discord.gg/?v=10&encoding=json';
 
-/** Initial reconnect delay */
+/** Initial reconnect delay in milliseconds */
 const RECONNECT_BASE_MS = 1000;
 
-/** Maximum reconnect delay */
+/** Maximum reconnect delay in milliseconds */
 const RECONNECT_MAX_MS = 30000;
 
-/** Reconnect delay multiplier */
+/** Reconnect delay multiplier for exponential backoff */
 const RECONNECT_MULTIPLIER = 2;
+
+/** Maximum jitter fraction added to backoff delay (0-1) */
+const RECONNECT_JITTER_FRACTION = 0.5;
+
+/** Number of missed heartbeat ACKs before considering connection zombie */
+const MAX_MISSED_HEARTBEAT_ACKS = 2;
+
+/** Close codes that indicate we should NOT resume (need fresh IDENTIFY) */
+const NON_RESUMABLE_CLOSE_CODES = new Set([
+  4004, // Authentication failed
+  4010, // Invalid shard
+  4011, // Sharding required
+  4013, // Invalid intents
+  4014, // Disallowed intents
+]);
 
 // ============================================================================
 // Discord Gateway
@@ -46,9 +77,10 @@ const RECONNECT_MULTIPLIER = 2;
  *
  * Handles:
  * - Discord WebSocket connection with HELLO -> IDENTIFY -> READY flow
- * - Heartbeat loop with proper interval
+ * - Heartbeat loop with jitter and ACK tracking for zombie detection
+ * - Session resume when reconnecting with valid session
  * - SignalDB SSE subscription for outbound messages
- * - Auto-reconnection with exponential backoff
+ * - Auto-reconnection with exponential backoff (1s -> 30s max)
  *
  * @example
  * ```typescript
@@ -70,13 +102,23 @@ export class DiscordGateway {
 
   // Discord WebSocket state
   private ws: WebSocket | null = null;
-  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private lastSequence: number | null = null;
   private sessionId: string | null = null;
   private resumeGatewayUrl: string | null = null;
   private discordConnected = false;
   private shouldReconnect = true;
   private currentBackoffMs = RECONNECT_BASE_MS;
+
+  // Heartbeat ACK tracking for zombie detection
+  private heartbeatAckReceived = true;
+  private missedHeartbeatAcks = 0;
+  private lastHeartbeatSentAt = 0;
+  private lastHeartbeatAckAt = 0;
+
+  // Connection uptime tracking
+  private connectedSinceMs = 0;
+  private reconnectCount = 0;
 
   // SignalDB SSE state
   private sseClient: SSEClient | null = null;
@@ -101,7 +143,7 @@ export class DiscordGateway {
 
   /**
    * Connect to both Discord Gateway and SignalDB SSE.
-   * Returns when both connections are established.
+   * Returns when both connections are established (READY received).
    */
   async connect(): Promise<void> {
     this.shouldReconnect = true;
@@ -114,16 +156,13 @@ export class DiscordGateway {
   }
 
   /**
-   * Disconnect from both Discord and SignalDB.
+   * Disconnect from both Discord and SignalDB gracefully.
    */
   disconnect(): void {
     this.shouldReconnect = false;
 
     // Disconnect Discord
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
+    this.clearHeartbeat();
 
     if (this.ws) {
       this.ws.close(1000, 'Graceful shutdown');
@@ -149,6 +188,31 @@ export class DiscordGateway {
     return {
       discord: this.discordConnected,
       signaldb: this.signalDBConnected,
+    };
+  }
+
+  /**
+   * Get detailed health status for diagnostics.
+   */
+  getHealthStatus(): {
+    discord: boolean;
+    signaldb: boolean;
+    sessionId: string | null;
+    lastHeartbeatSentAt: number;
+    lastHeartbeatAckAt: number;
+    missedHeartbeatAcks: number;
+    reconnectCount: number;
+    uptimeMs: number;
+  } {
+    return {
+      discord: this.discordConnected,
+      signaldb: this.signalDBConnected,
+      sessionId: this.sessionId,
+      lastHeartbeatSentAt: this.lastHeartbeatSentAt,
+      lastHeartbeatAckAt: this.lastHeartbeatAckAt,
+      missedHeartbeatAcks: this.missedHeartbeatAcks,
+      reconnectCount: this.reconnectCount,
+      uptimeMs: this.connectedSinceMs > 0 ? Date.now() - this.connectedSinceMs : 0,
     };
   }
 
@@ -211,7 +275,10 @@ export class DiscordGateway {
 
   private async connectDiscord(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const url = this.resumeGatewayUrl || DISCORD_GATEWAY_URL;
+      // Use resume URL if we have a valid session, otherwise fresh connect
+      const url = (this.sessionId && this.resumeGatewayUrl)
+        ? `${this.resumeGatewayUrl}/?v=10&encoding=json`
+        : DISCORD_GATEWAY_URL;
       this.ws = new WebSocket(url);
 
       let resolved = false;
@@ -225,8 +292,8 @@ export class DiscordGateway {
           const payload = JSON.parse(event.data as string) as DiscordGatewayPayload;
           this.handleGatewayPayload(payload);
 
-          // Resolve on READY
-          if (payload.t === 'READY' && !resolved) {
+          // Resolve on READY or RESUMED
+          if ((payload.t === 'READY' || payload.t === 'RESUMED') && !resolved) {
             resolved = true;
             resolve();
           }
@@ -247,10 +314,13 @@ export class DiscordGateway {
       this.ws.onclose = (event) => {
         this.discordConnected = false;
         this.emitStatus();
+        this.clearHeartbeat();
 
-        if (this.heartbeatInterval) {
-          clearInterval(this.heartbeatInterval);
-          this.heartbeatInterval = null;
+        // Check if close code is non-resumable (clear session state)
+        if (NON_RESUMABLE_CLOSE_CODES.has(event.code)) {
+          this.sessionId = null;
+          this.resumeGatewayUrl = null;
+          this.lastSequence = null;
         }
 
         // Reconnect if appropriate
@@ -267,7 +337,7 @@ export class DiscordGateway {
   }
 
   private handleGatewayPayload(payload: DiscordGatewayPayload): void {
-    // Track sequence number
+    // Track sequence number for heartbeat and resume
     if (payload.s !== null) {
       this.lastSequence = payload.s;
     }
@@ -277,23 +347,45 @@ export class DiscordGateway {
         this.handleHello(payload.d as DiscordHelloData);
         break;
 
+      case DiscordGatewayOpcode.Heartbeat:
+        // Discord can request an immediate heartbeat (op 1 as request)
+        this.sendHeartbeat();
+        break;
+
       case DiscordGatewayOpcode.HeartbeatACK:
-        // Heartbeat acknowledged, connection is healthy
+        // Heartbeat acknowledged -- connection is healthy
+        this.heartbeatAckReceived = true;
+        this.missedHeartbeatAcks = 0;
+        this.lastHeartbeatAckAt = Date.now();
         break;
 
       case DiscordGatewayOpcode.Reconnect:
-        // Discord requests reconnect
-        this.ws?.close(4000, 'Reconnect requested');
+        // Discord requests reconnect -- close and let reconnect logic handle
+        this.ws?.close(4000, 'Reconnect requested by Discord');
         break;
 
-      case DiscordGatewayOpcode.InvalidSession:
-        // Session invalid, need to re-identify
-        this.sessionId = null;
-        this.resumeGatewayUrl = null;
+      case DiscordGatewayOpcode.InvalidSession: {
+        // d is boolean: true = resumable, false = not resumable
+        const resumable = payload.d as boolean;
+        if (!resumable) {
+          this.sessionId = null;
+          this.resumeGatewayUrl = null;
+          this.lastSequence = null;
+        }
+        // Wait 1-5s before reconnecting per Discord docs
+        const delay = 1000 + Math.random() * 4000;
         if (this.shouldReconnect) {
-          this.scheduleDiscordReconnect();
+          this.ws?.close(4000, 'Invalid session');
+          setTimeout(() => {
+            if (this.shouldReconnect) {
+              this.connectDiscord().catch(() => {
+                // Will retry via scheduleDiscordReconnect
+              });
+            }
+          }, delay);
         }
         break;
+      }
 
       case DiscordGatewayOpcode.Dispatch:
         this.handleDispatch(payload.t!, payload.d);
@@ -302,23 +394,52 @@ export class DiscordGateway {
   }
 
   private handleHello(data: DiscordHelloData): void {
-    // Start heartbeat loop
     const interval = data.heartbeat_interval;
-    this.heartbeatInterval = setInterval(() => {
+
+    // Reset heartbeat ACK tracking
+    this.heartbeatAckReceived = true;
+    this.missedHeartbeatAcks = 0;
+
+    // Send initial heartbeat with jitter (random fraction of interval)
+    // per Discord docs: "send first heartbeat after heartbeat_interval * jitter"
+    const jitterDelay = Math.floor(Math.random() * interval);
+    setTimeout(() => {
+      this.sendHeartbeat();
+    }, jitterDelay);
+
+    // Start heartbeat loop at the specified interval
+    this.clearHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      // Check if previous heartbeat was ACK'd
+      if (!this.heartbeatAckReceived) {
+        this.missedHeartbeatAcks++;
+        if (this.missedHeartbeatAcks >= MAX_MISSED_HEARTBEAT_ACKS) {
+          // Zombie connection -- force reconnect
+          this.emitError(new Error(
+            `Discord gateway zombie: ${this.missedHeartbeatAcks} missed heartbeat ACKs`
+          ));
+          this.ws?.close(4001, 'Zombie connection detected');
+          return;
+        }
+      }
+
       this.sendHeartbeat();
     }, interval);
 
-    // Send initial heartbeat immediately (with jitter)
-    setTimeout(() => {
-      this.sendHeartbeat();
-    }, Math.random() * interval);
-
-    // Send IDENTIFY
-    this.sendIdentify();
+    // Send IDENTIFY or RESUME depending on session state
+    if (this.sessionId && this.lastSequence !== null) {
+      this.sendResume();
+    } else {
+      this.sendIdentify();
+    }
   }
 
   private sendHeartbeat(): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+    // Mark that we have not yet received ACK for this heartbeat
+    this.heartbeatAckReceived = false;
+    this.lastHeartbeatSentAt = Date.now();
 
     const payload: DiscordGatewayPayload = {
       op: DiscordGatewayOpcode.Heartbeat,
@@ -341,7 +462,7 @@ export class DiscordGateway {
         DiscordIntent.DirectMessages |
         DiscordIntent.MessageContent,
       properties: {
-        os: 'linux',
+        os: process.platform || 'linux',
         browser: 'claude-code-sdk',
         device: 'claude-code-sdk',
       },
@@ -357,6 +478,28 @@ export class DiscordGateway {
     this.ws.send(JSON.stringify(payload));
   }
 
+  /**
+   * Send RESUME to continue a previous session after disconnect.
+   * Requires valid sessionId and lastSequence from prior READY.
+   */
+  private sendResume(): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    if (!this.sessionId) return;
+
+    const payload: DiscordGatewayPayload = {
+      op: DiscordGatewayOpcode.Resume,
+      d: {
+        token: this.config.discordToken,
+        session_id: this.sessionId,
+        seq: this.lastSequence,
+      },
+      s: null,
+      t: null,
+    };
+
+    this.ws.send(JSON.stringify(payload));
+  }
+
   private handleDispatch(eventName: string, data: unknown): void {
     switch (eventName) {
       case 'READY': {
@@ -364,9 +507,19 @@ export class DiscordGateway {
         this.sessionId = readyData.session_id;
         this.resumeGatewayUrl = readyData.resume_gateway_url;
         this.discordConnected = true;
+        this.connectedSinceMs = Date.now();
         this.currentBackoffMs = RECONNECT_BASE_MS; // Reset backoff on success
         this.emitStatus();
         this.emitReady(readyData);
+        break;
+      }
+
+      case 'RESUMED': {
+        // Session successfully resumed
+        this.discordConnected = true;
+        this.connectedSinceMs = Date.now();
+        this.currentBackoffMs = RECONNECT_BASE_MS;
+        this.emitStatus();
         break;
       }
 
@@ -393,10 +546,23 @@ export class DiscordGateway {
     }
   }
 
+  private clearHeartbeat(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
   private async scheduleDiscordReconnect(): Promise<void> {
     if (!this.shouldReconnect) return;
 
-    const delay = this.currentBackoffMs;
+    this.reconnectCount++;
+
+    // Add jitter to prevent thundering herd on reconnect
+    const jitter = this.currentBackoffMs * RECONNECT_JITTER_FRACTION * Math.random();
+    const delay = this.currentBackoffMs + jitter;
+
+    // Increase backoff for next attempt
     this.currentBackoffMs = Math.min(
       this.currentBackoffMs * RECONNECT_MULTIPLIER,
       RECONNECT_MAX_MS

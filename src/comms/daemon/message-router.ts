@@ -13,6 +13,8 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import type { SignalDBClient } from '../client/signaldb';
 import type { Message } from '../protocol/types';
+import type { SecurityMiddleware } from '../security/middleware';
+import { RateLimitError } from '../security/middleware';
 import type { LocalSession, MessageRouteResult } from './types';
 import { createLogger } from './logger';
 
@@ -55,9 +57,11 @@ const CLAUDE_BINARY = path.join(os.homedir(), '.local', 'bin', 'claude');
  */
 export class MessageRouter {
   private readonly client: SignalDBClient;
+  private readonly security: SecurityMiddleware | null;
 
-  constructor(client: SignalDBClient) {
+  constructor(client: SignalDBClient, security?: SecurityMiddleware) {
     this.client = client;
+    this.security = security ?? null;
   }
 
   /**
@@ -101,6 +105,54 @@ export class MessageRouter {
       senderId: message.senderId.slice(0, 8),
       type: message.messageType,
     });
+
+    // Apply security checks before delivery
+    if (this.security) {
+      const startMs = Date.now();
+      try {
+        // 1. Rate limiting check (60 msg/min per agent)
+        this.security.checkAndRecord('message');
+
+        // 2. Content validation and sanitization
+        this.security.validateAndSanitize(message.content);
+
+        // 3. Directory enforcement on message content
+        this.security.enforceDirectory(message.content);
+
+        // 4. Audit log the incoming message
+        await this.security.audit({
+          receiverId: targetSession.agentId ?? targetSession.sessionId,
+          command: `route:${message.messageType}`,
+          result: 'allowed',
+          durationMs: Date.now() - startMs,
+        });
+      } catch (err) {
+        // Audit log the blocked message
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        try {
+          await this.security.audit({
+            receiverId: targetSession.agentId ?? targetSession.sessionId,
+            command: `route:${message.messageType}`,
+            result: `blocked:${err instanceof RateLimitError ? 'rate_limit' : 'security'}`,
+            durationMs: Date.now() - startMs,
+          });
+        } catch {
+          // Audit logging failure is non-critical
+        }
+
+        log.warn('Security check blocked message', {
+          messageId: message.id.slice(0, 8),
+          error: errorMsg,
+          isRateLimit: err instanceof RateLimitError,
+        });
+
+        return {
+          ok: false,
+          error: `Security check failed: ${errorMsg}`,
+          messageId: message.id,
+        };
+      }
+    }
 
     // Claim the message first
     if (targetSession.agentId && message.status === 'pending') {

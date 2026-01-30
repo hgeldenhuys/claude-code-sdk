@@ -2,7 +2,10 @@
  * Discord Slash Command Manager
  *
  * Registers and handles Discord slash commands that bridge to SignalDB.
- * Commands: /agent list, /agent message, /agent status, /paste create, /memo send
+ * Commands: /agents, /channels, /send, /memo, /paste
+ *
+ * Each command responds with formatted Discord embeds containing
+ * structured field data from SignalDB.
  */
 
 import { ChannelClient } from '../../channels/channel-client';
@@ -10,7 +13,7 @@ import { SignalDBClient } from '../../client/signaldb';
 import { MemoClient } from '../../memos/memo-client';
 import type { MemoPriority } from '../../memos/types';
 import { PasteClient } from '../../pastes/paste-client';
-import type { Agent } from '../../protocol/types';
+import type { Agent, Channel } from '../../protocol/types';
 import type {
   DiscordBotConfig,
   DiscordEmbed,
@@ -34,8 +37,14 @@ const DISCORD_API_BASE = 'https://discord.com/api/v10';
 
 /** Discord Application Command types */
 const APPLICATION_COMMAND_TYPE_CHAT_INPUT = 1;
+
+/** Discord option type constants */
 const OPTION_TYPE_STRING = 3;
+const OPTION_TYPE_INTEGER = 4;
 const OPTION_TYPE_BOOLEAN = 5;
+
+/** Maximum number of embeds Discord allows per response */
+const MAX_EMBEDS_PER_RESPONSE = 10;
 
 // ============================================================================
 // Command Definitions
@@ -43,59 +52,72 @@ const OPTION_TYPE_BOOLEAN = 5;
 
 /**
  * Slash command definitions for registration with Discord.
+ * Five commands as specified: /agents, /channels, /send, /memo, /paste
  */
 const SLASH_COMMANDS: SlashCommandDef[] = [
   {
-    name: 'agent',
-    description: 'Manage SignalDB agents',
+    name: 'agents',
+    description: 'List registered SignalDB agents and their status',
     options: [
       {
-        name: 'list',
-        description: 'List all registered agents',
+        name: 'filter',
+        description: 'Filter by status: active, idle, offline, or all (default: all)',
         type: 'STRING',
         required: false,
-      },
-      {
-        name: 'message',
-        description: 'Send a message to an agent',
-        type: 'STRING',
-        required: false,
-      },
-      {
-        name: 'status',
-        description: 'Check agent status by ID',
-        type: 'STRING',
-        required: false,
+        choices: [
+          { name: 'All', value: 'all' },
+          { name: 'Active', value: 'active' },
+          { name: 'Idle', value: 'idle' },
+          { name: 'Offline', value: 'offline' },
+        ],
       },
     ],
   },
   {
-    name: 'paste',
-    description: 'Create and share pastes',
+    name: 'channels',
+    description: 'List SignalDB channels',
     options: [
       {
-        name: 'content',
-        description: 'Content to paste',
+        name: 'type',
+        description: 'Filter by channel type: direct, project, broadcast, or all (default: all)',
+        type: 'STRING',
+        required: false,
+        choices: [
+          { name: 'All', value: 'all' },
+          { name: 'Direct', value: 'direct' },
+          { name: 'Project', value: 'project' },
+          { name: 'Broadcast', value: 'broadcast' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'send',
+    description: 'Send a message to a SignalDB agent',
+    options: [
+      {
+        name: 'target',
+        description: 'Target agent ID or address (e.g., agent://machine/session)',
         type: 'STRING',
         required: true,
       },
       {
-        name: 'ttl',
-        description: 'Time-to-live in seconds (default: 3600)',
-        type: 'INTEGER',
-        required: false,
+        name: 'message',
+        description: 'Message content to send',
+        type: 'STRING',
+        required: true,
       },
       {
-        name: 'read_once',
-        description: 'Delete after first read',
-        type: 'BOOLEAN',
+        name: 'channel',
+        description: 'Channel ID to send through (optional, uses direct if omitted)',
+        type: 'STRING',
         required: false,
       },
     ],
   },
   {
     name: 'memo',
-    description: 'Send memos to agents',
+    description: 'Send a memo to a SignalDB agent',
     options: [
       {
         name: 'to',
@@ -129,6 +151,30 @@ const SLASH_COMMANDS: SlashCommandDef[] = [
       },
     ],
   },
+  {
+    name: 'paste',
+    description: 'Create and share an ephemeral paste',
+    options: [
+      {
+        name: 'content',
+        description: 'Content to paste',
+        type: 'STRING',
+        required: true,
+      },
+      {
+        name: 'ttl',
+        description: 'Time-to-live in seconds (default: 3600)',
+        type: 'INTEGER',
+        required: false,
+      },
+      {
+        name: 'read_once',
+        description: 'Delete after first read',
+        type: 'BOOLEAN',
+        required: false,
+      },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -137,6 +183,9 @@ const SLASH_COMMANDS: SlashCommandDef[] = [
 
 /**
  * Manages Discord slash command registration and handling.
+ *
+ * Registers all 5 commands (/agents, /channels, /send, /memo, /paste)
+ * with a Discord guild and handles interactions with formatted embed responses.
  *
  * @example
  * ```typescript
@@ -201,12 +250,20 @@ export class SlashCommandManager {
       });
   }
 
+  /**
+   * Get the command definitions for external inspection.
+   */
+  getCommandDefinitions(): SlashCommandDef[] {
+    return [...SLASH_COMMANDS];
+  }
+
   // ==========================================================================
   // Command Registration
   // ==========================================================================
 
   /**
-   * Register slash commands with Discord for a specific guild.
+   * Register all slash commands with Discord for a specific guild.
+   * Uses bulk overwrite (PUT) which replaces all guild commands atomically.
    *
    * @param guildId - Discord guild ID to register commands in
    */
@@ -216,18 +273,29 @@ export class SlashCommandManager {
     const url = `${DISCORD_API_BASE}/applications/${applicationId}/guilds/${guildId}/commands`;
 
     // Convert our command definitions to Discord API format
-    const commands = SLASH_COMMANDS.map((cmd) => ({
-      name: cmd.name,
-      description: cmd.description,
-      type: APPLICATION_COMMAND_TYPE_CHAT_INPUT,
-      options: cmd.options?.map((opt) => ({
-        name: opt.name,
-        description: opt.description,
-        type: this.mapOptionType(opt.type),
-        required: opt.required ?? false,
-        choices: opt.choices,
-      })),
-    }));
+    const commands = [];
+    for (let i = 0; i < SLASH_COMMANDS.length; i++) {
+      const cmd = SLASH_COMMANDS[i]!;
+      const options = [];
+      if (cmd.options) {
+        for (let j = 0; j < cmd.options.length; j++) {
+          const opt = cmd.options[j]!;
+          options.push({
+            name: opt.name,
+            description: opt.description,
+            type: this.mapOptionType(opt.type),
+            required: opt.required ?? false,
+            choices: opt.choices,
+          });
+        }
+      }
+      commands.push({
+        name: cmd.name,
+        description: cmd.description,
+        type: APPLICATION_COMMAND_TYPE_CHAT_INPUT,
+        options,
+      });
+    }
 
     const response = await fetch(url, {
       method: 'PUT',
@@ -270,7 +338,7 @@ export class SlashCommandManager {
       case 'STRING':
         return OPTION_TYPE_STRING;
       case 'INTEGER':
-        return 4;
+        return OPTION_TYPE_INTEGER;
       case 'BOOLEAN':
         return OPTION_TYPE_BOOLEAN;
       case 'USER':
@@ -304,8 +372,14 @@ export class SlashCommandManager {
 
     try {
       switch (commandName) {
-        case 'agent':
-          await this.handleAgentCommand(interaction);
+        case 'agents':
+          await this.handleAgentsCommand(interaction);
+          break;
+        case 'channels':
+          await this.handleChannelsCommand(interaction);
+          break;
+        case 'send':
+          await this.handleSendCommand(interaction);
           break;
         case 'paste':
           await this.handlePasteCommand(interaction);
@@ -327,97 +401,187 @@ export class SlashCommandManager {
   // ==========================================================================
 
   /**
-   * Handle /agent subcommands.
+   * Handle /agents command -- list registered agents with status embeds.
    */
-  private async handleAgentCommand(interaction: DiscordInteraction): Promise<void> {
+  private async handleAgentsCommand(interaction: DiscordInteraction): Promise<void> {
     const options = interaction.data?.options || [];
-    const subcommand = this.getOptionValue(options, 'list')
-      ? 'list'
-      : this.getOptionValue(options, 'message')
-        ? 'message'
-        : this.getOptionValue(options, 'status')
-          ? 'status'
-          : 'list';
+    const filter = (this.getOptionValue(options, 'filter') as string) || 'all';
 
-    // Defer reply for async operations
     await this.deferReply(interaction);
 
-    switch (subcommand) {
-      case 'list': {
-        const agents = await this.signalDBClient.agents.list();
-        const embeds: DiscordEmbed[] = [];
-        const displayAgents = agents.slice(0, 10);
-        for (let i = 0; i < displayAgents.length; i++) {
-          const agent = displayAgents[i] as Agent;
-          embeds.push({
-            title: agent.sessionName || agent.id.slice(0, 8),
-            color: this.statusColor(agent.status),
-            fields: [
-              { name: 'Status', value: agent.status, inline: true },
-              { name: 'Machine', value: agent.machineId.slice(0, 8), inline: true },
-              { name: 'Project', value: agent.projectPath || 'N/A', inline: false },
-            ],
-          });
-        }
+    const agents = await this.signalDBClient.agents.list();
 
-        await this.editReply(interaction, {
-          content: `Found ${agents.length} agents:`,
-          embeds,
-        });
-        break;
+    // Filter by status if specified
+    const filtered: Agent[] = [];
+    for (let i = 0; i < agents.length; i++) {
+      const agent = agents[i]!;
+      if (filter === 'all' || agent.status === filter) {
+        filtered.push(agent);
       }
+    }
 
-      case 'message': {
-        const targetId = this.getOptionValue(options, 'message') as string;
-        // This would need more options in the actual command
-        await this.editReply(interaction, {
-          content: `To message agent ${targetId}, use the thread below.`,
-        });
-        break;
+    if (filtered.length === 0) {
+      await this.editReply(interaction, {
+        content: filter === 'all'
+          ? 'No agents registered.'
+          : `No agents with status "${filter}".`,
+      });
+      return;
+    }
+
+    // Build embeds (max 10 per Discord response)
+    const embeds: DiscordEmbed[] = [];
+    const displayCount = Math.min(filtered.length, MAX_EMBEDS_PER_RESPONSE);
+    for (let i = 0; i < displayCount; i++) {
+      const agent = filtered[i]!;
+      embeds.push({
+        title: agent.sessionName || `Agent ${agent.id.slice(0, 8)}`,
+        color: this.statusColor(agent.status),
+        fields: [
+          { name: 'Status', value: agent.status, inline: true },
+          { name: 'Machine', value: agent.machineId || 'N/A', inline: true },
+          { name: 'Project', value: agent.projectPath || 'N/A', inline: false },
+          { name: 'Session', value: agent.sessionId || 'N/A', inline: true },
+          {
+            name: 'Last Heartbeat',
+            value: agent.heartbeatAt || 'Never',
+            inline: true,
+          },
+        ],
+      });
+    }
+
+    const summary = filtered.length > displayCount
+      ? `Showing ${displayCount} of ${filtered.length} agents (filtered by: ${filter}):`
+      : `Found ${filtered.length} agent${filtered.length === 1 ? '' : 's'}:`;
+
+    await this.editReply(interaction, {
+      content: summary,
+      embeds,
+    });
+  }
+
+  /**
+   * Handle /channels command -- list SignalDB channels.
+   */
+  private async handleChannelsCommand(interaction: DiscordInteraction): Promise<void> {
+    const options = interaction.data?.options || [];
+    const typeFilter = (this.getOptionValue(options, 'type') as string) || 'all';
+
+    await this.deferReply(interaction);
+
+    const channels = await this.signalDBClient.channels.list();
+
+    // Filter by type if specified
+    const filtered: Channel[] = [];
+    for (let i = 0; i < channels.length; i++) {
+      const channel = channels[i]!;
+      if (typeFilter === 'all' || channel.type === typeFilter) {
+        filtered.push(channel);
       }
+    }
 
-      case 'status': {
-        const agentId = this.getOptionValue(options, 'status') as string;
-        const agents = await this.signalDBClient.agents.list();
-        let agent: Agent | undefined;
-        for (let i = 0; i < agents.length; i++) {
-          const a = agents[i] as Agent;
-          if (a.id === agentId || a.id.startsWith(agentId)) {
-            agent = a;
-            break;
-          }
-        }
+    if (filtered.length === 0) {
+      await this.editReply(interaction, {
+        content: typeFilter === 'all'
+          ? 'No channels found.'
+          : `No channels of type "${typeFilter}".`,
+      });
+      return;
+    }
 
-        if (!agent) {
-          await this.editReply(interaction, { content: `Agent not found: ${agentId}` });
-          return;
-        }
+    const embeds: DiscordEmbed[] = [];
+    const displayCount = Math.min(filtered.length, MAX_EMBEDS_PER_RESPONSE);
+    for (let i = 0; i < displayCount; i++) {
+      const channel = filtered[i]!;
+      const memberCount = channel.members ? channel.members.length : 0;
+      embeds.push({
+        title: channel.name || `Channel ${channel.id.slice(0, 8)}`,
+        color: this.channelTypeColor(channel.type),
+        fields: [
+          { name: 'Type', value: channel.type, inline: true },
+          { name: 'Members', value: String(memberCount), inline: true },
+          { name: 'ID', value: channel.id, inline: false },
+          { name: 'Created', value: channel.createdAt || 'N/A', inline: true },
+        ],
+      });
+    }
 
-        const embed: DiscordEmbed = {
-          title: agent.sessionName || agent.id,
-          color: this.statusColor(agent.status),
-          fields: [
-            { name: 'ID', value: agent.id, inline: false },
-            { name: 'Status', value: agent.status, inline: true },
-            { name: 'Machine ID', value: agent.machineId, inline: true },
-            { name: 'Project', value: agent.projectPath || 'N/A', inline: false },
-            { name: 'Session', value: agent.sessionId || 'N/A', inline: true },
-            {
-              name: 'Last Heartbeat',
-              value: agent.heartbeatAt || 'Never',
-              inline: true,
-            },
-          ],
-        };
+    const summary = filtered.length > displayCount
+      ? `Showing ${displayCount} of ${filtered.length} channels:`
+      : `Found ${filtered.length} channel${filtered.length === 1 ? '' : 's'}:`;
 
-        await this.editReply(interaction, { embeds: [embed] });
-        break;
-      }
+    await this.editReply(interaction, {
+      content: summary,
+      embeds,
+    });
+  }
+
+  /**
+   * Handle /send command -- send a message to a SignalDB agent.
+   */
+  private async handleSendCommand(interaction: DiscordInteraction): Promise<void> {
+    const options = interaction.data?.options || [];
+
+    const target = this.getOptionValue(options, 'target') as string;
+    const messageContent = this.getOptionValue(options, 'message') as string;
+    const channelId = this.getOptionValue(options, 'channel') as string | undefined;
+
+    if (!target || !messageContent) {
+      await this.respondEphemeral(interaction, 'Target and message are required.');
+      return;
+    }
+
+    await this.deferReply(interaction);
+
+    // Resolve target address
+    const targetAddress = target.includes('://') ? target : `agent://${target}`;
+
+    try {
+      // Send via SignalDB
+      const message = await this.signalDBClient.messages.send({
+        channelId: channelId || 'direct',
+        senderId: this.config.agentId,
+        targetType: 'agent',
+        targetAddress,
+        messageType: 'chat',
+        content: messageContent,
+        metadata: {
+          source: 'discord',
+          discordUser: interaction.member?.user?.username
+            || interaction.user?.username
+            || 'unknown',
+        },
+      });
+
+      const embed: DiscordEmbed = {
+        title: 'Message Sent',
+        color: 0x00ff00,
+        fields: [
+          { name: 'To', value: targetAddress, inline: true },
+          { name: 'Status', value: message.status, inline: true },
+          { name: 'ID', value: message.id, inline: false },
+          {
+            name: 'Content',
+            value: messageContent.length > 200
+              ? `${messageContent.slice(0, 200)}...`
+              : messageContent,
+            inline: false,
+          },
+        ],
+      };
+
+      await this.editReply(interaction, { embeds: [embed] });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      await this.editReply(interaction, {
+        content: `Failed to send message: ${errorMsg}`,
+      });
     }
   }
 
   /**
-   * Handle /paste command.
+   * Handle /paste command -- create an ephemeral paste.
    */
   private async handlePasteCommand(interaction: DiscordInteraction): Promise<void> {
     const options = interaction.data?.options || [];
@@ -452,7 +616,7 @@ export class SlashCommandManager {
         },
         {
           name: 'Content Preview',
-          value: content.length > 100 ? `${content.slice(0, 100)}...` : content,
+          value: content.length > 200 ? `${content.slice(0, 200)}...` : content,
           inline: false,
         },
       ],
@@ -462,7 +626,7 @@ export class SlashCommandManager {
   }
 
   /**
-   * Handle /memo command.
+   * Handle /memo command -- send a memo to an agent.
    */
   private async handleMemoCommand(interaction: DiscordInteraction): Promise<void> {
     const options = interaction.data?.options || [];
@@ -470,7 +634,7 @@ export class SlashCommandManager {
     const to = this.getOptionValue(options, 'to') as string;
     const subject = this.getOptionValue(options, 'subject') as string;
     const body = this.getOptionValue(options, 'body') as string;
-    const priority = (this.getOptionValue(options, 'priority') as string) || 'normal';
+    const priority = (this.getOptionValue(options, 'priority') as string) || 'P2';
 
     if (!to || !subject || !body) {
       await this.respondEphemeral(interaction, 'to, subject, and body are required.');
@@ -483,7 +647,7 @@ export class SlashCommandManager {
       to: to.includes('://') ? to : `agent://${to}`,
       subject,
       body,
-      priority: (priority || 'P2') as MemoPriority,
+      priority: priority as MemoPriority,
     });
 
     const embed: DiscordEmbed = {
@@ -608,6 +772,22 @@ export class SlashCommandManager {
         return 0xffff00; // Yellow
       case 'offline':
         return 0xff0000; // Red
+      default:
+        return 0x808080; // Gray
+    }
+  }
+
+  /**
+   * Map channel type to Discord embed color.
+   */
+  private channelTypeColor(type: string): number {
+    switch (type) {
+      case 'direct':
+        return 0x5865f2; // Discord blurple
+      case 'project':
+        return 0x57f287; // Green
+      case 'broadcast':
+        return 0xfee75c; // Yellow
       default:
         return 0x808080; // Gray
     }

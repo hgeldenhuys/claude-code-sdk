@@ -19,7 +19,7 @@ import type { SecurityConfig } from '../security/types';
  * - status: health/status check
  * - config-update: environment variable updates
  * - diagnostic: system diagnostics (disk, memory, etc.)
- * - restart: application restart via pm2 or systemd
+ * - restart: application restart via pm2 or launchd (macOS)
  * - raw: arbitrary shell command
  */
 export type RemoteCommandType =
