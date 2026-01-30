@@ -339,9 +339,16 @@ async function findRemoteAgent(
 
   verboseLog(`Found ${remoteAgents.length} agent(s) on ${targetMachine}`, verbose);
 
-  // Sort by status priority: active > idle > offline
+  // Sort by: named sessions first (more likely alive), then status priority
   const statusOrder: Record<string, number> = { active: 0, idle: 1, offline: 2 };
-  remoteAgents.sort((a, b) => (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3));
+  remoteAgents.sort((a, b) => {
+    // Prefer agents with session names (indicates active naming system)
+    const aHasName = a.sessionName ? 0 : 1;
+    const bHasName = b.sessionName ? 0 : 1;
+    if (aHasName !== bHasName) return aHasName - bHasName;
+    // Then by status
+    return (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+  });
 
   const best = remoteAgents[0]!;
   verboseLog(
