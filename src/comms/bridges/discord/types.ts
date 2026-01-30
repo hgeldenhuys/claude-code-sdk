@@ -27,6 +27,8 @@ export interface DiscordBotConfig {
   commandPrefix?: string;
   /** Rate limit: messages per minute per user (default: 10) */
   rateLimitPerUser?: number;
+  /** Discord category ID for agent channels (auto-created if missing) */
+  agentCategoryId?: string;
 }
 
 /**
@@ -492,6 +494,25 @@ export interface ChatConversation {
 }
 
 /**
+ * Info about a Discord channel mapped to an agent.
+ * Stored by AgentChannelManager for routing messages.
+ */
+export interface AgentChannelInfo {
+  /** Agent session name (used as channel name) */
+  sessionName: string;
+  /** Agent machine ID */
+  machineId: string;
+  /** Agent SignalDB ID */
+  agentId: string;
+  /** Discord channel ID */
+  discordChannelId: string;
+  /** Agent status at last sync */
+  status: 'active' | 'idle' | 'offline';
+  /** When this mapping was created */
+  createdAt: number;
+}
+
+/**
  * Callback types for Discord events.
  */
 export type DiscordEventCallback<T> = (event: T) => void | Promise<void>;
@@ -514,4 +535,6 @@ export interface DiscordBotStatus {
   rateLimitedUsers: number;
   /** Bot uptime in milliseconds */
   uptimeMs: number;
+  /** Number of active agent channels */
+  agentChannelCount: number;
 }

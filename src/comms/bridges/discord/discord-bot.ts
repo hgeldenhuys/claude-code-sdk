@@ -8,6 +8,7 @@
 import { ChannelClient } from '../../channels/channel-client';
 import { MemoClient } from '../../memos/memo-client';
 import { PasteClient } from '../../pastes/paste-client';
+import { AgentChannelManager } from './agent-channel-manager';
 import { DiscordChatHandler } from './chat-handler';
 import { SlashCommandManager } from './commands';
 import { MessageFormatter } from './formatter';
@@ -74,6 +75,7 @@ export class DiscordBot {
   private readonly gateway: DiscordGateway;
   private readonly commandManager: SlashCommandManager;
   private readonly chatHandler: DiscordChatHandler;
+  private readonly agentChannelManager: AgentChannelManager;
   private readonly threadMapper: ThreadMapper;
   private readonly presenceSync: PresenceSync;
   private readonly formatter: MessageFormatter;
@@ -128,6 +130,7 @@ export class DiscordBot {
     this.presenceSync = new PresenceSync(this.config, presenceConfig);
     this.formatter = new MessageFormatter(undefined, this.pasteClient);
     this.chatHandler = new DiscordChatHandler(this.config, this.formatter);
+    this.agentChannelManager = new AgentChannelManager(this.config);
     this.rateLimiter = new DiscordRateLimiter(this.config.rateLimitPerUser);
 
     this.messageBridge = new MessageBridge(
@@ -169,6 +172,17 @@ export class DiscordBot {
       // Register slash commands with Discord
       await this.commandManager.registerCommands(this.config.guildId);
 
+      // Set up agent channel management
+      await this.agentChannelManager.ensureCategory();
+      await this.agentChannelManager.reconcileOnStartup();
+
+      // Wire presence updates to agent channel sync
+      this.presenceSync.onUpdate((agents) => {
+        this.agentChannelManager.syncAgentChannels(agents).catch(() => {
+          // Channel sync errors are non-critical
+        });
+      });
+
       // Set up interaction handler -- route /chat to ChatHandler, rest to CommandManager
       this.gateway.onDiscordInteraction(async (interaction) => {
         if (interaction.data?.name === 'chat') {
@@ -178,9 +192,17 @@ export class DiscordBot {
         }
       });
 
-      // Set up message handler -- check for tracked chat threads before bridging
+      // Set up message handler:
+      // 1. Agent channels → route to agent via ChatHandler
+      // 2. Tracked threads → follow-up via ChatHandler
+      // 3. Everything else → MessageBridge handles
       this.gateway.onDiscordMessage(async (message) => {
-        if (this.chatHandler.isTrackedThread(message.channel_id)) {
+        if (this.agentChannelManager.isAgentChannel(message.channel_id)) {
+          const agentInfo = this.agentChannelManager.getAgentForChannel(message.channel_id);
+          if (agentInfo) {
+            await this.chatHandler.handleAgentChannelMessage(message, agentInfo);
+          }
+        } else if (this.chatHandler.isTrackedThread(message.channel_id)) {
           await this.chatHandler.handleThreadMessage(message);
         }
         // Note: MessageBridge also registers its own message handler in start()
@@ -268,6 +290,7 @@ export class DiscordBot {
       messagesFromSignalDB: bridgeStats.messagesFromSignalDB,
       rateLimitedUsers: this.rateLimiter.getRateLimitedUserCount(),
       uptimeMs: this.startTime ? Date.now() - this.startTime : 0,
+      agentChannelCount: this.agentChannelManager.getChannelCount(),
     };
   }
 
@@ -301,6 +324,13 @@ export class DiscordBot {
    */
   getChatHandler(): DiscordChatHandler {
     return this.chatHandler;
+  }
+
+  /**
+   * Get the agent channel manager instance.
+   */
+  getAgentChannelManager(): AgentChannelManager {
+    return this.agentChannelManager;
   }
 
   /**

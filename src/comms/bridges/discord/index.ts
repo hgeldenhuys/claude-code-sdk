@@ -39,6 +39,7 @@
 export { DiscordBot } from './discord-bot';
 
 // Core components
+export { AgentChannelManager } from './agent-channel-manager';
 export { DiscordGateway } from './gateway';
 export { SlashCommandManager } from './commands';
 export { ThreadMapper } from './thread-mapper';
@@ -55,6 +56,8 @@ export type {
   ThreadMapping,
   PresenceConfig,
   MessageFormatConfig,
+  // Agent channels
+  AgentChannelInfo,
   // Slash commands
   SlashCommandDef,
   SlashCommandOption,

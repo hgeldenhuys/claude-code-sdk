@@ -571,7 +571,7 @@ export class SlashCommandManager {
         senderId: this.config.agentId,
         targetType: 'agent',
         targetAddress,
-        messageType: 'chat',
+        messageType: 'sync',
         content: messageContent,
         metadata: {
           source: 'discord',

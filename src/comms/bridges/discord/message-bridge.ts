@@ -192,7 +192,7 @@ export class MessageBridge {
     try {
       // Publish to SignalDB
       await this.channelClient.publish(signalDBChannelId, content, {
-        messageType: 'chat',
+        messageType: 'sync',
         threadId,
         metadata: {
           source: 'discord',

@@ -60,10 +60,12 @@ const CLAUDE_BINARY = process.env.CLAUDE_BINARY ?? path.join(os.homedir(), '.loc
 export class MessageRouter {
   private readonly client: SignalDBClient;
   private readonly security: SecurityMiddleware | null;
+  private readonly machineId: string;
 
-  constructor(client: SignalDBClient, security?: SecurityMiddleware) {
+  constructor(client: SignalDBClient, security?: SecurityMiddleware, machineId?: string) {
     this.client = client;
     this.security = security ?? null;
+    this.machineId = machineId ?? 'unknown';
   }
 
   /**
@@ -184,9 +186,15 @@ export class MessageRouter {
         responseLength: response.length,
       });
 
-      // Post the response back to SignalDB
+      // Post the response back to SignalDB with session branching metadata
       if (targetSession.agentId) {
-        await this.postResponse(message, targetSession.agentId, response);
+        await this.postResponse(
+          message,
+          targetSession.agentId,
+          response,
+          targetSession.sessionId,
+          targetSession.projectPath,
+        );
       }
 
       // Update message status to delivered
@@ -291,20 +299,71 @@ export class MessageRouter {
 
   /**
    * Build COMMS context system prompt for the Claude session.
-   * Tells Claude this is a COMMS message, who sent it, and how to respond.
+   * Tells Claude this is a COMMS message, who sent it, the primitive type,
+   * and how to respond.
    */
   private buildSystemPrompt(message: Message): string {
+    // Describe the primitive type and expected behavior
+    let typeLabel: string;
+    let typeBehavior: string;
+    switch (message.messageType) {
+      case 'sync':
+        typeLabel = 'Sync Message';
+        typeBehavior = 'real-time, response expected';
+        break;
+      case 'async':
+        typeLabel = 'Async Message';
+        typeBehavior = 'async inbox delivery, response optional';
+        break;
+      case 'memo':
+        typeLabel = 'Memo';
+        typeBehavior = 'broadcast knowledge, no response needed';
+        break;
+      case 'response':
+        typeLabel = 'Response';
+        typeBehavior = 'reply to previous message';
+        break;
+      case 'story-notification':
+        typeLabel = 'Story Notification';
+        typeBehavior = 'story state change, informational';
+        break;
+      default:
+        typeLabel = 'Message';
+        typeBehavior = 'unknown type';
+    }
+
+    const threadLine = message.threadId
+      ? `Thread: ${message.threadId}`
+      : 'Thread: new conversation';
+
     const lines = [
-      '[COMMS: Incoming Message]',
+      `[COMMS: Incoming ${typeLabel}]`,
       'This message was delivered via the Tapestry COMMS system.',
       `From: ${message.senderId}`,
+      `Type: ${message.messageType} (${typeBehavior})`,
+      threadLine,
       `Channel: ${message.channelId}`,
       `Message ID: ${message.id}`,
-      `Type: ${message.messageType}`,
+    ];
+
+    // Add source context (Discord, CLI, etc.)
+    const meta = message.metadata ?? {};
+    if (meta.source) {
+      const sourceParts = [`Source: ${meta.source}`];
+      if (meta.discordChannel) {
+        sourceParts.push(`channel: ${meta.discordChannel}`);
+      }
+      if (meta.discordUser) {
+        sourceParts.push(`user: ${meta.discordUser}`);
+      }
+      lines.push(sourceParts.join(', '));
+    }
+
+    lines.push(
       '',
       'Your response will be automatically sent back to the sender via COMMS.',
       'Execute the request and provide a clear response.',
-    ];
+    );
     return lines.join('\n');
   }
 
@@ -384,11 +443,14 @@ export class MessageRouter {
 
   /**
    * Post a response message back to SignalDB.
+   * Includes session branching metadata so the receiver can resume this session.
    */
   private async postResponse(
     originalMessage: Message,
     senderAgentId: string,
     responseContent: string,
+    sessionId?: string,
+    projectPath?: string,
   ): Promise<void> {
     await this.client.messages.send({
       channelId: originalMessage.channelId,
@@ -400,6 +462,11 @@ export class MessageRouter {
       threadId: originalMessage.threadId ?? originalMessage.id,
       metadata: {
         inReplyTo: originalMessage.id,
+        sessionBranch: sessionId ? {
+          sessionId,
+          machineId: this.machineId,
+          projectPath,
+        } : undefined,
       },
     });
   }

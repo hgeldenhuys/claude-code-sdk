@@ -18,6 +18,7 @@ import { resolveAgent } from '../../protocol/agent-resolver';
 import type { Message } from '../../protocol/types';
 import type { MessageFormatter } from './formatter';
 import type {
+  AgentChannelInfo,
   ChatConversation,
   DiscordBotConfig,
   DiscordEmbed,
@@ -170,7 +171,7 @@ export class DiscordChatHandler {
         senderId: this.config.agentId,
         targetType: 'agent',
         targetAddress,
-        messageType: 'command',
+        messageType: 'sync',
         content: message,
         metadata: {
           source: 'discord',
@@ -261,7 +262,7 @@ export class DiscordChatHandler {
         senderId: this.config.agentId,
         targetType: 'agent',
         targetAddress,
-        messageType: 'command',
+        messageType: 'sync',
         content: message.content,
         threadId: conversation.signalDBThreadId,
         metadata: {
@@ -292,6 +293,99 @@ export class DiscordChatHandler {
       await this.postToDiscordChannel(
         message.channel_id,
         `Error communicating with ${conversation.agentName}: ${errorMsg}`,
+      );
+    } finally {
+      clearInterval(typingInterval);
+    }
+  }
+
+  /**
+   * Handle a message in a Discord agent channel (not a thread).
+   *
+   * 1. Create a Discord thread on the user's message
+   * 2. Start typing indicator in the thread
+   * 3. Send message to SignalDB targeting the agent
+   * 4. Poll for response
+   * 5. Post response in the thread
+   * 6. Store conversation for follow-ups
+   */
+  async handleAgentChannelMessage(
+    message: DiscordMessage,
+    agentInfo: AgentChannelInfo,
+  ): Promise<void> {
+    const threadTitle = `${agentInfo.sessionName}: ${message.content.slice(0, 50)}${message.content.length > 50 ? '...' : ''}`;
+
+    // Create a thread on the user's message
+    let thread: { id: string; name: string };
+    try {
+      thread = await this.createThread(
+        message.channel_id,
+        message.id,
+        threadTitle,
+      );
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      await this.postToDiscordChannel(
+        message.channel_id,
+        `Failed to create thread: ${errorMsg}`,
+      );
+      return;
+    }
+
+    // Start typing indicator in the thread
+    const typingInterval = this.startTypingIndicator(thread.id);
+
+    try {
+      // Build target address
+      const targetAddress = `agent://${agentInfo.machineId}/${agentInfo.sessionName}`;
+
+      // Send to SignalDB
+      const sent = await this.signalDBClient.messages.send({
+        channelId: '',
+        senderId: this.config.agentId,
+        targetType: 'agent',
+        targetAddress,
+        messageType: 'sync',
+        content: message.content,
+        metadata: {
+          source: 'discord',
+          discordUser: message.author.username,
+          discordChannel: `#${agentInfo.sessionName}`,
+          discordChannelType: 'agent-channel',
+        },
+      });
+
+      // Poll for response
+      const response = await this.pollForResponse(sent.id, sent.createdAt, DEFAULT_TIMEOUT_S);
+
+      if (response) {
+        const formatted = await this.formatter.formatForDiscord(response.content);
+        await this.postToDiscordChannel(thread.id, formatted);
+      } else {
+        await this.postToDiscordChannel(
+          thread.id,
+          `No response from **${agentInfo.sessionName}** within ${DEFAULT_TIMEOUT_S}s. The agent may still be processing.`,
+        );
+      }
+
+      // Store conversation for thread follow-ups
+      const conversation: ChatConversation = {
+        discordThreadId: thread.id,
+        signalDBThreadId: sent.id,
+        agentId: agentInfo.agentId,
+        agentName: agentInfo.sessionName,
+        agentMachineId: agentInfo.machineId,
+        createdAt: Date.now(),
+        lastActivityAt: Date.now(),
+        discordUserId: message.author.id,
+      };
+
+      this.conversations.set(thread.id, conversation);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      await this.postToDiscordChannel(
+        thread.id,
+        `Error communicating with ${agentInfo.sessionName}: ${errorMsg}`,
       );
     } finally {
       clearInterval(typingInterval);

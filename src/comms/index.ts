@@ -32,13 +32,15 @@
  * ```
  */
 
-// Protocol: types, address resolution, presence
+// Protocol: types, address resolution, presence, delivery
 export type {
   AgentStatus,
   ChannelType,
   MessageType,
   MessageStatus,
   AccessType,
+  DeliveryMode,
+  SessionBranch,
   AgentAddress,
   ProjectAddress,
   BroadcastAddress,
@@ -67,6 +69,7 @@ export {
   isIdle,
   isOffline,
   getPresenceThresholds,
+  resolveDeliveryMode,
 } from './protocol/index';
 
 // Client
@@ -254,8 +257,61 @@ export type {
   EnvironmentInfo,
 } from './config/index';
 
+// Sync: real-time push-delivered messages
+export {
+  SyncComposer,
+  messageToSyncView,
+} from './sync/index';
+
+export type {
+  SyncCompose,
+  SyncView,
+  SyncConfig,
+} from './sync/index';
+
+// Async: pull-mode inbox-delivered messages
+export {
+  AsyncComposer,
+  messageToAsyncView,
+  AsyncInbox,
+} from './async/index';
+
+export type {
+  AsyncCompose,
+  AsyncView,
+  AsyncFilter,
+  AsyncConfig,
+  AsyncInboxConfig,
+} from './async/index';
+
+// Stories: mutable work items with lifecycle
+export {
+  StoryClient,
+  StoryBoard,
+  StoryNotifier,
+} from './stories/index';
+
+export type {
+  StoryStatus,
+  StoryPriority,
+  AcceptanceCriterion,
+  StoryTask,
+  DiscussionEntry,
+  StoryDocuments,
+  ExternalRef,
+  StoryHistoryEntry,
+  Story,
+  StoryCreate,
+  StoryUpdate,
+  StoryFilter,
+  StoryClientConfig,
+  BoardColumn,
+  StoryNotifierConfig,
+} from './stories/index';
+
 // Discord Bridge: Discord <-> SignalDB message bridging
 export {
+  AgentChannelManager,
   DiscordBot,
   DiscordGateway,
   SlashCommandManager,
@@ -272,6 +328,7 @@ export {
 } from './bridges/discord/index';
 
 export type {
+  AgentChannelInfo,
   DiscordBotConfig,
   DiscordChannelMapping,
   ThreadMapping,
