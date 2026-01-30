@@ -1,14 +1,92 @@
 /**
  * MemoComposer - Builds and sends memo messages
  *
- * Converts MemoCompose input into MessageSend payloads,
- * storing subject/category/priority in message metadata.
+ * Converts MemoCompose input into MessageSend payloads.
+ * Encodes subject/category/priority as a structured header in the content
+ * field because SignalDB does not persist metadata_json on INSERT.
+ *
+ * Envelope format (prepended to content):
+ *   <!--memo:subject=...;category=...;priority=...-->
+ *
+ * This is parsed back out by messageToMemoView().
  */
 
 import type { Message, MessageSend } from '../protocol/types';
 import type { SignalDBClient } from '../client/signaldb';
 import { parseAddress } from '../protocol/address';
 import type { MemoCategory, MemoCompose, MemoConfig, MemoPriority, MemoView } from './types';
+
+// ============================================================================
+// Envelope Encoding/Decoding
+// ============================================================================
+
+/** Envelope prefix marker */
+const ENVELOPE_PREFIX = '<!--memo:';
+const ENVELOPE_SUFFIX = '-->\n';
+
+/**
+ * Encode memo metadata into an envelope header string.
+ * Format: <!--memo:subject=...;category=...;priority=...-->
+ */
+function encodeEnvelope(subject: string, category: MemoCategory, priority: MemoPriority): string {
+  // Escape semicolons and newlines in subject to avoid breaking the format
+  const safeSubject = subject.replace(/;/g, '&#59;').replace(/\n/g, '&#10;');
+  return `${ENVELOPE_PREFIX}subject=${safeSubject};category=${category};priority=${priority}${ENVELOPE_SUFFIX}`;
+}
+
+/**
+ * Decode memo metadata from content that may have an envelope header.
+ * Returns the extracted metadata and the clean body (without envelope).
+ */
+function decodeEnvelope(content: string): {
+  subject: string | null;
+  category: MemoCategory | null;
+  priority: MemoPriority | null;
+  body: string;
+} {
+  if (!content.startsWith(ENVELOPE_PREFIX)) {
+    return { subject: null, category: null, priority: null, body: content };
+  }
+
+  const endIdx = content.indexOf(ENVELOPE_SUFFIX);
+  if (endIdx === -1) {
+    return { subject: null, category: null, priority: null, body: content };
+  }
+
+  const headerContent = content.slice(ENVELOPE_PREFIX.length, endIdx);
+  const body = content.slice(endIdx + ENVELOPE_SUFFIX.length);
+
+  let subject: string | null = null;
+  let category: MemoCategory | null = null;
+  let priority: MemoPriority | null = null;
+
+  const parts = headerContent.split(';');
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]!;
+    const eqIdx = part.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = part.slice(0, eqIdx);
+    const value = part.slice(eqIdx + 1);
+
+    switch (key) {
+      case 'subject':
+        subject = value.replace(/&#59;/g, ';').replace(/&#10;/g, '\n');
+        break;
+      case 'category':
+        category = value as MemoCategory;
+        break;
+      case 'priority':
+        priority = value as MemoPriority;
+        break;
+    }
+  }
+
+  return { subject, category, priority, body };
+}
+
+// ============================================================================
+// MemoComposer
+// ============================================================================
 
 export class MemoComposer {
   private readonly client: SignalDBClient;
@@ -62,13 +140,17 @@ export class MemoComposer {
 
     const channelId = this.config.channelId ?? 'default';
 
+    // Encode metadata as envelope in content (SignalDB doesn't persist metadata_json)
+    const envelope = encodeEnvelope(memo.subject, category, priority);
+    const content = envelope + memo.body;
+
     return {
       channelId,
       senderId: this.config.agentId,
       targetType,
       targetAddress,
       messageType: 'memo',
-      content: memo.body,
+      content,
       metadata,
       threadId: memo.threadId,
       expiresAt,
@@ -87,17 +169,31 @@ export class MemoComposer {
 
 /**
  * Convert a raw Message to a MemoView by extracting metadata fields.
+ *
+ * Resolution order for subject/category/priority:
+ * 1. Envelope header in content (reliable — persisted in content field)
+ * 2. metadata_json from API (unreliable — SignalDB doesn't persist on INSERT)
+ * 3. Fallback defaults
  */
 export function messageToMemoView(msg: Message): MemoView {
   const meta = msg.metadata ?? {};
+
+  // Try envelope first (reliable)
+  const envelope = decodeEnvelope(msg.content);
+
+  const subject = envelope.subject ?? (meta.subject as string) ?? '(no subject)';
+  const category = envelope.category ?? (meta.category as MemoCategory) ?? 'knowledge';
+  const priority = envelope.priority ?? (meta.priority as MemoPriority) ?? 'P2';
+  const body = envelope.subject ? envelope.body : msg.content;
+
   return {
     id: msg.id,
     senderId: msg.senderId,
     to: msg.targetAddress,
-    subject: (meta.subject as string) ?? '(no subject)',
-    body: msg.content,
-    category: (meta.category as MemoCategory) ?? 'knowledge',
-    priority: (meta.priority as MemoPriority) ?? 'P2',
+    subject,
+    body,
+    category,
+    priority,
     status: msg.status,
     claimedBy: msg.claimedBy,
     threadId: msg.threadId,

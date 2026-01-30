@@ -8,6 +8,7 @@
 import { ChannelClient } from '../../channels/channel-client';
 import { MemoClient } from '../../memos/memo-client';
 import { PasteClient } from '../../pastes/paste-client';
+import { DiscordChatHandler } from './chat-handler';
 import { SlashCommandManager } from './commands';
 import { MessageFormatter } from './formatter';
 import { DiscordGateway } from './gateway';
@@ -72,6 +73,7 @@ export class DiscordBot {
   private readonly config: DiscordBotConfig;
   private readonly gateway: DiscordGateway;
   private readonly commandManager: SlashCommandManager;
+  private readonly chatHandler: DiscordChatHandler;
   private readonly threadMapper: ThreadMapper;
   private readonly presenceSync: PresenceSync;
   private readonly formatter: MessageFormatter;
@@ -125,6 +127,7 @@ export class DiscordBot {
     this.threadMapper = new ThreadMapper(this.config);
     this.presenceSync = new PresenceSync(this.config, presenceConfig);
     this.formatter = new MessageFormatter(undefined, this.pasteClient);
+    this.chatHandler = new DiscordChatHandler(this.config, this.formatter);
     this.rateLimiter = new DiscordRateLimiter(this.config.rateLimitPerUser);
 
     this.messageBridge = new MessageBridge(
@@ -166,9 +169,21 @@ export class DiscordBot {
       // Register slash commands with Discord
       await this.commandManager.registerCommands(this.config.guildId);
 
-      // Set up interaction handler
+      // Set up interaction handler -- route /chat to ChatHandler, rest to CommandManager
       this.gateway.onDiscordInteraction(async (interaction) => {
-        await this.commandManager.handleInteraction(interaction);
+        if (interaction.data?.name === 'chat') {
+          await this.chatHandler.handleChatCommand(interaction);
+        } else {
+          await this.commandManager.handleInteraction(interaction);
+        }
+      });
+
+      // Set up message handler -- check for tracked chat threads before bridging
+      this.gateway.onDiscordMessage(async (message) => {
+        if (this.chatHandler.isTrackedThread(message.channel_id)) {
+          await this.chatHandler.handleThreadMessage(message);
+        }
+        // Note: MessageBridge also registers its own message handler in start()
       });
 
       // Start presence sync
@@ -193,6 +208,7 @@ export class DiscordBot {
 
     // Stop components in reverse order
     this.messageBridge.stop();
+    this.chatHandler.dispose();
     this.presenceSync.stop();
     this.gateway.disconnect();
     this.channelClient.disconnect();
@@ -278,6 +294,13 @@ export class DiscordBot {
    */
   getGateway(): DiscordGateway {
     return this.gateway;
+  }
+
+  /**
+   * Get the chat handler instance.
+   */
+  getChatHandler(): DiscordChatHandler {
+    return this.chatHandler;
   }
 
   /**

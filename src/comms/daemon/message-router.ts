@@ -2,8 +2,10 @@
  * Message Router
  *
  * Routes incoming SignalDB messages to the correct local Claude Code session.
- * Uses `Bun.spawn(['claude', '--resume', sessionId, '--append-system-prompt', ctx, '-p', content])`
+ * Uses `Bun.spawn(['claude', '--resume', sessionId, '--dangerously-skip-permissions', '--append-system-prompt', ctx, '-p', content])`
  * to deliver messages with COMMS context and captures the response output.
+ * The --dangerously-skip-permissions flag is required because headless Claude
+ * processes cannot prompt the user for file write permissions.
  *
  * After execution, posts the response back to SignalDB as a 'response' type
  * message via the client.
@@ -309,7 +311,7 @@ export class MessageRouter {
   /**
    * Deliver a message to a local Claude session via the `claude` CLI.
    *
-   * Spawns: `claude --resume <sessionId> --append-system-prompt <context> -p <content>`
+   * Spawns: `claude --resume <sessionId> --dangerously-skip-permissions --append-system-prompt <context> -p <content>`
    * Captures stdout as the response.
    *
    * IMPORTANT: Must run from the session's projectPath directory for
@@ -331,7 +333,13 @@ export class MessageRouter {
     });
 
     const proc = Bun.spawn(
-      [CLAUDE_BINARY, '--resume', sessionId, '--append-system-prompt', systemPrompt, '-p', message.content],
+      [
+        CLAUDE_BINARY,
+        '--resume', sessionId,
+        '--dangerously-skip-permissions',
+        '--append-system-prompt', systemPrompt,
+        '-p', message.content,
+      ],
       {
         cwd: projectPath,
         stdout: 'pipe',

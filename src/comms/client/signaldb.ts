@@ -88,6 +88,11 @@ const AGENT_FIELD_ALIASES: Record<string, string> = {
   createdAt: 'registeredAt', // Agent.registeredAt <- created_at
 };
 
+/** Field aliases specific to Message objects (metadata_json -> metadataJson -> metadata) */
+const MESSAGE_FIELD_ALIASES: Record<string, string> = {
+  metadataJson: 'metadata', // Message.metadata <- metadata_json
+};
+
 // ============================================================================
 // Client Configuration
 // ============================================================================
@@ -243,6 +248,20 @@ function applyAgentAliases(agent: Agent): Agent {
   return agent;
 }
 
+/** Apply Message-specific field aliases (metadataJson -> metadata) */
+function applyMessageAliases(msg: Message): Message {
+  const raw = msg as unknown as Record<string, unknown>;
+  if (raw.metadataJson !== undefined && raw.metadata === undefined) {
+    raw.metadata = raw.metadataJson;
+    delete raw.metadataJson;
+  }
+  // Ensure metadata is always an object
+  if (!raw.metadata || typeof raw.metadata !== 'object') {
+    raw.metadata = {};
+  }
+  return msg;
+}
+
 class AgentOperations {
   constructor(private readonly client: SignalDBClient) {}
 
@@ -305,8 +324,8 @@ class AgentOperations {
 
   /**
    * List agents with optional filters.
-   * Note: SignalDB only supports limit/offset/orderBy/order params.
-   * All other filters are applied client-side.
+   * Note: Agent filters are still applied client-side since agent
+   * queries are low-volume and benefit from flexible matching.
    */
   async list(filters?: AgentFilter): Promise<Agent[]> {
     // SignalDB only supports pagination params, not column filters
@@ -434,7 +453,7 @@ class MessageOperations {
    */
   async send(data: MessageSend): Promise<Message> {
     // Convert camelCase to snake_case for SignalDB
-    return this.client.request<Message>('POST', '/v1/messages', {
+    const msg = await this.client.request<Message>('POST', '/v1/messages', {
       channel_id: data.channelId,
       sender_id: data.senderId,
       target_type: data.targetType,
@@ -445,6 +464,7 @@ class MessageOperations {
       status: 'pending',
       thread_id: data.threadId,
     });
+    return applyMessageAliases(msg);
   }
 
   /**
@@ -454,10 +474,12 @@ class MessageOperations {
    */
   async claim(id: string, agentId: string): Promise<Message> {
     // Get the existing message to preserve all fields
-    const existing = await this.client.request<Message>('GET', `/v1/messages/${id}`);
+    const existing = applyMessageAliases(
+      await this.client.request<Message>('GET', `/v1/messages/${id}`)
+    );
 
     // Update with claim info while preserving all existing fields
-    return this.client.request<Message>('PUT', `/v1/messages/${id}`, {
+    const msg = await this.client.request<Message>('PUT', `/v1/messages/${id}`, {
       channel_id: existing.channelId,
       sender_id: existing.senderId,
       target_type: existing.targetType,
@@ -470,6 +492,7 @@ class MessageOperations {
       claimed_at: new Date().toISOString(),
       status: 'claimed',
     });
+    return applyMessageAliases(msg);
   }
 
   /**
@@ -479,10 +502,12 @@ class MessageOperations {
    */
   async updateStatus(id: string, status: MessageStatus): Promise<Message> {
     // Get the existing message to preserve all fields
-    const existing = await this.client.request<Message>('GET', `/v1/messages/${id}`);
+    const existing = applyMessageAliases(
+      await this.client.request<Message>('GET', `/v1/messages/${id}`)
+    );
 
     // Update status while preserving all existing fields
-    return this.client.request<Message>('PUT', `/v1/messages/${id}`, {
+    const msg = await this.client.request<Message>('PUT', `/v1/messages/${id}`, {
       channel_id: existing.channelId,
       sender_id: existing.senderId,
       target_type: existing.targetType,
@@ -495,6 +520,7 @@ class MessageOperations {
       claimed_at: existing.claimedAt,
       status,
     });
+    return applyMessageAliases(msg);
   }
 
   /**
@@ -502,61 +528,104 @@ class MessageOperations {
    * Note: Requests a higher limit since SignalDB's default is 100.
    */
   async list(): Promise<Message[]> {
-    return this.client.request<Message[]>('GET', '/v1/messages', undefined, {
+    const messages = await this.client.request<Message[]>('GET', '/v1/messages', undefined, {
       limit: '500',
       orderBy: 'created_at',
       order: 'desc',
     });
+    for (let i = 0; i < messages.length; i++) {
+      applyMessageAliases(messages[i]!);
+    }
+    return messages;
   }
 
   /**
    * List messages by channel with optional filters.
-   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
+   * Uses server-side filtering via query params.
    */
   async listByChannel(channelId: string, filters?: MessageFilter): Promise<Message[]> {
-    const messages = await this.list();
+    const params: Record<string, string | undefined> = {
+      channel_id: channelId,
+      limit: String(filters?.limit ?? 500),
+      orderBy: 'created_at',
+      order: 'desc',
+    };
+    if (filters?.status) params.status = filters.status;
+    if (filters?.messageType) params.message_type = filters.messageType;
 
-    return messages.filter(msg => {
-      if (msg.channelId !== channelId) return false;
-      if (filters?.status && msg.status !== filters.status) return false;
-      if (filters?.messageType && msg.messageType !== filters.messageType) return false;
-      return true;
-    });
+    const messages = await this.client.request<Message[]>('GET', '/v1/messages', undefined, params);
+    for (let i = 0; i < messages.length; i++) {
+      applyMessageAliases(messages[i]!);
+    }
+    return messages;
   }
 
   /**
    * List messages targeted at a specific agent.
-   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
-   * Matches messages where the agent is either the sender or recipient.
+   * Uses server-side sender_id filter, then client-side recipient matching
+   * (targetAddress contains agent ID or session ID which can't be filtered server-side).
    *
    * @param agentId The database ID of the agent
    * @param filters Optional message filters
-   * @param sessionId Optional session ID to match in targetAddress (needed since targetAddress uses sessionId, not database ID)
+   * @param sessionId Optional session ID to match in targetAddress
    */
   async listForAgent(agentId: string, filters?: MessageFilter, sessionId?: string): Promise<Message[]> {
-    const messages = await this.list();
+    // Fetch messages where agent is sender (server-side)
+    const senderParams: Record<string, string | undefined> = {
+      sender_id: agentId,
+      limit: '500',
+      orderBy: 'created_at',
+      order: 'desc',
+    };
+    if (filters?.status) senderParams.status = filters.status;
+    if (filters?.messageType) senderParams.message_type = filters.messageType;
 
-    return messages.filter(msg => {
-      // Match by sender OR target address containing agent ID or session info
-      // The targetAddress format is: agent://{machineId}/{sessionId}
+    const sentMessages = await this.client.request<Message[]>('GET', '/v1/messages', undefined, senderParams);
+    for (let i = 0; i < sentMessages.length; i++) {
+      applyMessageAliases(sentMessages[i]!);
+    }
+
+    // Fetch messages where agent is recipient (target_address contains agentId)
+    // Server-side target_address is an exact match, so we still need client-side filtering
+    // for partial matches (agent ID, session ID, session name in the URI)
+    const allMessages = await this.list();
+    const sentIds = new Set<string>();
+    for (let i = 0; i < sentMessages.length; i++) {
+      sentIds.add(sentMessages[i]!.id);
+    }
+
+    const result: Message[] = [...sentMessages];
+    for (let i = 0; i < allMessages.length; i++) {
+      const msg = allMessages[i]!;
+      if (sentIds.has(msg.id)) continue;
+
       const isRecipient = msg.targetAddress?.includes(agentId) ||
         (sessionId && msg.targetAddress?.includes(sessionId));
-      const isSender = msg.senderId === agentId;
+      if (!isRecipient) continue;
+      if (filters?.status && msg.status !== filters.status) continue;
+      if (filters?.messageType && msg.messageType !== filters.messageType) continue;
 
-      if (!isRecipient && !isSender) return false;
-      if (filters?.status && msg.status !== filters.status) return false;
-      if (filters?.messageType && msg.messageType !== filters.messageType) return false;
-      return true;
-    });
+      result.push(msg);
+    }
+
+    return result;
   }
 
   /**
    * List messages in a conversation thread.
-   * Note: SignalDB doesn't support server-side filtering, so we filter client-side.
+   * Uses server-side thread_id filtering.
    */
   async listByThread(threadId: string): Promise<Message[]> {
-    const messages = await this.list();
-    return messages.filter(msg => msg.threadId === threadId);
+    const messages = await this.client.request<Message[]>('GET', '/v1/messages', undefined, {
+      thread_id: threadId,
+      limit: '500',
+      orderBy: 'created_at',
+      order: 'desc',
+    });
+    for (let i = 0; i < messages.length; i++) {
+      applyMessageAliases(messages[i]!);
+    }
+    return messages;
   }
 }
 

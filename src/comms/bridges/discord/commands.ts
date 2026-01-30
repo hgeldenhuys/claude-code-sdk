@@ -152,6 +152,30 @@ const SLASH_COMMANDS: SlashCommandDef[] = [
     ],
   },
   {
+    name: 'chat',
+    description: 'Chat with an AI agent and get a response',
+    options: [
+      {
+        name: 'agent',
+        description: 'Agent name, session name, or ID (e.g., "realtime-db", "witty-bison")',
+        type: 'STRING',
+        required: true,
+      },
+      {
+        name: 'message',
+        description: 'Message to send to the agent',
+        type: 'STRING',
+        required: true,
+      },
+      {
+        name: 'timeout',
+        description: 'Max seconds to wait for response (default: 120)',
+        type: 'INTEGER',
+        required: false,
+      },
+    ],
+  },
+  {
     name: 'paste',
     description: 'Create and share an ephemeral paste',
     options: [
@@ -380,6 +404,9 @@ export class SlashCommandManager {
           break;
         case 'send':
           await this.handleSendCommand(interaction);
+          break;
+        case 'chat':
+          // Handled by DiscordChatHandler in discord-bot.ts -- should not reach here
           break;
         case 'paste':
           await this.handlePasteCommand(interaction);

@@ -7,7 +7,7 @@
  * Usage:
  *   comms-memo list [--category <cat>] [--priority <pri>] [--unread] [--json]
  *   comms-memo read <id>
- *   comms-memo compose <address> --subject <s> --body <b> [--category <c>] [--priority <p>] [--thread <id>]
+ *   comms-memo compose <name-or-address> --subject <s> --body <b> [--category <c>] [--priority <p>] [--thread <id>]
  *   comms-memo reply <id> --body <b> [--subject <s>] [--category <c>] [--priority <p>]
  *   comms-memo archive <id>
  *
@@ -18,6 +18,8 @@
  */
 
 import { MemoClient } from '../src/comms/memos/memo-client';
+import { SignalDBClient } from '../src/comms/client/signaldb';
+import { resolveAgent } from '../src/comms/protocol/agent-resolver';
 import type { MemoCategory, MemoFilter, MemoPriority, MemoView } from '../src/comms/memos/types';
 
 // ============================================================================
@@ -330,7 +332,7 @@ async function readMemo(client: MemoClient, options: CLIOptions): Promise<void> 
 
 async function composeMemo(client: MemoClient, options: CLIOptions): Promise<void> {
   if (!options.address) {
-    console.error(red('Usage: comms-memo compose <address> --subject <s> --body <b>'));
+    console.error(red('Usage: comms-memo compose <name-or-address> --subject <s> --body <b>'));
     process.exit(1);
   }
   if (!options.subject) {
@@ -342,8 +344,25 @@ async function composeMemo(client: MemoClient, options: CLIOptions): Promise<voi
     process.exit(1);
   }
 
+  // Resolve agent name to full address if not already a URI
+  let targetAddress = options.address;
+  if (!targetAddress.includes('://')) {
+    const apiUrl = process.env.SIGNALDB_API_URL!;
+    const projectKey = process.env.SIGNALDB_PROJECT_KEY!;
+    const restClient = new SignalDBClient({ apiUrl, projectKey });
+    const agent = await resolveAgent(restClient, targetAddress);
+    if (!agent) {
+      console.error(red(`No agent found for "${targetAddress}". Run 'comms agents' to see available agents.`));
+      process.exit(1);
+    }
+    targetAddress = `agent://${agent.machineId}/${agent.sessionName ?? agent.sessionId ?? agent.id}`;
+    if (!options.json) {
+      console.error(dim(`Resolved "${options.address}" → ${targetAddress}`));
+    }
+  }
+
   const memo = await client.compose({
-    to: options.address,
+    to: targetAddress,
     subject: options.subject,
     body: options.body,
     category: options.category,
@@ -414,7 +433,7 @@ function showHelp(): void {
 ${bold('Usage:')}
   comms-memo ${cyan('list')}                          List inbox memos
   comms-memo ${cyan('read')} <id>                     Read a memo (auto-marks as read)
-  comms-memo ${cyan('compose')} <address> --subject .. Compose and send a memo
+  comms-memo ${cyan('compose')} <name> --subject ..   Compose and send a memo
   comms-memo ${cyan('reply')} <id> --body ..           Reply to a memo
   comms-memo ${cyan('archive')} <id>                   Archive (expire) a memo
 
@@ -436,11 +455,18 @@ ${bold('Environment:')}
   SIGNALDB_PROJECT_KEY     Project API key
   SIGNALDB_AGENT_ID        This agent's ID
 
+${bold('Address Resolution:')}
+  Accepts agent names (resolved via SignalDB) or full URIs:
+    witty-bison                   → resolves to agent://machine/witty-bison
+    realtime-db                   → resolves by project name
+    agent://mac-1/agent-2         → used as-is
+
 ${bold('Examples:')}
   comms-memo list --unread
   comms-memo list --category knowledge --priority P0
   comms-memo read abc12345
-  comms-memo compose agent://mac-1/agent-2 -s "Build Results" -b "All tests passed" -p P1
+  comms-memo compose witty-bison -s "Build Results" -b "All tests passed" -p P1
+  comms-memo compose agent://mac-1/agent-2 -s "Status" -b "All clear"
   comms-memo reply abc12345 -b "Thanks for the update"
   comms-memo archive abc12345`);
 }

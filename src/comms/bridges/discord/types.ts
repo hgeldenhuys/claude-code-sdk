@@ -469,6 +469,29 @@ export enum DiscordMessageFlags {
 }
 
 /**
+ * Active chat conversation between a Discord user and an AI agent.
+ * Created when a user uses /chat and maintained for thread follow-ups.
+ */
+export interface ChatConversation {
+  /** Discord thread ID (thread has its own channel ID) */
+  discordThreadId: string;
+  /** SignalDB thread ID for continuation */
+  signalDBThreadId: string;
+  /** Target agent for this conversation */
+  agentId: string;
+  /** Agent display name */
+  agentName: string;
+  /** Machine ID of the agent */
+  agentMachineId: string;
+  /** When this conversation was created */
+  createdAt: number;
+  /** Last activity timestamp (for cleanup) */
+  lastActivityAt: number;
+  /** Discord user who started the conversation */
+  discordUserId: string;
+}
+
+/**
  * Callback types for Discord events.
  */
 export type DiscordEventCallback<T> = (event: T) => void | Promise<void>;
