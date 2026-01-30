@@ -32,6 +32,9 @@ const ROUTE_TIMEOUT_MS = 5 * 60 * 1000;
 /** Path to the claude binary (resolved from typical install locations) */
 const CLAUDE_BINARY = process.env.CLAUDE_BINARY ?? path.join(os.homedir(), '.local', 'bin', 'claude');
 
+/** Path to persisted session branch mappings */
+const BRANCHES_FILE = path.join(os.homedir(), '.claude', 'daemon', 'session-branches.json');
+
 // ============================================================================
 // MessageRouter
 // ============================================================================
@@ -81,6 +84,7 @@ export class MessageRouter {
     this.client = client;
     this.security = security ?? null;
     this.machineId = machineId ?? 'unknown';
+    this.loadBranches();
   }
 
   /**
@@ -212,6 +216,7 @@ export class MessageRouter {
       // On subsequent messages: this is the same branch session.
       if (result.branchSessionId) {
         this.sessionBranches.set(threadId, result.branchSessionId);
+        this.saveBranches();
       }
 
       log.info('Message delivered successfully', {
@@ -344,25 +349,21 @@ export class MessageRouter {
     let typeLabel: string;
     let typeBehavior: string;
     switch (message.messageType) {
-      case 'sync':
-        typeLabel = 'Sync Message';
-        typeBehavior = 'real-time, response expected';
+      case 'chat':
+        typeLabel = 'Chat Message';
+        typeBehavior = 'conversational, response expected';
         break;
-      case 'async':
-        typeLabel = 'Async Message';
-        typeBehavior = 'async inbox delivery, response optional';
+      case 'command':
+        typeLabel = 'Command';
+        typeBehavior = 'executable instruction, response expected';
         break;
       case 'memo':
         typeLabel = 'Memo';
-        typeBehavior = 'broadcast knowledge, no response needed';
+        typeBehavior = 'async knowledge sharing, response optional';
         break;
       case 'response':
         typeLabel = 'Response';
         typeBehavior = 'reply to previous message';
-        break;
-      case 'story-notification':
-        typeLabel = 'Story Notification';
-        typeBehavior = 'story state change, informational';
         break;
       default:
         typeLabel = 'Message';
@@ -529,6 +530,59 @@ export class MessageRouter {
     } catch (err) {
       clearTimeout(timeoutId);
       throw err;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Branch Persistence
+  // --------------------------------------------------------------------------
+
+  /**
+   * Load persisted session branch mappings from disk.
+   * Called in constructor to restore thread→branch mappings across daemon restarts.
+   */
+  private loadBranches(): void {
+    try {
+      const file = Bun.file(BRANCHES_FILE);
+      // Bun.file is lazy — check existence via size synchronously
+      const fs = require('node:fs');
+      const text = fs.readFileSync(BRANCHES_FILE, 'utf-8') as string;
+      const data = JSON.parse(text) as Record<string, string>;
+      for (const [threadId, branchId] of Object.entries(data)) {
+        this.sessionBranches.set(threadId, branchId);
+      }
+      log.info('Loaded session branches from disk', {
+        count: this.sessionBranches.size,
+      });
+    } catch {
+      // File doesn't exist or is invalid — start with empty map
+      log.debug('No persisted session branches found (starting fresh)');
+    }
+  }
+
+  /**
+   * Persist session branch mappings to disk.
+   * Called whenever a new thread→branch mapping is created.
+   */
+  private saveBranches(): void {
+    try {
+      const data: Record<string, string> = {};
+      for (const [threadId, branchId] of this.sessionBranches) {
+        data[threadId] = branchId;
+      }
+      // Ensure directory exists
+      const fs = require('node:fs');
+      const dir = path.dirname(BRANCHES_FILE);
+      fs.mkdirSync(dir, { recursive: true });
+      // Write atomically via Bun.write
+      Bun.write(BRANCHES_FILE, JSON.stringify(data, null, 2));
+      log.debug('Saved session branches to disk', {
+        count: this.sessionBranches.size,
+      });
+    } catch (err) {
+      log.warn('Failed to persist session branches', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

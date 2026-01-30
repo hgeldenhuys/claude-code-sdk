@@ -12,6 +12,7 @@
  */
 
 import type { Agent } from '../../protocol/types';
+import type { AccessController } from './access-controller';
 import type { AgentChannelInfo, DiscordBotConfig } from './types';
 
 // ============================================================================
@@ -97,9 +98,30 @@ export class AgentChannelManager {
   /** The Discord category ID for agent channels */
   private categoryId: string | null = null;
 
+  /** Access controller for permission overwrites (optional, set after construction) */
+  private accessController: AccessController | null = null;
+
+  /** The bot's own Discord user ID (for permission overwrites) */
+  private botUserId: string | null = null;
+
   constructor(config: DiscordBotConfig) {
     this.config = config;
     this.categoryId = config.agentCategoryId ?? null;
+  }
+
+  /**
+   * Set the access controller for managing channel permissions.
+   */
+  setAccessController(controller: AccessController): void {
+    this.accessController = controller;
+  }
+
+  /**
+   * Set the bot's own Discord user ID (received from READY event).
+   * Used to build permission overwrites that always allow the bot.
+   */
+  setBotUserId(id: string): void {
+    this.botUserId = id;
   }
 
   // ==========================================================================
@@ -127,10 +149,11 @@ export class AgentChannelManager {
       }
     }
 
-    // Create the category
+    // Create the category with permission overwrites
     const category = await this.createChannel({
       name: AGENT_CATEGORY_NAME,
       type: CHANNEL_TYPE_CATEGORY,
+      permission_overwrites: this.buildPermissionOverwrites(),
     });
 
     this.categoryId = category.id;
@@ -140,11 +163,13 @@ export class AgentChannelManager {
   /**
    * On startup, reconcile existing Discord channels with agent state.
    * Picks up channels that were created in a previous bot session.
+   * Also applies permission overwrites to existing channels if configured.
    */
   async reconcileOnStartup(): Promise<void> {
     if (!this.categoryId) return;
 
     const channels = await this.getGuildChannels();
+    const overwrites = this.buildPermissionOverwrites();
 
     for (let i = 0; i < channels.length; i++) {
       const ch = channels[i]!;
@@ -159,6 +184,17 @@ export class AgentChannelManager {
       const info = this.parseTopicInfo(ch.topic, sessionName, ch.id);
       if (info) {
         this.channelAgents.set(ch.id, info);
+      }
+
+      // Patch existing channels to apply permission overwrites
+      if (overwrites.length > 0) {
+        try {
+          await this.discordRequest('PATCH', `/channels/${ch.id}`, {
+            permission_overwrites: overwrites,
+          });
+        } catch {
+          // Non-critical: permission patch failure doesn't block reconciliation
+        }
       }
     }
   }
@@ -231,6 +267,8 @@ export class AgentChannelManager {
 
   /**
    * Create a Discord channel for an agent.
+   * If bot user ID and owner IDs are configured, the channel is created
+   * as private (deny @everyone, allow bot + owners).
    */
   async createAgentChannel(agent: Agent): Promise<string> {
     if (!this.categoryId) {
@@ -245,6 +283,7 @@ export class AgentChannelManager {
       type: CHANNEL_TYPE_TEXT,
       parent_id: this.categoryId,
       topic,
+      permission_overwrites: this.buildPermissionOverwrites(),
     });
 
     // Store mappings
@@ -257,6 +296,15 @@ export class AgentChannelManager {
       status: agent.status,
       createdAt: Date.now(),
     });
+
+    // Auto-apply global access grants to the new channel
+    if (this.accessController) {
+      try {
+        await this.accessController.applyGlobalGrants(channel.id);
+      } catch {
+        // Non-critical: grant failures don't block channel creation
+      }
+    }
 
     // Post welcome card
     await this.postWelcomeCard(channel.id, agent);
@@ -359,6 +407,72 @@ export class AgentChannelManager {
     return this.categoryId;
   }
 
+  /**
+   * Get all current agent channel IDs.
+   * Used by the /access command to pass channel IDs for global grants.
+   */
+  getAllChannelIds(): string[] {
+    return Array.from(this.agentChannels.values());
+  }
+
+  /**
+   * Get the Discord channel ID for an agent session name.
+   * Returns undefined if no channel exists for that agent.
+   */
+  getChannelIdForAgent(sessionName: string): string | undefined {
+    return this.agentChannels.get(sessionName);
+  }
+
+  // ==========================================================================
+  // Permission Overwrites
+  // ==========================================================================
+
+  /**
+   * Build Discord permission overwrites to make channels private.
+   *
+   * Returns an array of permission overwrite objects:
+   * - Deny VIEW_CHANNEL for @everyone (role type 0, id = guild id)
+   * - Allow VIEW_CHANNEL for the bot user (member type 1)
+   * - Allow VIEW_CHANNEL for each owner user ID (member type 1)
+   *
+   * Returns empty array if bot user ID is not set (overwrites are optional).
+   */
+  private buildPermissionOverwrites(): Array<Record<string, unknown>> {
+    if (!this.botUserId) return [];
+
+    const VIEW_CHANNEL = (1n << 10n).toString();
+    const overwrites: Array<Record<string, unknown>> = [];
+
+    // Deny @everyone VIEW_CHANNEL (role overwrite, id = guild id)
+    overwrites.push({
+      id: this.config.guildId,
+      type: 0, // role
+      deny: VIEW_CHANNEL,
+      allow: '0',
+    });
+
+    // Allow bot user VIEW_CHANNEL
+    overwrites.push({
+      id: this.botUserId,
+      type: 1, // member
+      allow: VIEW_CHANNEL,
+      deny: '0',
+    });
+
+    // Allow each owner user VIEW_CHANNEL
+    const ownerIds = this.config.ownerUserIds ?? [];
+    for (let i = 0; i < ownerIds.length; i++) {
+      overwrites.push({
+        id: ownerIds[i]!,
+        type: 1, // member
+        allow: VIEW_CHANNEL,
+        deny: '0',
+      });
+    }
+
+    return overwrites;
+  }
+
   // ==========================================================================
   // Discord REST Helpers
   // ==========================================================================
@@ -425,6 +539,7 @@ export class AgentChannelManager {
     type: number;
     parent_id?: string;
     topic?: string;
+    permission_overwrites?: Array<Record<string, unknown>>;
   }): Promise<DiscordChannelObject> {
     return this.discordRequest(
       'POST',

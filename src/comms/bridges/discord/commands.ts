@@ -14,6 +14,8 @@ import { MemoClient } from '../../memos/memo-client';
 import type { MemoPriority } from '../../memos/types';
 import { PasteClient } from '../../pastes/paste-client';
 import type { Agent, Channel } from '../../protocol/types';
+import type { AccessController } from './access-controller';
+import type { AgentChannelManager } from './agent-channel-manager';
 import type {
   DiscordBotConfig,
   DiscordEmbed,
@@ -199,6 +201,63 @@ const SLASH_COMMANDS: SlashCommandDef[] = [
       },
     ],
   },
+  {
+    name: 'access',
+    description: 'Manage user access to agent channels (owner only)',
+    options: [
+      {
+        name: 'grant',
+        description: 'Grant a user access to an agent channel',
+        type: 'SUB_COMMAND',
+        options: [
+          {
+            name: 'user',
+            description: 'Discord user to grant access to',
+            type: 'USER',
+            required: true,
+          },
+          {
+            name: 'agent',
+            description: 'Agent session name, or "*" for all channels',
+            type: 'STRING',
+            required: true,
+          },
+        ],
+      },
+      {
+        name: 'revoke',
+        description: 'Revoke a user\'s access to an agent channel',
+        type: 'SUB_COMMAND',
+        options: [
+          {
+            name: 'user',
+            description: 'Discord user to revoke access from',
+            type: 'USER',
+            required: true,
+          },
+          {
+            name: 'agent',
+            description: 'Agent session name, or "*" for all channels',
+            type: 'STRING',
+            required: true,
+          },
+        ],
+      },
+      {
+        name: 'list',
+        description: 'List access grants for a channel or all channels',
+        type: 'SUB_COMMAND',
+        options: [
+          {
+            name: 'agent',
+            description: 'Agent session name to filter, or omit for all',
+            type: 'STRING',
+            required: false,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -232,6 +291,8 @@ export class SlashCommandManager {
   private readonly channelClient: ChannelClient;
   private readonly memoClient: MemoClient;
   private readonly pasteClient: PasteClient;
+  private accessController: AccessController | null = null;
+  private agentChannelManager: AgentChannelManager | null = null;
 
   constructor(
     config: DiscordBotConfig,
@@ -275,6 +336,20 @@ export class SlashCommandManager {
   }
 
   /**
+   * Set the access controller for /access command handling.
+   */
+  setAccessController(controller: AccessController): void {
+    this.accessController = controller;
+  }
+
+  /**
+   * Set the agent channel manager for /access command handling.
+   */
+  setAgentChannelManager(manager: AgentChannelManager): void {
+    this.agentChannelManager = manager;
+  }
+
+  /**
    * Get the command definitions for external inspection.
    */
   getCommandDefinitions(): SlashCommandDef[] {
@@ -300,19 +375,7 @@ export class SlashCommandManager {
     const commands = [];
     for (let i = 0; i < SLASH_COMMANDS.length; i++) {
       const cmd = SLASH_COMMANDS[i]!;
-      const options = [];
-      if (cmd.options) {
-        for (let j = 0; j < cmd.options.length; j++) {
-          const opt = cmd.options[j]!;
-          options.push({
-            name: opt.name,
-            description: opt.description,
-            type: this.mapOptionType(opt.type),
-            required: opt.required ?? false,
-            choices: opt.choices,
-          });
-        }
-      }
+      const options = cmd.options ? this.convertOptions(cmd.options) : [];
       commands.push({
         name: cmd.name,
         description: cmd.description,
@@ -355,10 +418,37 @@ export class SlashCommandManager {
   }
 
   /**
+   * Recursively convert SlashCommandOption[] to Discord API format.
+   * Handles nested options for SUB_COMMAND types.
+   */
+  private convertOptions(opts: import('./types').SlashCommandOption[]): unknown[] {
+    const result: unknown[] = [];
+    for (let i = 0; i < opts.length; i++) {
+      const opt = opts[i]!;
+      const converted: Record<string, unknown> = {
+        name: opt.name,
+        description: opt.description,
+        type: this.mapOptionType(opt.type),
+        required: opt.required ?? false,
+      };
+      if (opt.choices) {
+        converted.choices = opt.choices;
+      }
+      if (opt.options) {
+        converted.options = this.convertOptions(opt.options);
+      }
+      result.push(converted);
+    }
+    return result;
+  }
+
+  /**
    * Map our option type strings to Discord option type numbers.
    */
   private mapOptionType(type: string): number {
     switch (type) {
+      case 'SUB_COMMAND':
+        return 1;
       case 'STRING':
         return OPTION_TYPE_STRING;
       case 'INTEGER':
@@ -413,6 +503,9 @@ export class SlashCommandManager {
           break;
         case 'memo':
           await this.handleMemoCommand(interaction);
+          break;
+        case 'access':
+          await this.handleAccessCommand(interaction);
           break;
         default:
           await this.respondEphemeral(interaction, `Unknown command: ${commandName}`);
@@ -571,7 +664,7 @@ export class SlashCommandManager {
         senderId: this.config.agentId,
         targetType: 'agent',
         targetAddress,
-        messageType: 'sync',
+        messageType: 'chat',
         content: messageContent,
         metadata: {
           source: 'discord',
@@ -689,6 +782,167 @@ export class SlashCommandManager {
     };
 
     await this.editReply(interaction, { embeds: [embed] });
+  }
+
+  // ==========================================================================
+  // /access Command
+  // ==========================================================================
+
+  /**
+   * Handle /access command -- grant, revoke, or list user access to agent channels.
+   * Owner-only: only users whose Discord IDs are in config.ownerUserIds can execute.
+   */
+  private async handleAccessCommand(interaction: DiscordInteraction): Promise<void> {
+    if (!this.accessController || !this.agentChannelManager) {
+      await this.respondEphemeral(interaction, 'Access control is not configured.');
+      return;
+    }
+
+    // Owner guard
+    if (!this.isOwner(interaction)) {
+      await this.respondEphemeral(interaction, 'You do not have permission to manage access.');
+      return;
+    }
+
+    const options = interaction.data?.options || [];
+    if (options.length === 0) {
+      await this.respondEphemeral(interaction, 'No subcommand provided.');
+      return;
+    }
+
+    // First option is the subcommand (type 1)
+    const subcommand = options[0]!;
+    const subOptions = subcommand.options || [];
+
+    switch (subcommand.name) {
+      case 'grant':
+        await this.handleAccessGrant(interaction, subOptions);
+        break;
+      case 'revoke':
+        await this.handleAccessRevoke(interaction, subOptions);
+        break;
+      case 'list':
+        await this.handleAccessList(interaction, subOptions);
+        break;
+      default:
+        await this.respondEphemeral(interaction, `Unknown subcommand: ${subcommand.name}`);
+    }
+  }
+
+  /**
+   * /access grant @user <agent>
+   */
+  private async handleAccessGrant(
+    interaction: DiscordInteraction,
+    options: DiscordInteractionOption[],
+  ): Promise<void> {
+    const userId = this.getOptionValue(options, 'user') as string;
+    const agentName = this.getOptionValue(options, 'agent') as string;
+
+    if (!userId || !agentName) {
+      await this.respondEphemeral(interaction, 'User and agent are required.');
+      return;
+    }
+
+    await this.deferReply(interaction);
+
+    const channelId = this.resolveAgentChannel(agentName);
+    const allChannelIds = this.agentChannelManager!.getAllChannelIds();
+
+    await this.accessController!.grantAccess(userId, channelId, allChannelIds);
+
+    const target = channelId === '*' ? 'all agent channels' : `#${agentName}`;
+    await this.editReply(interaction, {
+      content: `Granted <@${userId}> access to ${target}.`,
+    });
+  }
+
+  /**
+   * /access revoke @user <agent>
+   */
+  private async handleAccessRevoke(
+    interaction: DiscordInteraction,
+    options: DiscordInteractionOption[],
+  ): Promise<void> {
+    const userId = this.getOptionValue(options, 'user') as string;
+    const agentName = this.getOptionValue(options, 'agent') as string;
+
+    if (!userId || !agentName) {
+      await this.respondEphemeral(interaction, 'User and agent are required.');
+      return;
+    }
+
+    await this.deferReply(interaction);
+
+    const channelId = this.resolveAgentChannel(agentName);
+    const allChannelIds = this.agentChannelManager!.getAllChannelIds();
+
+    await this.accessController!.revokeAccess(userId, channelId, allChannelIds);
+
+    const target = channelId === '*' ? 'all agent channels' : `#${agentName}`;
+    await this.editReply(interaction, {
+      content: `Revoked <@${userId}> access to ${target}.`,
+    });
+  }
+
+  /**
+   * /access list [agent]
+   */
+  private async handleAccessList(
+    interaction: DiscordInteraction,
+    options: DiscordInteractionOption[],
+  ): Promise<void> {
+    const agentName = this.getOptionValue(options, 'agent') as string | undefined;
+
+    await this.deferReply(interaction);
+
+    const channelId = agentName ? this.resolveAgentChannel(agentName) : undefined;
+    const grants = this.accessController!.listAccess(channelId);
+
+    if (grants.length === 0) {
+      await this.editReply(interaction, {
+        content: 'No access grants found.',
+      });
+      return;
+    }
+
+    const lines: string[] = [];
+    for (let i = 0; i < grants.length; i++) {
+      const g = grants[i]!;
+      const scope = g.channelId === '*' ? 'all channels' : `#${g.channelId}`;
+      lines.push(`• <@${g.userId}> → ${scope}`);
+    }
+
+    await this.editReply(interaction, {
+      content: `**Access Grants** (${grants.length}):\n${lines.join('\n')}`,
+    });
+  }
+
+  /**
+   * Resolve an agent name to a Discord channel ID.
+   * Returns '*' if the agent name is '*' (global).
+   * Returns the session name if no channel is found (AccessController handles it).
+   */
+  private resolveAgentChannel(agentName: string): string {
+    if (agentName === '*') return '*';
+    if (!this.agentChannelManager) return agentName;
+    return this.agentChannelManager.getChannelIdForAgent(agentName) ?? agentName;
+  }
+
+  /**
+   * Check if the interaction user is a bot owner.
+   */
+  private isOwner(interaction: DiscordInteraction): boolean {
+    const ownerIds = this.config.ownerUserIds ?? [];
+    if (ownerIds.length === 0) return true; // No owners configured = anyone can manage
+
+    const userId = interaction.member?.user?.id ?? interaction.user?.id;
+    if (!userId) return false;
+
+    for (let i = 0; i < ownerIds.length; i++) {
+      if (ownerIds[i] === userId) return true;
+    }
+    return false;
   }
 
   // ==========================================================================

@@ -8,6 +8,7 @@
 import { ChannelClient } from '../../channels/channel-client';
 import { MemoClient } from '../../memos/memo-client';
 import { PasteClient } from '../../pastes/paste-client';
+import { AccessController } from './access-controller';
 import { AgentChannelManager } from './agent-channel-manager';
 import { DiscordChatHandler } from './chat-handler';
 import { SlashCommandManager } from './commands';
@@ -76,6 +77,7 @@ export class DiscordBot {
   private readonly commandManager: SlashCommandManager;
   private readonly chatHandler: DiscordChatHandler;
   private readonly agentChannelManager: AgentChannelManager;
+  private readonly accessController: AccessController;
   private readonly threadMapper: ThreadMapper;
   private readonly presenceSync: PresenceSync;
   private readonly formatter: MessageFormatter;
@@ -131,7 +133,13 @@ export class DiscordBot {
     this.formatter = new MessageFormatter(undefined, this.pasteClient);
     this.chatHandler = new DiscordChatHandler(this.config, this.formatter);
     this.agentChannelManager = new AgentChannelManager(this.config);
+    this.accessController = new AccessController(this.config);
     this.rateLimiter = new DiscordRateLimiter(this.config.rateLimitPerUser);
+
+    // Wire AccessController into AgentChannelManager and CommandManager
+    this.agentChannelManager.setAccessController(this.accessController);
+    this.commandManager.setAccessController(this.accessController);
+    this.commandManager.setAgentChannelManager(this.agentChannelManager);
 
     this.messageBridge = new MessageBridge(
       this.config,
@@ -166,6 +174,11 @@ export class DiscordBot {
     this.isRunning = true;
 
     try {
+      // Register READY callback before connecting to capture bot user ID
+      this.gateway.onDiscordReady((readyData) => {
+        this.agentChannelManager.setBotUserId(readyData.user.id);
+      });
+
       // Connect to both gateways
       await this.gateway.connect();
 
@@ -331,6 +344,13 @@ export class DiscordBot {
    */
   getAgentChannelManager(): AgentChannelManager {
     return this.agentChannelManager;
+  }
+
+  /**
+   * Get the access controller instance.
+   */
+  getAccessController(): AccessController {
+    return this.accessController;
   }
 
   /**

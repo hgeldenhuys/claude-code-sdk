@@ -633,6 +633,7 @@ cd apps/tapestry-observer && bun dev  # Real-time web dashboard
 - **Auto-compaction drops headless turns**: When resuming a large session (200K+ context) headlessly, auto-compaction can silently drop recent small headless turns, causing memory loss between routed messages. Solution: fork a lightweight branch session.
 - **`--fork-session` creates branch sessions**: `claude --resume <id> --fork-session` creates a new session inheriting the parent's context but with its own transcript. Combined with `--output-format json`, the forked session ID is returned in the `session_id` field.
 - **`--output-format json` structured output**: Returns `{result, session_id, is_error, duration_ms, usage}` instead of raw text. Essential for programmatic CLI usage.
+- **`onDiscordReady` must register before `connect()`**: The Gateway READY event fires during connection. Callbacks registered after `connect()` resolves will miss it. Bot user ID (needed for permission overwrites) comes from READY data.
 
 **System Prompt Injection:**
 
@@ -651,7 +652,8 @@ Follow-up:      Discord msg → --resume <branch>                  → memory pr
 Follow-up:      Discord msg → --resume <branch>                  → memory preserved
 ```
 
-Branch tracking is in-memory (`Map<threadId, branchSessionId>`) in `message-router.ts`.
+Branch tracking is persisted to `~/.claude/daemon/session-branches.json` so mappings
+survive daemon restarts. Loaded on construction, saved on every new branch.
 The `--output-format json` flag captures the `session_id` from each invocation to track
 whether a fork occurred. JSON parse failures fall back to raw text (SyntaxError guard).
 
@@ -670,6 +672,23 @@ Components: `daemon` (lifecycle), `sse-client` (connection/keepalive), `router` 
 
 SSEClient exposes `getHealthStatus()` returning `{ connected, lastConnectedAt, lastEventAt, reconnectCount }`. The daemon checks `isConnected` every discovery poll cycle and force-reconnects if the stream died.
 
+**Access Control (Discord Agent Channels):**
+
+Agent channels are private by default when `DISCORD_OWNER_IDS` is configured.
+Uses Discord permission overwrites to deny `@everyone` VIEW_CHANNEL and allow
+only the bot + owner users. Runtime access management via `/access` slash command:
+
+```
+/access grant user:@JohnDoe agent:witty-bison   # Grant access to one channel
+/access grant user:@JohnDoe agent:*              # Grant access to all channels
+/access revoke user:@JohnDoe agent:witty-bison   # Revoke access
+/access list                                      # List all grants
+/access list agent:witty-bison                    # List grants for one channel
+```
+
+New channels auto-inherit global grants (`*`) via `AccessController.applyGlobalGrants()`.
+Owner-only guard: only users in `config.ownerUserIds` can execute `/access`.
+
 **Full Architecture Reference:** See `src/comms/README.md` for lifecycle diagrams, troubleshooting, and configuration.
 
 **Environment Configuration:**
@@ -682,6 +701,7 @@ TAPESTRY_ENV=live                          # Active environment
 TAPESTRY_MACHINE_ID=m4.local               # Machine identifier
 TAPESTRY_LIVE_API_URL=https://signaldb.co  # SignalDB API
 TAPESTRY_LIVE_PROJECT_KEY=sk_live_...      # Project API key
+DISCORD_OWNER_IDS=123456789,987654321      # Comma-separated Discord user IDs (bot owners)
 ```
 
 Environments: `dev` (local, throwaway), `test` (UAT/CI), `live` (production).

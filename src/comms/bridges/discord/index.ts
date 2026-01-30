@@ -39,6 +39,7 @@
 export { DiscordBot } from './discord-bot';
 
 // Core components
+export { AccessController } from './access-controller';
 export { AgentChannelManager } from './agent-channel-manager';
 export { DiscordGateway } from './gateway';
 export { SlashCommandManager } from './commands';
@@ -49,6 +50,7 @@ export { DiscordRateLimiter } from './rate-limiter';
 export { MessageBridge } from './message-bridge';
 
 // Types
+export type { AccessGrant } from './access-controller';
 export type {
   // Configuration
   DiscordBotConfig,

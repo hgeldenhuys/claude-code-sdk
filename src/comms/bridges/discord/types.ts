@@ -29,6 +29,8 @@ export interface DiscordBotConfig {
   rateLimitPerUser?: number;
   /** Discord category ID for agent channels (auto-created if missing) */
   agentCategoryId?: string;
+  /** Discord user IDs allowed to manage agent access (bot owners) */
+  ownerUserIds?: string[];
 }
 
 /**
@@ -88,7 +90,7 @@ export interface MessageFormatConfig {
 /**
  * Discord slash command option types.
  */
-export type SlashCommandOptionType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'USER' | 'CHANNEL' | 'ROLE';
+export type SlashCommandOptionType = 'SUB_COMMAND' | 'STRING' | 'INTEGER' | 'BOOLEAN' | 'USER' | 'CHANNEL' | 'ROLE';
 
 /**
  * Discord slash command option definition.
@@ -104,6 +106,8 @@ export interface SlashCommandOption {
   required?: boolean;
   /** Predefined choices for this option */
   choices?: Array<{ name: string; value: string }>;
+  /** Nested options (for SUB_COMMAND type) */
+  options?: SlashCommandOption[];
 }
 
 /**

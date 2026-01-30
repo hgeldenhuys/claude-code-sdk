@@ -182,6 +182,7 @@ async function main(): Promise<number> {
   const discordToken = process.env.DISCORD_TOKEN ?? envVars['DISCORD_TOKEN'];
   const guildId = process.env.DISCORD_GUILD_ID ?? envVars['DISCORD_GUILD_ID'];
   const agentCategoryId = process.env.DISCORD_AGENT_CATEGORY_ID ?? envVars['DISCORD_AGENT_CATEGORY_ID'];
+  const ownerIdsRaw = process.env.DISCORD_OWNER_IDS ?? envVars['DISCORD_OWNER_IDS'] ?? '';
 
   if (!discordToken) {
     console.error('error: DISCORD_TOKEN is required (set in .env.tapestry or environment)');
@@ -225,6 +226,9 @@ async function main(): Promise<number> {
     return 1;
   }
 
+  // Parse owner user IDs (comma-separated)
+  const ownerUserIds = ownerIdsRaw.split(',').filter(Boolean);
+
   // Create bot
   const bot = new DiscordBot({
     discordToken,
@@ -233,6 +237,7 @@ async function main(): Promise<number> {
     projectKey,
     agentId: 'discord-bot',
     agentCategoryId: agentCategoryId || undefined,
+    ownerUserIds: ownerUserIds.length > 0 ? ownerUserIds : undefined,
   });
 
   // Print startup info
@@ -240,6 +245,7 @@ async function main(): Promise<number> {
   console.log(`  API:       ${apiUrl}`);
   console.log(`  Guild:     ${guildId}`);
   console.log(`  Category:  ${agentCategoryId || '(auto-create)'}`);
+  console.log(`  Owners:    ${ownerUserIds.length > 0 ? ownerUserIds.join(', ') : '(none — open access)'}`);
   console.log('');
 
   // Graceful shutdown
