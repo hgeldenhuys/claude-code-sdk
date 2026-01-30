@@ -83,8 +83,14 @@ export class AgentDaemon {
   /** Session discovery polling interval */
   private discoveryInterval: ReturnType<typeof setInterval> | null = null;
 
+  /** Periodic message polling interval (primary reliability mechanism) */
+  private pollingInterval: ReturnType<typeof setInterval> | null = null;
+
   /** Discovery polling interval in ms (5 seconds for near-realtime) */
   private readonly discoveryIntervalMs: number = 5_000;
+
+  /** Message polling interval in ms (reliable fallback independent of SSE) */
+  private readonly pollingIntervalMs: number = 10_000;
 
   /** Timestamp when daemon was started */
   private startedAt: number = 0;
@@ -179,13 +185,16 @@ export class AgentDaemon {
         log.info('Discovered active sessions', { count: discovered.length });
       }
 
-      // 3. Register each session in SignalDB
+      // 3. Clean up orphaned agents from previous daemon runs
+      await this.cleanupOrphanedAgents(discovered);
+
+      // 4. Register each session in SignalDB
       for (let i = 0; i < discovered.length; i++) {
         const session = discovered[i]!;
         await this.registerSession(session);
       }
 
-      // 3b. Create RLS filter with initial session IDs
+      // 4b. Create RLS filter with initial session IDs
       const sessionIds = new Set<string>();
       for (const [sessionId] of this.sessions) {
         sessionIds.add(sessionId);
@@ -198,18 +207,21 @@ export class AgentDaemon {
       );
       log.info('RLS filter initialized', { sessionIds: sessionIds.size });
 
-      // 4. Start heartbeat loops for all registered agents
+      // 5. Start heartbeat loops for all registered agents
       for (const [sessionId, session] of this.sessions) {
         if (session.agentId) {
           this.startHeartbeat(sessionId, session.agentId);
         }
       }
 
-      // 5. Connect SSE for real-time messages
+      // 6. Connect SSE for real-time messages (fast-path, not relied upon)
       await this.connectSSE();
 
-      // 6. Start session discovery polling (5s interval)
+      // 7. Start session discovery polling (5s interval)
       this.startDiscoveryPolling();
+
+      // 8. Start periodic message polling (primary reliability mechanism)
+      this.startMessagePolling();
 
       this.setState('running');
       log.info('Daemon running', { machineId: this.config.machineId, sessions: this.sessions.size });
@@ -237,6 +249,12 @@ export class AgentDaemon {
     if (this.discoveryInterval) {
       clearInterval(this.discoveryInterval);
       this.discoveryInterval = null;
+    }
+
+    // 1b. Stop message polling
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
     }
 
     // 2. Disconnect SSE
@@ -346,6 +364,54 @@ export class AgentDaemon {
     if (this.rlsFilter) {
       this.rlsFilter.updateMemberships(channels);
       log.info('Updated RLS channel memberships', { count: channels.size });
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Orphaned Agent Cleanup
+  // --------------------------------------------------------------------------
+
+  /**
+   * Clean up agents in SignalDB that were left behind by previous daemon runs.
+   * On startup, queries all agents on this machine and deregisters any whose
+   * sessionId is not in the freshly discovered sessions list.
+   */
+  private async cleanupOrphanedAgents(discovered: LocalSession[]): Promise<void> {
+    try {
+      const discoveredSessionIds = new Set(discovered.map(s => s.sessionId));
+      const allAgents = await this.client.agents.list();
+      let orphanCount = 0;
+
+      for (let i = 0; i < allAgents.length; i++) {
+        const agent = allAgents[i]!;
+        // Only clean up agents on this machine
+        if (agent.machineId !== this.config.machineId) continue;
+        // If the agent's session is not in our freshly discovered set, it's orphaned
+        if (agent.sessionId && !discoveredSessionIds.has(agent.sessionId)) {
+          try {
+            await this.registry.deregister(agent.id);
+            orphanCount++;
+            log.info('Deregistered orphaned agent', {
+              agentId: agent.id.slice(0, 8),
+              sessionId: agent.sessionId.slice(0, 8),
+              sessionName: agent.sessionName,
+            });
+          } catch (err) {
+            log.warn('Failed to deregister orphaned agent', {
+              agentId: agent.id.slice(0, 8),
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+      }
+
+      if (orphanCount > 0) {
+        log.info('Cleaned up orphaned agents', { count: orphanCount });
+      }
+    } catch (err) {
+      log.warn('Orphan cleanup failed (non-fatal)', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -535,13 +601,38 @@ export class AgentDaemon {
       }
 
       // SSE health check: if disconnected, force reconnect
+      // (Expected to happen frequently due to ~11s server timeout)
       if (this.sseClient && !this.sseClient.isConnected) {
-        log.warn('SSE disconnected during health check, reconnecting');
+        log.debug('SSE disconnected during health check, reconnecting');
         await this.reconnectSSE();
       }
     }, this.discoveryIntervalMs);
 
     log.info('Started discovery polling', { intervalMs: this.discoveryIntervalMs });
+  }
+
+  // --------------------------------------------------------------------------
+  // Periodic Message Polling (Primary Reliability Mechanism)
+  // --------------------------------------------------------------------------
+
+  /**
+   * Start periodic polling for pending messages.
+   * This is the primary reliability mechanism -- SSE is a fast-path optimization
+   * but cannot be relied upon (server closes connections every ~11s).
+   * Polling runs independently on a fixed interval.
+   */
+  private startMessagePolling(): void {
+    this.pollingInterval = setInterval(async () => {
+      try {
+        await this.pollPendingMessages();
+      } catch (err) {
+        log.warn('Periodic poll error', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }, this.pollingIntervalMs);
+
+    log.info('Started message polling', { intervalMs: this.pollingIntervalMs });
   }
 
   // --------------------------------------------------------------------------
@@ -568,16 +659,8 @@ export class AgentDaemon {
 
     this.sseClient.onStatus((connected: boolean) => {
       this.callbacks.onSSEStatus?.(connected);
-      log.info('SSE status changed', { connected });
-
-      // Poll for missed messages on every reconnect
-      if (connected) {
-        this.pollPendingMessages().catch((err) => {
-          log.warn('Pending message poll failed', {
-            error: err instanceof Error ? err.message : String(err),
-          });
-        });
-      }
+      // SSE flaps frequently (~11s cycle) -- log at debug to reduce noise
+      log.debug('SSE status changed', { connected });
     });
 
     this.sseClient.onError((error: Error) => {

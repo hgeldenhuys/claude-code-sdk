@@ -258,7 +258,8 @@ export class SSEClient {
   // --------------------------------------------------------------------------
 
   /**
-   * Start keepalive timer that pings the API every 15s of idle.
+   * Start keepalive timer that pings the API every 8s of idle.
+   * Must be shorter than the server's ~11s connection timeout.
    * If the ping fails, abort and reconnect immediately.
    */
   private startKeepalive(): void {
@@ -266,7 +267,7 @@ export class SSEClient {
 
     this.keepaliveTimer = setInterval(async () => {
       const idleMs = Date.now() - this.lastEventTime;
-      if (idleMs < 12000) return;
+      if (idleMs < 7000) return;
 
       try {
         const resp = await fetch(`${this.apiUrl}/v1/agents?limit=1`, {
@@ -288,7 +289,7 @@ export class SSEClient {
           this.abortController.abort();
         }
       }
-    }, 15000);
+    }, 8000);
   }
 
   private stopKeepalive(): void {
@@ -354,7 +355,7 @@ export class SSEClient {
       this.emitStatus(true);
       this.startKeepalive();
 
-      log.info('SSE stream connected', { url, resumeId: this.lastEventId });
+      log.debug('SSE stream connected', { url, resumeId: this.lastEventId });
 
       // Process the stream in background (don't await - let caller continue)
       this.processStream(response.body).catch((err) => {
@@ -401,8 +402,9 @@ export class SSEClient {
         const { done, value } = await reader.read();
 
         if (done) {
-          // Stream ended (server closed connection)
-          log.warn('SSE stream ended (server closed connection)');
+          // Stream ended -- expected every ~11s due to server timeout.
+          // Not a warning; the periodic poll handles reliability.
+          log.debug('SSE stream ended (server closed connection)');
           break;
         }
 
@@ -489,7 +491,7 @@ export class SSEClient {
 
     const delay = this.currentBackoffMs;
 
-    log.info('Scheduling SSE reconnect', {
+    log.debug('Scheduling SSE reconnect', {
       delayMs: delay,
       reconnectCount: this.reconnectCount,
     });
