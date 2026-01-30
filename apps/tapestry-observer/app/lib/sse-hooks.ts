@@ -1,11 +1,14 @@
 /**
  * SSE Subscription Hooks
  *
- * React hooks for subscribing to SignalDB Server-Sent Events streams.
- * Handles connection management, reconnection, and state updates.
+ * React hooks for subscribing to SignalDB Server-Sent Events streams
+ * through the BFF proxy (/api/proxy). No API keys are sent from the browser —
+ * the server-side proxy injects credentials.
+ *
+ * Handles connection management, reconnection, keepalive, and state updates.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Agent, Channel, Message } from "./types";
 
 // ============================================================================
@@ -13,20 +16,22 @@ import type { Agent, Channel, Message } from "./types";
 // ============================================================================
 
 interface UseSSEOptions {
-  apiUrl: string;
-  apiKey: string;
   enabled?: boolean;
-  useProxy?: boolean; // Use /api/proxy/* to avoid CORS
 }
+
+export type StreamMode = "live" | "polling" | "offline";
 
 interface SSEState<T> {
   data: T[];
   connected: boolean;
   error: Error | null;
-  lastEventId: string | null;
+  mode: StreamMode;
 }
 
 type EntityType = "agents" | "channels" | "messages";
+
+// All requests go through the BFF proxy
+const BASE_URL = "/api/proxy";
 
 // ============================================================================
 // Case Conversion Utilities
@@ -120,46 +125,78 @@ function parseSSEFrame(frame: string): ParsedSSEEvent | null {
 // ============================================================================
 
 /**
- * Subscribe to a SignalDB table's SSE stream for real-time updates.
+ * Subscribe to a SignalDB table's SSE stream via the BFF proxy.
+ *
+ * No API keys or Authorization headers are sent from the browser.
+ * The server-side proxy (/api/proxy/*) injects credentials.
  */
 export function useTableStream<T extends { id: string }>(
   table: EntityType,
   options: UseSSEOptions
 ): SSEState<T> & { refresh: () => void } {
-  const { apiUrl, apiKey, enabled = true, useProxy = false } = options; // CORS now enabled on API
-
-  // Use proxy to avoid CORS issues when running in browser
-  const baseUrl = useMemo(() => {
-    if (useProxy && typeof window !== "undefined") {
-      return "/api/proxy";
-    }
-    return apiUrl;
-  }, [useProxy, apiUrl]);
+  const { enabled = true } = options;
 
   const [state, setState] = useState<SSEState<T>>({
     data: [],
     connected: false,
     error: null,
-    lastEventId: null,
+    mode: "offline",
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepaliveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const backoffRef = useRef(1000);
+  const sseFailCountRef = useRef(0);
   const mountedRef = useRef(true);
+  const lastEventIdRef = useRef<string | null>(null);
+  const lastEventTimeRef = useRef<number>(Date.now());
 
-  // Fetch initial data
+  // Clear keepalive interval
+  const clearKeepalive = useCallback(() => {
+    if (keepaliveIntervalRef.current) {
+      clearInterval(keepaliveIntervalRef.current);
+      keepaliveIntervalRef.current = null;
+    }
+  }, []);
+
+  // Start keepalive ping (no auth header — proxy handles it)
+  const startKeepalive = useCallback(() => {
+    clearKeepalive();
+
+    keepaliveIntervalRef.current = setInterval(async () => {
+      const idleMs = Date.now() - lastEventTimeRef.current;
+      if (idleMs < 6000) return;
+
+      try {
+        const resp = await fetch(`${BASE_URL}/v1/agents?limit=1`, {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!resp.ok) {
+          throw new Error(`Keepalive failed: ${resp.status}`);
+        }
+      } catch {
+        if (mountedRef.current) {
+          abortControllerRef.current?.abort();
+        }
+      }
+    }, 8000);
+  }, [clearKeepalive]);
+
+  // Stop polling
+  const stopPolling = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }, []);
+
+  // Fetch initial data (no auth header — proxy handles it)
   const fetchInitialData = useCallback(async () => {
-    if (!apiKey || !baseUrl) return;
-
     try {
-      const response = await fetch(`${baseUrl}/v1/${table}?limit=500`, {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
+      const response = await fetch(`${BASE_URL}/v1/${table}?limit=500`, {
+        headers: { "Content-Type": "application/json" },
       });
 
       if (!response.ok) {
@@ -181,27 +218,35 @@ export function useTableStream<T extends { id: string }>(
         }));
       }
     }
-  }, [baseUrl, apiKey, table]);
+  }, [table]);
 
-  // Connect to SSE stream
+  // Start polling fallback (every 10s)
+  const startPolling = useCallback(() => {
+    stopPolling();
+    pollIntervalRef.current = setInterval(() => {
+      if (mountedRef.current) {
+        fetchInitialData();
+      }
+    }, 10_000);
+  }, [stopPolling, fetchInitialData]);
+
+  // Connect to SSE stream (no auth header — proxy handles it)
   const connect = useCallback(async () => {
-    if (!enabled || !apiKey || !baseUrl) return;
+    if (!enabled) return;
 
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${apiKey}`,
       Accept: "text/event-stream",
-      // Note: Cache-Control not allowed by CORS
     };
 
-    if (state.lastEventId) {
-      headers["Last-Event-ID"] = state.lastEventId;
+    if (lastEventIdRef.current) {
+      headers["Last-Event-ID"] = lastEventIdRef.current;
     }
 
     try {
-      const response = await fetch(`${baseUrl}/v1/${table}/stream`, {
+      const response = await fetch(`${BASE_URL}/v1/${table}/stream`, {
         method: "GET",
         headers,
         signal: abortControllerRef.current.signal,
@@ -217,11 +262,17 @@ export function useTableStream<T extends { id: string }>(
         throw new Error("SSE response has no body");
       }
 
-      // Connected - reset backoff
+      // Connected - reset backoff and fail count, switch to live mode
       backoffRef.current = 1000;
+      sseFailCountRef.current = 0;
+      lastEventTimeRef.current = Date.now();
+      stopPolling();
       if (mountedRef.current) {
-        setState((prev) => ({ ...prev, connected: true, error: null }));
+        setState((prev) => ({ ...prev, connected: true, error: null, mode: "live" }));
       }
+
+      // Start keepalive
+      startKeepalive();
 
       // Process stream
       const reader = response.body.getReader();
@@ -242,16 +293,26 @@ export function useTableStream<T extends { id: string }>(
           const parsedEvent = parseSSEFrame(frame);
           if (!parsedEvent) continue;
 
-          if (parsedEvent.id !== null && mountedRef.current) {
-            setState((prev) => ({ ...prev, lastEventId: parsedEvent.id }));
+          if (parsedEvent.id !== null) {
+            lastEventIdRef.current = parsedEvent.id;
           }
 
+          lastEventTimeRef.current = Date.now();
+
           const eventType = parsedEvent.event;
-          const eventData = parsedEvent.data;
+          const rawEvent = parsedEvent.data;
 
-          if (!eventData || typeof eventData !== "object") continue;
+          if (!rawEvent || typeof rawEvent !== "object") continue;
 
-          const converted = convertKeysToCamelCase<T>(eventData);
+          const record = rawEvent as Record<string, unknown>;
+          if (!record.id) continue;
+
+          const entityData =
+            record.data && typeof record.data === "object"
+              ? { id: record.id, ...(record.data as Record<string, unknown>) }
+              : record;
+
+          const converted = convertKeysToCamelCase<T>(entityData);
 
           if (!mountedRef.current) continue;
 
@@ -261,7 +322,6 @@ export function useTableStream<T extends { id: string }>(
             switch (eventType) {
               case "insert":
               case "initial":
-                // Add if not exists
                 if (!newData.some((item) => item.id === converted.id)) {
                   newData = [...newData, converted];
                 }
@@ -274,8 +334,7 @@ export function useTableStream<T extends { id: string }>(
               case "delete":
                 newData = newData.filter((item) => item.id !== converted.id);
                 break;
-              default:
-                // For generic "message" events, treat as upsert
+              default: {
                 const idx = newData.findIndex(
                   (item) => item.id === converted.id
                 );
@@ -284,6 +343,7 @@ export function useTableStream<T extends { id: string }>(
                 } else {
                   newData = [...newData, converted];
                 }
+              }
             }
 
             return { ...prev, data: newData };
@@ -291,32 +351,56 @@ export function useTableStream<T extends { id: string }>(
         }
       }
     } catch (err) {
-      // Ignore abort errors
       if (err instanceof DOMException && err.name === "AbortError") {
+        if (mountedRef.current) {
+          clearKeepalive();
+          setState((prev) => ({ ...prev, connected: false }));
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connect();
+          }, 100);
+        }
         return;
       }
 
-      if (mountedRef.current) {
-        setState((prev) => ({
-          ...prev,
-          connected: false,
-          error: err instanceof Error ? err : new Error(String(err)),
-        }));
+      sseFailCountRef.current++;
 
-        // Schedule reconnect with exponential backoff
-        reconnectTimeoutRef.current = setTimeout(() => {
-          backoffRef.current = Math.min(backoffRef.current * 2, 30000);
-          connect();
-        }, backoffRef.current);
+      if (mountedRef.current) {
+        clearKeepalive();
+
+        if (sseFailCountRef.current >= 3) {
+          setState((prev) => ({
+            ...prev,
+            connected: false,
+            error: null,
+            mode: prev.data.length > 0 ? "polling" : "offline",
+          }));
+          startPolling();
+          reconnectTimeoutRef.current = setTimeout(() => {
+            sseFailCountRef.current = 0;
+            connect();
+          }, 60_000);
+        } else {
+          setState((prev) => ({
+            ...prev,
+            connected: false,
+            error: err instanceof Error ? err : new Error(String(err)),
+          }));
+          reconnectTimeoutRef.current = setTimeout(() => {
+            backoffRef.current = Math.min(backoffRef.current * 2, 30000);
+            connect();
+          }, backoffRef.current);
+        }
       }
+      return;
     }
 
-    // Stream ended - reconnect (clear error since it ended cleanly)
+    // Stream ended cleanly - reconnect
     if (mountedRef.current) {
+      clearKeepalive();
       setState((prev) => ({ ...prev, connected: false, error: null }));
       reconnectTimeoutRef.current = setTimeout(connect, backoffRef.current);
     }
-  }, [enabled, baseUrl, apiKey, table, state.lastEventId]);
+  }, [enabled, table, startKeepalive, clearKeepalive, startPolling, stopPolling]);
 
   // Refresh function
   const refresh = useCallback(() => {
@@ -327,7 +411,7 @@ export function useTableStream<T extends { id: string }>(
   useEffect(() => {
     mountedRef.current = true;
 
-    if (enabled && apiKey && baseUrl) {
+    if (enabled) {
       fetchInitialData();
       connect();
     }
@@ -335,11 +419,13 @@ export function useTableStream<T extends { id: string }>(
     return () => {
       mountedRef.current = false;
       abortControllerRef.current?.abort();
+      clearKeepalive();
+      stopPolling();
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [enabled, apiKey, baseUrl, fetchInitialData, connect]);
+  }, [enabled, fetchInitialData, connect, clearKeepalive, stopPolling]);
 
   return { ...state, refresh };
 }

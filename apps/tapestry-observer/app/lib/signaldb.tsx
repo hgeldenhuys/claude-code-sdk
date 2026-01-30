@@ -2,6 +2,8 @@
  * SignalDB Context Provider
  *
  * Provides SignalDB connection state and data to the component tree.
+ * No API keys are stored client-side — the BFF proxy handles credentials.
+ * On mount, fetches /api/config to check if the server is configured.
  */
 
 import {
@@ -14,7 +16,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAgents, useChannels, useMessages } from "./sse-hooks";
-import type { Agent, Channel, ConnectionState, Message } from "./types";
+import type { Agent, Channel, ConnectionState, Message, StreamMode } from "./types";
 
 // ============================================================================
 // Context Types
@@ -22,11 +24,10 @@ import type { Agent, Channel, ConnectionState, Message } from "./types";
 
 interface SignalDBContextValue {
   // Connection
-  apiUrl: string | null;
-  apiKey: string | null;
+  configured: boolean;
+  configLoading: boolean;
+  apiHost: string | null;
   connected: ConnectionState;
-  setCredentials: (apiUrl: string, apiKey: string) => void;
-  clearCredentials: () => void;
 
   // Data
   agents: Agent[];
@@ -47,35 +48,6 @@ interface SignalDBContextValue {
 const SignalDBContext = createContext<SignalDBContextValue | null>(null);
 
 // ============================================================================
-// Credential Storage
-// ============================================================================
-
-const STORAGE_KEY_API_URL = "tapestry_api_url";
-const STORAGE_KEY_API_KEY = "tapestry_api_key";
-
-function getStoredCredentials(): { apiUrl: string | null; apiKey: string | null } {
-  if (typeof window === "undefined") {
-    return { apiUrl: null, apiKey: null };
-  }
-  return {
-    apiUrl: localStorage.getItem(STORAGE_KEY_API_URL),
-    apiKey: localStorage.getItem(STORAGE_KEY_API_KEY),
-  };
-}
-
-function storeCredentials(apiUrl: string, apiKey: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY_API_URL, apiUrl);
-  localStorage.setItem(STORAGE_KEY_API_KEY, apiKey);
-}
-
-function clearStoredCredentials(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY_API_URL);
-  localStorage.removeItem(STORAGE_KEY_API_KEY);
-}
-
-// ============================================================================
 // Provider Component
 // ============================================================================
 
@@ -84,40 +56,44 @@ interface SignalDBProviderProps {
 }
 
 export function SignalDBProvider({ children }: SignalDBProviderProps) {
-  const [apiUrl, setApiUrl] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [configured, setConfigured] = useState(false);
+  const [configLoading, setConfigLoading] = useState(true);
+  const [apiHost, setApiHost] = useState<string | null>(null);
 
-  // Load credentials from URL params or storage on mount
+  // Check server config on mount
   useEffect(() => {
-    // Check URL params first
-    const params = new URLSearchParams(window.location.search);
-    const urlApiKey = params.get("apiKey");
-    const urlApiUrl = params.get("apiUrl");
+    let cancelled = false;
 
-    if (urlApiKey) {
-      const url = urlApiUrl || "https://api.signaldb.live";
-      setApiUrl(url);
-      setApiKey(urlApiKey);
-      storeCredentials(url, urlApiKey);
-      return;
+    async function checkConfig() {
+      try {
+        const resp = await fetch("/api/config");
+        if (!resp.ok) {
+          throw new Error(`Config check failed: ${resp.status}`);
+        }
+        const data = await resp.json();
+        if (!cancelled) {
+          setConfigured(data.configured === true);
+          setApiHost(data.apiHost || null);
+        }
+      } catch {
+        if (!cancelled) {
+          setConfigured(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setConfigLoading(false);
+        }
+      }
     }
 
-    // Fall back to stored credentials
-    const stored = getStoredCredentials();
-    if (stored.apiUrl && stored.apiKey) {
-      setApiUrl(stored.apiUrl);
-      setApiKey(stored.apiKey);
-    }
+    checkConfig();
+    return () => { cancelled = true; };
   }, []);
 
-  // SSE options
+  // SSE options — enabled only when server is configured
   const sseOptions = useMemo(
-    () => ({
-      apiUrl: apiUrl || "",
-      apiKey: apiKey || "",
-      enabled: !!(apiUrl && apiKey),
-    }),
-    [apiUrl, apiKey]
+    () => ({ enabled: configured }),
+    [configured]
   );
 
   // Subscribe to all tables
@@ -125,15 +101,25 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
   const channelsStream = useChannels(sseOptions);
   const messagesStream = useMessages(sseOptions);
 
-  // Connection state
-  const connected = useMemo<ConnectionState>(
-    () => ({
+  // Connection state — derive overall mode from individual streams
+  const connected = useMemo<ConnectionState>(() => {
+    const modes = [agentsStream.mode, channelsStream.mode, messagesStream.mode];
+    let overallMode: StreamMode = "offline";
+    if (modes.some((m) => m === "live")) {
+      overallMode = "live";
+    } else if (modes.some((m) => m === "polling")) {
+      overallMode = "polling";
+    }
+    return {
       agents: agentsStream.connected,
       channels: channelsStream.connected,
       messages: messagesStream.connected,
-    }),
-    [agentsStream.connected, channelsStream.connected, messagesStream.connected]
-  );
+      mode: overallMode,
+    };
+  }, [
+    agentsStream.connected, channelsStream.connected, messagesStream.connected,
+    agentsStream.mode, channelsStream.mode, messagesStream.mode,
+  ]);
 
   // Errors
   const errors = useMemo(
@@ -146,18 +132,6 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
   );
 
   // Actions
-  const setCredentials = useCallback((url: string, key: string) => {
-    setApiUrl(url);
-    setApiKey(key);
-    storeCredentials(url, key);
-  }, []);
-
-  const clearCredentials = useCallback(() => {
-    setApiUrl(null);
-    setApiKey(null);
-    clearStoredCredentials();
-  }, []);
-
   const refresh = useCallback(() => {
     agentsStream.refresh();
     channelsStream.refresh();
@@ -167,11 +141,10 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
   // Context value
   const value = useMemo<SignalDBContextValue>(
     () => ({
-      apiUrl,
-      apiKey,
+      configured,
+      configLoading,
+      apiHost,
       connected,
-      setCredentials,
-      clearCredentials,
       agents: agentsStream.data,
       channels: channelsStream.data,
       messages: messagesStream.data,
@@ -179,11 +152,10 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
       refresh,
     }),
     [
-      apiUrl,
-      apiKey,
+      configured,
+      configLoading,
+      apiHost,
       connected,
-      setCredentials,
-      clearCredentials,
       agentsStream.data,
       channelsStream.data,
       messagesStream.data,

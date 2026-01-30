@@ -51,19 +51,18 @@ export async function execute(args: string[]): Promise<void> {
     exitWithError('Usage: comms send <address> <message>');
   }
 
-  // Determine message content: stdin (piped) or remaining args
+  // Determine message content: positional args first, then stdin pipe
   let content: string;
-  if (!process.stdin.isTTY) {
-    // Reading from pipe
+  const messageParts = positional.slice(1);
+  if (messageParts.length > 0) {
+    // Inline message from positional args (always preferred)
+    content = messageParts.join(' ');
+  } else if (!process.stdin.isTTY) {
+    // No positional args, try reading from pipe
     content = await Bun.stdin.text();
     content = content.trimEnd();
   } else {
-    // Remaining positional args joined as message
-    const messageParts = positional.slice(1);
-    if (messageParts.length === 0) {
-      exitWithError('No message provided. Pipe stdin or pass message as arguments.');
-    }
-    content = messageParts.join(' ');
+    exitWithError('No message provided. Pipe stdin or pass message as arguments.');
   }
 
   if (!content) {

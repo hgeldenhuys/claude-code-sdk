@@ -109,6 +109,16 @@ export interface MessageRouteFailure {
 export type MessageRouteResult = MessageRouteSuccess | MessageRouteFailure;
 
 // ============================================================================
+// Logging
+// ============================================================================
+
+/**
+ * Log level for the structured daemon logger.
+ * Configured via COMMS_LOG_LEVEL environment variable.
+ */
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+// ============================================================================
 // SSE Event Types
 // ============================================================================
 

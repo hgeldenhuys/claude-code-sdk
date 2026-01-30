@@ -79,10 +79,128 @@ export interface SSEEvent<T> {
 // Connection State
 // ============================================================================
 
+export type StreamMode = "live" | "polling" | "offline";
+
 export interface ConnectionState {
   agents: boolean;
   messages: boolean;
   channels: boolean;
+  mode: StreamMode;
+}
+
+// ============================================================================
+// Hierarchy Types (for Agent Tree)
+// ============================================================================
+
+export interface MachineNode {
+  machineId: string;
+  projects: ProjectNode[];
+  agentCount: number;
+  activeCount: number;
+  idleCount: number;
+  offlineCount: number;
+  lastHeartbeat: string | null;
+}
+
+export interface ProjectNode {
+  projectPath: string;
+  projectName: string;
+  agents: Agent[];
+  agentCount: number;
+}
+
+// ============================================================================
+// Delivery Mode
+// ============================================================================
+
+export type DeliveryMode = "push" | "pull" | "broadcast";
+
+// ============================================================================
+// Memo & Paste View Types
+// ============================================================================
+
+export interface MemoView {
+  message: Message;
+  subject: string;
+  category: string;
+  priority: string;
+}
+
+export interface PasteView {
+  id: string;
+  creatorId: string;
+  content: string;
+  contentType: string;
+  accessMode: string;
+  ttlSeconds: number | null;
+  status: string;
+  createdAt: string;
+  expiresAt: string | null;
+  metadata: Record<string, unknown>;
+}
+
+// ============================================================================
+// Chat & Mail View Types
+// ============================================================================
+
+export interface ChatThread {
+  threadId: string;
+  participants: string[];
+  lastMessage: Message;
+  messageCount: number;
+  unreadCount: number;
+}
+
+export interface MailMessage {
+  message: Message;
+  subject: string;
+  folder: "inbox" | "sent" | "all";
+  isRead: boolean;
+}
+
+// ============================================================================
+// Delivery Helpers
+// ============================================================================
+
+export function getDeliveryMode(msg: Message): DeliveryMode {
+  return (msg.metadata?.deliveryMode as DeliveryMode) || "push";
+}
+
+export function isChatMessage(msg: Message): boolean {
+  return msg.messageType === "chat" && getDeliveryMode(msg) !== "pull";
+}
+
+export function isMailMessage(msg: Message): boolean {
+  return msg.messageType === "chat" && getDeliveryMode(msg) === "pull";
+}
+
+export function isMemoMessage(msg: Message): boolean {
+  return msg.messageType === "memo";
+}
+
+/**
+ * Format date for day separator display.
+ */
+export function formatDate(timestamp: string): string {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/**
+ * Check if two timestamps are on the same calendar day.
+ */
+export function isSameDay(a: string, b: string): boolean {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
 }
 
 // ============================================================================

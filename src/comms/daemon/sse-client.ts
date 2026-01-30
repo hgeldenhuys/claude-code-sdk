@@ -10,10 +10,16 @@
  * - Exponential backoff reconnection (1s, 2s, 4s, 8s, max 30s)
  * - Last-Event-ID tracking for resume after reconnect
  * - Callback-based message delivery
+ * - Structured logging via createLogger
+ * - Health status monitoring (reconnect count, last connected/event times)
+ * - Keepalive ping with logging on failure
  */
 
 import type { Message } from '../protocol/types';
 import type { SSEConfig, SSEEvent } from './types';
+import { createLogger } from './logger';
+
+const log = createLogger('sse-client');
 
 // ============================================================================
 // Types
@@ -27,6 +33,14 @@ export type SSEStatusCallback = (connected: boolean) => void;
 
 /** Callback invoked on connection errors. */
 export type SSEErrorCallback = (error: Error) => void;
+
+/** Health status snapshot for diagnostics. */
+export interface SSEHealthStatus {
+  connected: boolean;
+  lastConnectedAt: number;
+  lastEventAt: number;
+  reconnectCount: number;
+}
 
 // ============================================================================
 // SSE Text Protocol Parser
@@ -135,6 +149,12 @@ export class SSEClient {
   private shouldReconnect = true;
   private currentBackoffMs: number;
   private lastEventId: string | null;
+  private keepaliveTimer: ReturnType<typeof setInterval> | null = null;
+  private lastEventTime: number = Date.now();
+
+  // Health tracking
+  private lastConnectedAt: number = 0;
+  private reconnectCount: number = 0;
 
   constructor(
     apiUrl: string,
@@ -190,12 +210,25 @@ export class SSEClient {
   }
 
   /**
+   * Get health status snapshot for diagnostics.
+   */
+  getHealthStatus(): SSEHealthStatus {
+    return {
+      connected: this.connected,
+      lastConnectedAt: this.lastConnectedAt,
+      lastEventAt: this.lastEventTime,
+      reconnectCount: this.reconnectCount,
+    };
+  }
+
+  /**
    * Connect to the SSE stream.
    * Returns when the initial connection is established or fails.
    * Reconnection happens automatically in the background.
    */
   async connect(): Promise<void> {
     this.shouldReconnect = true;
+    log.info('Connecting to SSE stream', { url: `${this.apiUrl}${this.config.endpoint}` });
     await this.doConnect();
   }
 
@@ -205,6 +238,7 @@ export class SSEClient {
   disconnect(): void {
     this.shouldReconnect = false;
     this.reconnecting = false;
+    this.stopKeepalive();
 
     if (this.abortController) {
       this.abortController.abort();
@@ -214,6 +248,53 @@ export class SSEClient {
     if (this.connected) {
       this.connected = false;
       this.emitStatus(false);
+    }
+
+    log.info('Disconnected from SSE stream');
+  }
+
+  // --------------------------------------------------------------------------
+  // Keepalive
+  // --------------------------------------------------------------------------
+
+  /**
+   * Start keepalive timer that pings the API every 15s of idle.
+   * If the ping fails, abort and reconnect immediately.
+   */
+  private startKeepalive(): void {
+    this.stopKeepalive();
+
+    this.keepaliveTimer = setInterval(async () => {
+      const idleMs = Date.now() - this.lastEventTime;
+      if (idleMs < 12000) return;
+
+      try {
+        const resp = await fetch(`${this.apiUrl}/v1/agents?limit=1`, {
+          headers: { Authorization: `Bearer ${this.projectKey}` },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!resp.ok) {
+          throw new Error(`Keepalive failed: ${resp.status}`);
+        }
+        log.debug('Keepalive ping OK', { idleMs });
+      } catch (err) {
+        // Keepalive failed -- stream is dead regardless of shouldReconnect.
+        // Always abort so that processStream exits and triggers reconnect.
+        log.warn('Keepalive ping failed, aborting stream', {
+          idleMs,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        if (this.abortController) {
+          this.abortController.abort();
+        }
+      }
+    }, 15000);
+  }
+
+  private stopKeepalive(): void {
+    if (this.keepaliveTimer) {
+      clearInterval(this.keepaliveTimer);
+      this.keepaliveTimer = null;
     }
   }
 
@@ -248,6 +329,8 @@ export class SSEClient {
     // Create abort controller for this connection
     this.abortController = new AbortController();
 
+    log.debug('Opening SSE connection', { url, lastEventId: this.lastEventId });
+
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -265,13 +348,21 @@ export class SSEClient {
 
       // Connected successfully - reset backoff
       this.connected = true;
+      this.lastConnectedAt = Date.now();
       this.currentBackoffMs = this.config.reconnectBaseMs;
+      this.lastEventTime = Date.now();
       this.emitStatus(true);
+      this.startKeepalive();
+
+      log.info('SSE stream connected', { url, resumeId: this.lastEventId });
 
       // Process the stream in background (don't await - let caller continue)
       this.processStream(response.body).catch((err) => {
         // Handle stream errors
         if (!(err instanceof DOMException && err.name === 'AbortError')) {
+          log.error('SSE stream processing error', {
+            error: err instanceof Error ? err.message : String(err),
+          });
           this.emitError(err instanceof Error ? err : new Error(String(err)));
         }
       });
@@ -280,6 +371,10 @@ export class SSEClient {
       if (err instanceof DOMException && err.name === 'AbortError') {
         return;
       }
+
+      log.error('SSE connection failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
 
       this.connected = false;
       this.emitStatus(false);
@@ -307,6 +402,7 @@ export class SSEClient {
 
         if (done) {
           // Stream ended (server closed connection)
+          log.warn('SSE stream ended (server closed connection)');
           break;
         }
 
@@ -320,10 +416,11 @@ export class SSEClient {
 
           const event = parseSSEFrame(frame);
           if (event) {
-            // Track last event ID for resumption
+            // Track last event ID for resumption and reset idle timer
             if (event.id !== null) {
               this.lastEventId = event.id;
             }
+            this.lastEventTime = Date.now();
 
             // Emit message if it's an insert event from SignalDB
             // SignalDB sends: event: insert, data: {id, data: {...message fields}, ts}
@@ -349,6 +446,11 @@ export class SSEClient {
                   expiresAt: (wrapper.data.expires_at ?? null) as string | null,
                 };
                 if (msg.content !== undefined) {
+                  log.debug('SSE message received', {
+                    messageId: msg.id.slice(0, 8),
+                    senderId: msg.senderId.slice(0, 8),
+                    type: msg.messageType,
+                  });
                   this.emitMessage(msg);
                 }
               }
@@ -368,6 +470,7 @@ export class SSEClient {
 
     // Stream ended - reconnect if allowed
     this.connected = false;
+    this.stopKeepalive();
     this.emitStatus(false);
 
     if (this.shouldReconnect) {
@@ -382,8 +485,14 @@ export class SSEClient {
   private async scheduleReconnect(): Promise<void> {
     if (this.reconnecting || !this.shouldReconnect) return;
     this.reconnecting = true;
+    this.reconnectCount++;
 
     const delay = this.currentBackoffMs;
+
+    log.info('Scheduling SSE reconnect', {
+      delayMs: delay,
+      reconnectCount: this.reconnectCount,
+    });
 
     // Calculate next backoff (exponential with cap)
     this.currentBackoffMs = Math.min(
@@ -408,8 +517,11 @@ export class SSEClient {
     for (let i = 0; i < this.messageCallbacks.length; i++) {
       try {
         this.messageCallbacks[i]!(message);
-      } catch {
-        // Don't let callback errors kill the stream
+      } catch (err) {
+        log.warn('Message callback error', {
+          messageId: message.id.slice(0, 8),
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }
@@ -418,8 +530,11 @@ export class SSEClient {
     for (let i = 0; i < this.statusCallbacks.length; i++) {
       try {
         this.statusCallbacks[i]!(connected);
-      } catch {
-        // Ignore callback errors
+      } catch (err) {
+        log.warn('Status callback error', {
+          connected,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }
@@ -428,8 +543,11 @@ export class SSEClient {
     for (let i = 0; i < this.errorCallbacks.length; i++) {
       try {
         this.errorCallbacks[i]!(error);
-      } catch {
-        // Ignore callback errors
+      } catch (err) {
+        log.warn('Error callback error', {
+          originalError: error.message,
+          callbackError: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }

@@ -2,8 +2,8 @@
  * Message Router
  *
  * Routes incoming SignalDB messages to the correct local Claude Code session.
- * Uses `Bun.spawn(['claude', '--resume', sessionId, '-p', content])` to
- * deliver messages and captures the response output.
+ * Uses `Bun.spawn(['claude', '--resume', sessionId, '--append-system-prompt', ctx, '-p', content])`
+ * to deliver messages with COMMS context and captures the response output.
  *
  * After execution, posts the response back to SignalDB as a 'response' type
  * message via the client.
@@ -14,6 +14,9 @@ import * as os from 'node:os';
 import type { SignalDBClient } from '../client/signaldb';
 import type { Message } from '../protocol/types';
 import type { LocalSession, MessageRouteResult } from './types';
+import { createLogger } from './logger';
+
+const log = createLogger('router');
 
 // ============================================================================
 // Constants
@@ -34,7 +37,7 @@ const CLAUDE_BINARY = path.join(os.homedir(), '.local', 'bin', 'claude');
  *
  * Responsibilities:
  * - Match messages to the correct local session
- * - Spawn `claude` CLI to deliver the message content
+ * - Spawn `claude` CLI to deliver the message content with COMMS context
  * - Capture stdout/stderr from the Claude process
  * - Post response back to SignalDB as a 'response' message
  *
@@ -79,6 +82,11 @@ export class MessageRouter {
     const targetSession = this.resolveTarget(message, localSessions);
 
     if (!targetSession) {
+      log.warn('No matching session for message', {
+        messageId: message.id.slice(0, 8),
+        targetAddress: message.targetAddress,
+        sessionCount: localSessions.length,
+      });
       return {
         ok: false,
         error: `No local session matches target address: ${message.targetAddress}`,
@@ -86,12 +94,24 @@ export class MessageRouter {
       };
     }
 
+    log.info('Routing message to session', {
+      messageId: message.id.slice(0, 8),
+      sessionId: targetSession.sessionId.slice(0, 8),
+      sessionName: targetSession.sessionName,
+      senderId: message.senderId.slice(0, 8),
+      type: message.messageType,
+    });
+
     // Claim the message first
     if (targetSession.agentId && message.status === 'pending') {
       try {
         await this.client.messages.claim(message.id, targetSession.agentId);
       } catch (err) {
         // Another agent might have claimed it first
+        log.warn('Failed to claim message', {
+          messageId: message.id.slice(0, 8),
+          error: err instanceof Error ? err.message : String(err),
+        });
         return {
           ok: false,
           error: `Failed to claim message: ${err instanceof Error ? err.message : String(err)}`,
@@ -102,7 +122,13 @@ export class MessageRouter {
 
     // Route the message to the Claude session
     try {
-      const response = await this.deliverToSession(targetSession.sessionId, message.content, targetSession.projectPath);
+      const response = await this.deliverToSession(targetSession.sessionId, message, targetSession.projectPath);
+
+      log.info('Message delivered successfully', {
+        messageId: message.id.slice(0, 8),
+        sessionId: targetSession.sessionId.slice(0, 8),
+        responseLength: response.length,
+      });
 
       // Post the response back to SignalDB
       if (targetSession.agentId) {
@@ -123,6 +149,11 @@ export class MessageRouter {
       };
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
+      log.error('Failed to deliver message', {
+        messageId: message.id.slice(0, 8),
+        sessionId: targetSession.sessionId.slice(0, 8),
+        error: errorMsg,
+      });
       return {
         ok: false,
         error: `Failed to deliver message to session ${targetSession.sessionId}: ${errorMsg}`,
@@ -205,29 +236,64 @@ export class MessageRouter {
   // --------------------------------------------------------------------------
 
   /**
+   * Build COMMS context system prompt for the Claude session.
+   * Tells Claude this is a COMMS message, who sent it, and how to respond.
+   */
+  private buildSystemPrompt(message: Message): string {
+    const lines = [
+      '[COMMS: Incoming Message]',
+      'This message was delivered via the Tapestry COMMS system.',
+      `From: ${message.senderId}`,
+      `Channel: ${message.channelId}`,
+      `Message ID: ${message.id}`,
+      `Type: ${message.messageType}`,
+      '',
+      'Your response will be automatically sent back to the sender via COMMS.',
+      'Execute the request and provide a clear response.',
+    ];
+    return lines.join('\n');
+  }
+
+  /**
    * Deliver a message to a local Claude session via the `claude` CLI.
    *
-   * Spawns: `claude --resume <sessionId> -p <content>`
+   * Spawns: `claude --resume <sessionId> --append-system-prompt <context> -p <content>`
    * Captures stdout as the response.
    *
    * IMPORTANT: Must run from the session's projectPath directory for
    * `claude --resume` to find the session.
    *
    * @param sessionId - Claude Code session UUID to resume
-   * @param content - Message content to deliver as a prompt
+   * @param message - Full message object (for context injection)
    * @param projectPath - The project directory path for the session
    * @returns The Claude response text
    */
-  private async deliverToSession(sessionId: string, content: string, projectPath: string): Promise<string> {
-    const proc = Bun.spawn([CLAUDE_BINARY, '--resume', sessionId, '-p', content], {
-      cwd: projectPath,
-      stdout: 'pipe',
-      stderr: 'pipe',
-      env: { ...process.env },
+  private async deliverToSession(sessionId: string, message: Message, projectPath: string): Promise<string> {
+    const systemPrompt = this.buildSystemPrompt(message);
+
+    log.debug('Spawning claude process', {
+      sessionId: sessionId.slice(0, 8),
+      messageId: message.id.slice(0, 8),
+      projectPath,
     });
+
+    const proc = Bun.spawn(
+      [CLAUDE_BINARY, '--resume', sessionId, '--append-system-prompt', systemPrompt, '-p', message.content],
+      {
+        cwd: projectPath,
+        stdout: 'pipe',
+        stderr: 'pipe',
+        env: { ...process.env },
+      },
+    );
 
     // Set up timeout
     const timeoutId = setTimeout(() => {
+      log.warn('Claude process timed out, killing', {
+        sessionId: sessionId.slice(0, 8),
+        messageId: message.id.slice(0, 8),
+        timeoutMs: ROUTE_TIMEOUT_MS,
+      });
       proc.kill();
     }, ROUTE_TIMEOUT_MS);
 

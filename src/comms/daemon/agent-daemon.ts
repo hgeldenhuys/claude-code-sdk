@@ -9,24 +9,26 @@
  * 3. Heartbeat loops to maintain presence
  * 4. SSE subscription for real-time message delivery
  * 5. Message routing to the correct local session
- * 6. Graceful shutdown on SIGINT/SIGTERM
+ * 6. Periodic SSE health checks to detect silent stream death
+ * 7. Graceful shutdown on SIGINT/SIGTERM
  */
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as os from 'node:os';
 import type { SignalDBClient } from '../client/signaldb';
 import { AgentRegistry } from '../registry/agent-registry';
 import type { Message } from '../protocol/types';
 import { discoverSessions } from './session-discovery';
 import { SSEClient } from './sse-client';
 import { MessageRouter } from './message-router';
+import { writeToInbox } from './inbox-writer';
+import { createLogger } from './logger';
 import type {
   DaemonConfig,
   DaemonState,
   DaemonCallbacks,
   LocalSession,
 } from './types';
+
+const log = createLogger('daemon');
 
 // ============================================================================
 // AgentDaemon
@@ -77,6 +79,9 @@ export class AgentDaemon {
   /** Discovery polling interval in ms (5 seconds for near-realtime) */
   private readonly discoveryIntervalMs: number = 5_000;
 
+  /** Timestamp when daemon was started */
+  private startedAt: number = 0;
+
   constructor(
     client: SignalDBClient,
     config: DaemonConfig,
@@ -103,6 +108,7 @@ export class AgentDaemon {
     }
 
     this.setState('starting');
+    this.startedAt = Date.now();
 
     try {
       // 1. Install signal handlers
@@ -112,9 +118,9 @@ export class AgentDaemon {
       const discovered = await discoverSessions(this.config.machineId);
 
       if (discovered.length === 0) {
-        this.log('No active Claude Code sessions found');
+        log.info('No active Claude Code sessions found');
       } else {
-        this.log(`Discovered ${discovered.length} active session(s)`);
+        log.info('Discovered active sessions', { count: discovered.length });
       }
 
       // 3. Register each session in SignalDB
@@ -137,11 +143,11 @@ export class AgentDaemon {
       this.startDiscoveryPolling();
 
       this.setState('running');
-      this.log('Daemon running');
+      log.info('Daemon running', { machineId: this.config.machineId, sessions: this.sessions.size });
     } catch (err) {
       this.setState('error');
       const error = err instanceof Error ? err : new Error(String(err));
-      this.log(`Startup failed: ${error.message}`);
+      log.error('Startup failed', { error: error.message });
       this.callbacks.onError?.(error);
       throw err;
     }
@@ -156,6 +162,7 @@ export class AgentDaemon {
     }
 
     this.setState('stopping');
+    log.info('Stopping daemon');
 
     // 1. Stop discovery polling
     if (this.discoveryInterval) {
@@ -169,31 +176,37 @@ export class AgentDaemon {
       this.sseClient = null;
     }
 
-    // 2. Stop all heartbeat loops
+    // 3. Stop all heartbeat loops
     for (const [sessionId, cleanup] of this.heartbeats) {
       cleanup();
-      this.log(`Stopped heartbeat for session ${sessionId.slice(0, 8)}`);
+      log.debug('Stopped heartbeat', { sessionId: sessionId.slice(0, 8) });
     }
     this.heartbeats.clear();
 
-    // 3. Deregister all agents from SignalDB
+    // 4. Deregister all agents from SignalDB
     for (const [sessionId, session] of this.sessions) {
       if (session.agentId) {
         try {
           await this.registry.deregister(session.agentId);
-          this.log(`Deregistered agent ${session.agentId.slice(0, 8)} for session ${sessionId.slice(0, 8)}`);
+          log.info('Deregistered agent', {
+            agentId: session.agentId.slice(0, 8),
+            sessionId: sessionId.slice(0, 8),
+          });
         } catch (err) {
-          this.log(`Failed to deregister ${session.agentId.slice(0, 8)}: ${err instanceof Error ? err.message : String(err)}`);
+          log.warn('Failed to deregister agent', {
+            agentId: session.agentId.slice(0, 8),
+            error: err instanceof Error ? err.message : String(err),
+          });
         }
       }
     }
     this.sessions.clear();
 
-    // 4. Remove signal handlers
+    // 5. Remove signal handlers
     this.removeSignalHandlers();
 
     this.setState('stopped');
-    this.log('Daemon stopped');
+    log.info('Daemon stopped', { uptimeMs: Date.now() - this.startedAt });
   }
 
   /**
@@ -215,6 +228,14 @@ export class AgentDaemon {
    */
   getSessions(): LocalSession[] {
     return Array.from(this.sessions.values());
+  }
+
+  /**
+   * Get daemon uptime in milliseconds.
+   */
+  getUptime(): number {
+    if (this.startedAt === 0) return 0;
+    return Date.now() - this.startedAt;
   }
 
   // --------------------------------------------------------------------------
@@ -240,9 +261,16 @@ export class AgentDaemon {
       this.sessions.set(session.sessionId, registered);
       this.callbacks.onSessionDiscovered?.(registered);
 
-      this.log(`Registered session ${session.sessionId.slice(0, 8)} as agent ${agent.id.slice(0, 8)}`);
+      log.info('Registered session', {
+        sessionId: session.sessionId.slice(0, 8),
+        agentId: agent.id.slice(0, 8),
+        sessionName: session.sessionName,
+      });
     } catch (err) {
-      this.log(`Failed to register session ${session.sessionId.slice(0, 8)}: ${err instanceof Error ? err.message : String(err)}`);
+      log.error('Failed to register session', {
+        sessionId: session.sessionId.slice(0, 8),
+        error: err instanceof Error ? err.message : String(err),
+      });
       this.callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
     }
   }
@@ -258,7 +286,10 @@ export class AgentDaemon {
     );
 
     this.heartbeats.set(sessionId, cleanup);
-    this.log(`Started heartbeat for agent ${agentId.slice(0, 8)} (interval: ${this.config.heartbeatIntervalMs}ms)`);
+    log.debug('Started heartbeat', {
+      agentId: agentId.slice(0, 8),
+      intervalMs: this.config.heartbeatIntervalMs,
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -268,6 +299,7 @@ export class AgentDaemon {
   /**
    * Start polling for session changes every 5 seconds.
    * Discovers new sessions and deregisters stale ones.
+   * Also checks SSE health on every cycle.
    */
   private startDiscoveryPolling(): void {
     this.discoveryInterval = setInterval(async () => {
@@ -278,7 +310,10 @@ export class AgentDaemon {
         // Find new sessions (discovered but not yet registered)
         for (const session of discovered) {
           if (!this.sessions.has(session.sessionId)) {
-            this.log(`New session: ${session.sessionId.slice(0, 8)} (${session.sessionName ?? 'unnamed'})`);
+            log.info('New session discovered', {
+              sessionId: session.sessionId.slice(0, 8),
+              sessionName: session.sessionName,
+            });
             await this.registerSession(session);
 
             // Start heartbeat for the new session
@@ -292,7 +327,10 @@ export class AgentDaemon {
         // Find stale sessions (registered but no longer discovered)
         for (const [sessionId, session] of this.sessions) {
           if (!discoveredIds.has(sessionId)) {
-            this.log(`Session stale: ${sessionId.slice(0, 8)} (${session.sessionName ?? 'unnamed'})`);
+            log.info('Session stale, removing', {
+              sessionId: sessionId.slice(0, 8),
+              sessionName: session.sessionName,
+            });
 
             // Stop heartbeat
             const cleanup = this.heartbeats.get(sessionId);
@@ -305,20 +343,31 @@ export class AgentDaemon {
             if (session.agentId) {
               try {
                 await this.registry.deregister(session.agentId);
-              } catch {
-                // Ignore deregistration errors
+              } catch (err) {
+                log.warn('Failed to deregister stale agent', {
+                  agentId: session.agentId.slice(0, 8),
+                  error: err instanceof Error ? err.message : String(err),
+                });
               }
             }
 
             this.sessions.delete(sessionId);
           }
         }
-      } catch {
-        // Silently ignore polling errors - next poll will retry
+      } catch (err) {
+        log.warn('Discovery polling error', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+
+      // SSE health check: if disconnected, force reconnect
+      if (this.sseClient && !this.sseClient.isConnected) {
+        log.warn('SSE disconnected during health check, reconnecting');
+        await this.reconnectSSE();
       }
     }, this.discoveryIntervalMs);
 
-    this.log(`Started discovery polling (${this.discoveryIntervalMs}ms)`);
+    log.info('Started discovery polling', { intervalMs: this.discoveryIntervalMs });
   }
 
   // --------------------------------------------------------------------------
@@ -345,20 +394,34 @@ export class AgentDaemon {
 
     this.sseClient.onStatus((connected: boolean) => {
       this.callbacks.onSSEStatus?.(connected);
-      this.log(`SSE ${connected ? 'connected' : 'disconnected'}`);
+      log.info('SSE status changed', { connected });
     });
 
     this.sseClient.onError((error: Error) => {
       this.callbacks.onError?.(error);
-      this.log(`SSE error: ${error.message}`);
+      log.error('SSE error', { error: error.message });
     });
 
     try {
       await this.sseClient.connect();
     } catch (err) {
-      this.log(`SSE initial connection failed: ${err instanceof Error ? err.message : String(err)}`);
+      log.warn('SSE initial connection failed (will auto-reconnect)', {
+        error: err instanceof Error ? err.message : String(err),
+      });
       // SSE client will auto-reconnect, so don't throw
     }
+  }
+
+  /**
+   * Force-reconnect the SSE client by disconnecting the old one
+   * and creating a fresh connection.
+   */
+  private async reconnectSSE(): Promise<void> {
+    if (this.sseClient) {
+      this.sseClient.disconnect();
+      this.sseClient = null;
+    }
+    await this.connectSSE();
   }
 
   // --------------------------------------------------------------------------
@@ -366,22 +429,83 @@ export class AgentDaemon {
   // --------------------------------------------------------------------------
 
   private handleIncomingMessage(message: Message): void {
-    this.log(`Received message ${message.id.slice(0, 8)} (type: ${message.messageType})`);
+    log.info('Received message', {
+      messageId: message.id.slice(0, 8),
+      type: message.messageType,
+      senderId: message.senderId.slice(0, 8),
+    });
 
+    const deliveryMode = (message.metadata?.deliveryMode as string) || 'push';
+
+    // Branch on delivery mode
+    if (deliveryMode === 'broadcast') {
+      // Memos: skip routing entirely -- read via REST only
+      log.debug('Skipping broadcast message (memo)', { messageId: message.id.slice(0, 8) });
+      return;
+    }
+
+    if (deliveryMode === 'pull') {
+      // Mail: write to local inbox, skip push to session
+      try {
+        const targetAgentId = this.resolveTargetAgent(message);
+        if (targetAgentId) {
+          writeToInbox(targetAgentId, message);
+          log.info('Wrote pull message to inbox', {
+            messageId: message.id.slice(0, 8),
+            agentId: targetAgentId.slice(0, 8),
+          });
+        } else {
+          log.warn('No target agent for pull message', {
+            messageId: message.id.slice(0, 8),
+          });
+        }
+      } catch (err) {
+        log.error('Failed to write to inbox', {
+          messageId: message.id.slice(0, 8),
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+      return;
+    }
+
+    // Push (default): route to session immediately
     const localSessions = Array.from(this.sessions.values());
 
     // Route asynchronously - don't block the SSE stream
     this.router.route(message, localSessions).then((result) => {
       if (result.ok) {
         this.callbacks.onMessageRouted?.(result);
-        this.log(`Routed message ${result.messageId.slice(0, 8)} successfully`);
+        log.info('Message routed successfully', { messageId: result.messageId.slice(0, 8) });
       } else {
         this.callbacks.onMessageError?.(result);
-        this.log(`Failed to route message ${result.messageId.slice(0, 8)}: ${result.error}`);
+        log.warn('Message routing failed', {
+          messageId: result.messageId.slice(0, 8),
+          error: result.error,
+        });
       }
     }).catch((err) => {
-      this.log(`Unexpected error routing message: ${err instanceof Error ? err.message : String(err)}`);
+      log.error('Unexpected error routing message', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     });
+  }
+
+  /**
+   * Resolve the target agent ID from message target address.
+   */
+  private resolveTargetAgent(message: Message): string | null {
+    // Try to find a matching local session by target address
+    for (const session of this.sessions.values()) {
+      if (message.targetAddress?.includes(session.sessionId || '')) {
+        return session.agentId || null;
+      }
+    }
+    // Fall back to first registered agent
+    const firstSession = this.sessions.values().next();
+    if (!firstSession.done && firstSession.value) {
+      return firstSession.value.agentId || null;
+    }
+    return null;
   }
 
   // --------------------------------------------------------------------------
@@ -390,7 +514,7 @@ export class AgentDaemon {
 
   private installSignalHandlers(): void {
     const handleShutdown = () => {
-      this.log('Shutdown signal received');
+      log.info('Shutdown signal received');
       this.stop().catch((err) => {
         console.error('Error during shutdown:', err);
       }).finally(() => {
@@ -426,16 +550,8 @@ export class AgentDaemon {
     this.state = newState;
 
     if (oldState !== newState) {
+      log.debug('State changed', { from: oldState, to: newState });
       this.callbacks.onStateChange?.(newState);
     }
-  }
-
-  // --------------------------------------------------------------------------
-  // Logging
-  // --------------------------------------------------------------------------
-
-  private log(message: string): void {
-    const timestamp = new Date().toISOString().slice(11, 19);
-    console.log(`[${timestamp}] [daemon] ${message}`);
   }
 }

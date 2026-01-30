@@ -2,18 +2,20 @@
  * ConnectionStatus Component
  *
  * Displays the SSE connection status for all streams.
+ * No API key checks — server-side proxy handles credentials.
  */
 
 import { useSignalDB } from "~/lib/signaldb";
 
 export function ConnectionStatus() {
-  const { connected, apiUrl, apiKey, errors } = useSignalDB();
+  const { connected, configured, apiHost, errors } = useSignalDB();
 
+  const { mode } = connected;
   const allConnected =
     connected.agents && connected.channels && connected.messages;
   const anyError = errors.agents || errors.channels || errors.messages;
 
-  if (!apiKey) {
+  if (!configured) {
     return (
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <span className="w-2 h-2 rounded-full bg-gray-600" />
@@ -22,22 +24,31 @@ export function ConnectionStatus() {
     );
   }
 
+  // Determine display state: live > polling > connecting > error
+  let dotClass = "bg-yellow-500";
+  let textClass = "text-gray-400";
+  let label = "Connecting...";
+
+  if (allConnected) {
+    dotClass = "bg-green-500 animate-pulse-green";
+    textClass = "text-green-400";
+    label = "Live";
+  } else if (mode === "polling") {
+    dotClass = "bg-blue-500";
+    textClass = "text-blue-400";
+    label = "Polling";
+  } else if (anyError && mode === "offline") {
+    dotClass = "bg-red-500";
+    textClass = "text-red-400";
+    label = "Error";
+  }
+
   return (
     <div className="flex items-center gap-4">
       {/* Overall status */}
       <div className="flex items-center gap-2 text-sm">
-        <span
-          className={`w-2 h-2 rounded-full ${
-            allConnected
-              ? "bg-green-500 animate-pulse-green"
-              : anyError
-                ? "bg-red-500"
-                : "bg-yellow-500"
-          }`}
-        />
-        <span className={allConnected ? "text-green-400" : "text-gray-400"}>
-          {allConnected ? "Connected" : anyError ? "Error" : "Connecting..."}
-        </span>
+        <span className={`w-2 h-2 rounded-full ${dotClass}`} />
+        <span className={textClass}>{label}</span>
       </div>
 
       {/* Stream breakdown */}
@@ -47,10 +58,10 @@ export function ConnectionStatus() {
         <StreamStatus label="Messages" connected={connected.messages} />
       </div>
 
-      {/* API URL */}
-      {apiUrl && (
+      {/* API host (masked, no secrets) */}
+      {apiHost && (
         <div className="hidden lg:block text-xs text-gray-600 font-mono truncate max-w-xs">
-          {apiUrl.replace(/^https?:\/\//, "")}
+          {apiHost}
         </div>
       )}
     </div>

@@ -14,12 +14,17 @@ export type {
   LocalSession,
   SSEConfig,
   SSEEvent,
+  LogLevel,
   MessageRouteResult,
   MessageRouteSuccess,
   MessageRouteFailure,
 } from './types';
 
 export { createDefaultConfig } from './types';
+
+// Logger
+export { createLogger } from './logger';
+export type { LogFields } from './logger';
 
 // Session discovery
 export { discoverSessions } from './session-discovery';
@@ -30,6 +35,7 @@ export type {
   SSEMessageCallback,
   SSEStatusCallback,
   SSEErrorCallback,
+  SSEHealthStatus,
 } from './sse-client';
 
 // Message router

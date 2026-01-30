@@ -90,7 +90,7 @@ export async function execute(args: string[]): Promise<void> {
       console.log(`  ${bold('Capabilities:')} ${dim(capKeys.join(', '))}`);
     }
 
-    const metaKeys = Object.keys(agent.metadata);
+    const metaKeys = Object.keys(agent.metadata ?? {});
     if (metaKeys.length > 0) {
       console.log(`  ${bold('Metadata:')}     ${dim(JSON.stringify(agent.metadata))}`);
     }

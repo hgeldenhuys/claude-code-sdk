@@ -629,6 +629,28 @@ cd apps/tapestry-observer && bun dev  # Real-time web dashboard
 - **snake_case conversion**: SignalDB returns `snake_case` fields (e.g., `machine_id`, `created_at`). The `SignalDBClient` auto-converts to `camelCase` and applies field aliases (`createdAt` → `registeredAt`).
 - **Session discovery**: `decodeProjectPath()` fails for hyphenated directory names. Use `cwd` from `~/.claude/global-sessions.json` instead.
 - **`claude --resume` requires cwd**: The `claude --resume <session-id>` command must run from the session's original project directory, otherwise it fails silently.
+- **Heartbeat masks SSE death**: Heartbeat runs independently. A healthy heartbeat doesn't mean the SSE stream is alive. The daemon now checks `isConnected` every 5s.
+
+**System Prompt Injection:**
+
+When routing messages to Claude sessions, the daemon injects COMMS context via `--append-system-prompt`. This tells Claude the message came from COMMS, who sent it, and that the response will be auto-routed back. See `message-router.ts:buildSystemPrompt()`.
+
+**Structured Logging:**
+
+All daemon components use structured logging via `createLogger()` from `src/comms/daemon/logger.ts`:
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `COMMS_LOG_LEVEL` | `info` | Minimum level: `debug`, `info`, `warn`, `error` |
+| `COMMS_LOG_FILE` | (none) | Path to append logs to (in addition to stdout) |
+
+Components: `daemon` (lifecycle), `sse-client` (connection/keepalive), `router` (delivery).
+
+**SSE Health Monitoring:**
+
+SSEClient exposes `getHealthStatus()` returning `{ connected, lastConnectedAt, lastEventAt, reconnectCount }`. The daemon checks `isConnected` every discovery poll cycle and force-reconnects if the stream died.
+
+**Full Architecture Reference:** See `src/comms/README.md` for lifecycle diagrams, troubleshooting, and configuration.
 
 **Environment Configuration:**
 
