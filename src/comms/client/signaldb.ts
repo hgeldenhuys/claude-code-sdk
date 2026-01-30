@@ -54,38 +54,39 @@ function snakeToCamel(str: string): string {
  * Field aliases for type compatibility.
  * SignalDB uses different field names than our protocol types.
  */
-const FIELD_ALIASES: Record<string, string> = {
-  createdAt: 'registeredAt', // Agent.registeredAt <- created_at
-};
-
 /**
  * Convert all keys in an object from snake_case to camelCase (recursive).
- * Also applies field aliases for type compatibility.
+ * Optionally applies field aliases for type compatibility.
  */
-function convertKeysToCamelCase<T>(obj: unknown): T {
+function convertKeysToCamelCase<T>(obj: unknown, fieldAliases?: Record<string, string>): T {
   if (obj === null || obj === undefined) {
     return obj as T;
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => convertKeysToCamelCase(item)) as T;
+    return obj.map(item => convertKeysToCamelCase(item, fieldAliases)) as T;
   }
 
   if (typeof obj === 'object') {
     const result: Record<string, unknown> = {};
     for (const key of Object.keys(obj as Record<string, unknown>)) {
       let camelKey = snakeToCamel(key);
-      // Apply field alias if exists
-      if (FIELD_ALIASES[camelKey]) {
-        camelKey = FIELD_ALIASES[camelKey];
+      // Apply field alias if provided
+      if (fieldAliases && fieldAliases[camelKey]) {
+        camelKey = fieldAliases[camelKey]!;
       }
-      result[camelKey] = convertKeysToCamelCase((obj as Record<string, unknown>)[key]);
+      result[camelKey] = convertKeysToCamelCase((obj as Record<string, unknown>)[key], fieldAliases);
     }
     return result as T;
   }
 
   return obj as T;
 }
+
+/** Field aliases specific to Agent objects */
+const AGENT_FIELD_ALIASES: Record<string, string> = {
+  createdAt: 'registeredAt', // Agent.registeredAt <- created_at
+};
 
 // ============================================================================
 // Client Configuration
@@ -233,6 +234,15 @@ export class SignalDBClient {
 // Agent Operations
 // ============================================================================
 
+/** Apply Agent-specific field aliases (createdAt -> registeredAt) */
+function applyAgentAliases(agent: Agent): Agent {
+  const raw = agent as unknown as Record<string, unknown>;
+  if (raw.createdAt && !raw.registeredAt) {
+    raw.registeredAt = raw.createdAt;
+  }
+  return agent;
+}
+
 class AgentOperations {
   constructor(private readonly client: SignalDBClient) {}
 
@@ -242,7 +252,7 @@ class AgentOperations {
    */
   async register(data: AgentRegistration): Promise<Agent> {
     // Convert camelCase to snake_case for SignalDB (only send snake_case keys)
-    return this.client.request<Agent>('POST', '/v1/agents', {
+    const agent = await this.client.request<Agent>('POST', '/v1/agents', {
       machine_id: data.machineId,
       session_id: data.sessionId,
       session_name: data.sessionName,
@@ -253,6 +263,7 @@ class AgentOperations {
       status: 'active',
       heartbeat_at: new Date().toISOString(),
     });
+    return applyAgentAliases(agent);
   }
 
   /**
@@ -267,10 +278,11 @@ class AgentOperations {
    * Uses PATCH for partial update to preserve other fields.
    */
   async heartbeat(id: string): Promise<Agent> {
-    return this.client.request<Agent>('PATCH', `/v1/agents/${id}`, {
+    const agent = await this.client.request<Agent>('PATCH', `/v1/agents/${id}`, {
       heartbeat_at: new Date().toISOString(),
       status: 'active',
     });
+    return applyAgentAliases(agent);
   }
 
   /**
@@ -299,6 +311,9 @@ class AgentOperations {
   async list(filters?: AgentFilter): Promise<Agent[]> {
     // SignalDB only supports pagination params, not column filters
     const agents = await this.client.request<Agent[]>('GET', '/v1/agents');
+    for (let i = 0; i < agents.length; i++) {
+      applyAgentAliases(agents[i]!);
+    }
 
     if (!filters) {
       return agents;
