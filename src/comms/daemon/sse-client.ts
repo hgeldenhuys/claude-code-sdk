@@ -228,7 +228,7 @@ export class SSEClient {
    */
   async connect(): Promise<void> {
     this.shouldReconnect = true;
-    log.info('Connecting to SSE stream', { url: `${this.apiUrl}${this.config.endpoint}` });
+    log.debug('Connecting to SSE stream', { url: `${this.apiUrl}${this.config.endpoint}` });
     await this.doConnect();
   }
 
@@ -250,7 +250,7 @@ export class SSEClient {
       this.emitStatus(false);
     }
 
-    log.info('Disconnected from SSE stream');
+    log.debug('Disconnected from SSE stream');
   }
 
   // --------------------------------------------------------------------------
