@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { loadExternalAdapters } from './discovery';
 import { registerBuiltinAdapters } from './index';
 import { AdapterRegistry, getAdapterRegistry } from './registry';
+import { createRemoteSync } from './remote-sync';
 import type { DaemonConfig, DaemonState, TranscriptAdapter } from './types';
 
 const DEFAULT_DEBOUNCE_MS = 100;
@@ -336,6 +337,12 @@ export function createDaemon(db: Database, config?: DaemonConfig): AdapterDaemon
  * Run daemon in foreground (for CLI use)
  */
 export async function runDaemonForeground(db: Database, config?: DaemonConfig): Promise<void> {
+  // Initialize remote sync sidecar (returns null if TAPESTRY_SYNC_ENABLED !== 'true')
+  const sync = createRemoteSync(db);
+  if (sync) {
+    console.log('[remote-sync] SignalDB sync enabled');
+  }
+
   const daemon = createDaemon(db, {
     ...config,
     onUpdate: (adapterName, filePath, entriesIndexed) => {
@@ -343,6 +350,10 @@ export async function runDaemonForeground(db: Database, config?: DaemonConfig): 
       const shortName = fileName.length > 50 ? `${fileName.slice(0, 47)}...` : fileName;
       const time = new Date().toLocaleTimeString();
       console.log(`[${time}] [${adapterName}] ${shortName}: +${entriesIndexed} entries`);
+
+      // Push to SignalDB if sync is enabled
+      sync?.onLocalUpdate(adapterName, filePath, entriesIndexed);
+
       config?.onUpdate?.(adapterName, filePath, entriesIndexed);
     },
     onError: (adapterName, error) => {
@@ -356,13 +367,29 @@ export async function runDaemonForeground(db: Database, config?: DaemonConfig): 
 
   console.log('Adapter daemon started');
   console.log(`Watching: ${daemon.getState().activeAdapters.join(', ')}`);
+  if (sync) {
+    const stats = sync.getStats();
+    console.log(`[remote-sync] Cursor-based sync active (uploaded: ${stats.uploaded}, pending: ${stats.pending})`);
+  }
   console.log('Press Ctrl+C to stop\n');
 
   // Handle graceful shutdown
   const shutdown = () => {
     console.log('\nStopping daemon...');
-    daemon.stop();
-    process.exit(0);
+    if (sync) {
+      console.log('[remote-sync] Flushing pending uploads...');
+      sync.flush().then(() => {
+        console.log('[remote-sync] Flush complete');
+        daemon.stop();
+        process.exit(0);
+      }).catch(() => {
+        daemon.stop();
+        process.exit(0);
+      });
+    } else {
+      daemon.stop();
+      process.exit(0);
+    }
   };
 
   process.on('SIGINT', shutdown);

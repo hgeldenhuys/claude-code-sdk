@@ -1,13 +1,13 @@
 //! Database schema creation and migration
 //!
-//! Creates all tables matching the TypeScript schema exactly (v8).
+//! Creates all tables matching the TypeScript schema exactly (v10).
 
 use rusqlite::Connection;
 
 use crate::connection::IndexerError;
 
 /// Current database schema version
-pub const DB_VERSION: i32 = 8;
+pub const DB_VERSION: i32 = 10;
 
 /// Initialize the database schema (create tables + run migrations)
 pub fn init_schema(conn: &mut Connection) -> Result<(), IndexerError> {
@@ -317,6 +317,48 @@ pub fn migrate_schema(conn: &Connection) -> Result<(), IndexerError> {
 
         eprintln!("[db] Migration v7->v8 complete");
         version = 8;
+    }
+
+    // Migration v8 -> v9: Content trimming (no schema change, data convention change)
+    // The indexed data now stores trimmed previews instead of full blobs.
+    // Run "transcript index rebuild" to apply trimming to historical data.
+    if version == 8 {
+        eprintln!("[db] Migrating schema from v8 to v9 (content trimming convention)...");
+        eprintln!("[db] Note: Run 'transcript index rebuild' to re-index with trimmed content");
+        version = 9;
+    }
+
+    // Migration v9 -> v10: Drop non-searchable line types
+    // Removes progress, file-history-snapshot, and queue-operation rows (~44% of DB size).
+    // These types have zero searchable content but consume ~623 MB of raw storage.
+    if version == 9 {
+        eprintln!("[db] Migrating schema from v9 to v10 (drop non-searchable line types)...");
+
+        // Delete non-searchable line types
+        let deleted = conn.execute(
+            "DELETE FROM lines WHERE type IN ('progress', 'file-history-snapshot', 'queue-operation')",
+            [],
+        )?;
+        eprintln!("[db] Deleted {} non-searchable rows", deleted);
+
+        // Rebuild FTS to remove orphaned entries
+        eprintln!("[db] Rebuilding lines_fts...");
+        conn.execute_batch("DELETE FROM lines_fts")?;
+        conn.execute_batch(
+            "INSERT INTO lines_fts(rowid, content, session_id, slug, type)
+             SELECT id, content, session_id, slug, type FROM lines",
+        )?;
+
+        // Update session line counts (now stale after DELETE)
+        conn.execute_batch(
+            "UPDATE sessions SET line_count = (
+                SELECT COUNT(*) FROM lines WHERE lines.file_path = sessions.file_path
+            )",
+        )?;
+
+        eprintln!("[db] Migration v9->v10 complete");
+        eprintln!("[db] Tip: Run VACUUM to reclaim disk space");
+        version = 10;
     }
 
     // Suppress unused variable warning

@@ -86,6 +86,20 @@ export {
   type AdapterLoadResult,
 } from './discovery';
 
+// Export remote sync sidecar
+export {
+  createRemoteSync,
+  SignalDBSyncManager,
+  UploadQueue,
+  loadRemoteSyncConfig,
+} from './remote-sync';
+export type {
+  RemoteSyncConfig,
+  SyncCursor,
+  SyncEntry,
+  SyncStats,
+} from './remote-sync';
+
 // Import for registration function
 import type { Database } from 'bun:sqlite';
 import { HookEventsAdapter } from './hook-events';

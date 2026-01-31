@@ -10,6 +10,7 @@ use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::path::Path;
 
 use crate::connection::IndexerError;
+use crate::content_trimmer::{trim_context_json, trim_handler_results, trim_input_json};
 use crate::discovery;
 
 /// Result of indexing a single hook file
@@ -150,20 +151,21 @@ pub fn index_hook_file(
 
         // Extract handler results
         let handler_results = parsed.get("handlerResults");
-        let handler_results_json = handler_results
-            .map(|v| serde_json::to_string(v).unwrap_or_default());
+        let handler_results_json = handler_results.map(|v| trim_handler_results(v));
 
         // Extract turn info from handler results
         let (turn_id, turn_sequence, session_name, git_hash, git_branch, git_dirty) =
             extract_handler_data(handler_results, &parsed);
 
+        let tool_name_str = tool_name.as_deref().unwrap_or("");
+
         let input_json = parsed
             .get("input")
-            .map(|v| serde_json::to_string(v).unwrap_or_default());
+            .map(|v| trim_input_json(v, tool_name_str));
 
         let context_json = parsed
             .get("context")
-            .map(|v| serde_json::to_string(v).unwrap_or_default());
+            .map(|v| trim_context_json(v));
 
         let file_path_str = file_path.to_string_lossy().to_string();
 

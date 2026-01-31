@@ -6,6 +6,7 @@
 
 pub mod adapter;
 pub mod connection;
+pub mod content_trimmer;
 pub mod correlation;
 pub mod daemon;
 pub mod discovery;

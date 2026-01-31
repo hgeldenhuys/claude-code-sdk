@@ -12,6 +12,7 @@ import type { Database } from 'bun:sqlite';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BaseAdapter, initCursorSchema } from './base';
+import { trimContextJson, trimHandlerResults, trimInputJson } from './content-trimmer';
 import type { EntryContext, ProcessEntryResult, SearchableTable, WatchPath } from './types';
 
 const DEFAULT_HOOKS_DIR = join(process.env.HOME || '~', '.claude', 'hooks');
@@ -157,17 +158,19 @@ export class HookEventsAdapter extends BaseAdapter {
       const finalTurnSequence = turnSequence ?? (entry.turnSequence as number) ?? null;
       const finalSessionName = sessionName || (entry.sessionName as string) || null;
 
+      const toolName = (entry.toolName as string) || '';
+
       const insertStmt = this.getInsertStatement(db);
       insertStmt.run(
         sessionId,
         timestamp,
         eventType,
         (entry.toolUseId as string) || null,
-        (entry.toolName as string) || null,
+        toolName || null,
         (entry.decision as string) || null,
-        Object.keys(handlerResults).length > 0 ? JSON.stringify(handlerResults) : null,
-        entry.input ? JSON.stringify(entry.input) : null,
-        entry.context ? JSON.stringify(entry.context) : null,
+        Object.keys(handlerResults).length > 0 ? trimHandlerResults(handlerResults) : null,
+        entry.input ? trimInputJson(entry.input as Record<string, unknown>, toolName) : null,
+        entry.context ? trimContextJson(entry.context as Record<string, unknown>) : null,
         context.filePath,
         context.lineNumber,
         finalTurnId,

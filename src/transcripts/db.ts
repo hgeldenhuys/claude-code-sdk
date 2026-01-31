@@ -14,12 +14,27 @@ import {
   statSync,
 } from 'node:fs';
 import { join } from 'node:path';
+import {
+  trimContextJson,
+  trimHandlerResults,
+  trimInputJson,
+  trimRawTranscriptLine,
+} from './adapters/content-trimmer';
 import type { SearchableTable, UnifiedSearchResult } from './adapters/types';
 import { findTranscriptFiles } from './indexer';
 import type { SearchResult, TranscriptLine } from './types';
 
-export const DB_VERSION = 8;
+export const DB_VERSION = 10;
 const DEFAULT_DB_PATH = join(process.env.HOME || '~', '.claude-code-sdk', 'transcripts.db');
+
+/**
+ * Line types that have zero searchable content and only consume raw storage.
+ * Skipped during indexing to save ~44% of database size.
+ * - progress: streaming tool execution updates (partial stdout, elapsed time)
+ * - file-history-snapshot: git file snapshots
+ * - queue-operation: internal queue operations
+ */
+const SKIP_TYPES = new Set(['progress', 'file-history-snapshot', 'queue-operation']);
 
 export interface DbStats {
   version: number;
@@ -409,6 +424,47 @@ function migrateSchema(db: Database): void {
     console.error('[db] Migration v7→v8 complete');
     currentVersion = 8;
   }
+
+  // Migration from v8 to v9: Content trimming (no schema change, data convention change)
+  // The indexed data now stores trimmed previews instead of full blobs.
+  // Run "transcript index rebuild" to apply trimming to historical data.
+  if (currentVersion === 8) {
+    console.error('[db] Migrating schema from v8 to v9 (content trimming convention)...');
+    console.error('[db] Note: Run "transcript index rebuild" to re-index with trimmed content');
+    currentVersion = 9;
+  }
+
+  // Migration from v9 to v10: Drop non-searchable line types
+  // Removes progress, file-history-snapshot, and queue-operation rows (~44% of DB size)
+  // These types have zero searchable content but consume ~623 MB of raw storage.
+  if (currentVersion === 9) {
+    console.error('[db] Migrating schema from v9 to v10 (drop non-searchable line types)...');
+
+    // Delete non-searchable line types
+    const deleteResult = db.run(
+      `DELETE FROM lines WHERE type IN ('progress', 'file-history-snapshot', 'queue-operation')`
+    );
+    console.error(`[db] Deleted ${deleteResult.changes} non-searchable rows`);
+
+    // Rebuild FTS to remove orphaned entries
+    console.error('[db] Rebuilding lines_fts...');
+    db.run('DELETE FROM lines_fts');
+    db.run(`
+      INSERT INTO lines_fts(rowid, content, session_id, slug, type)
+      SELECT id, content, session_id, slug, type FROM lines
+    `);
+
+    // Update session line counts (now stale after DELETE)
+    db.run(`
+      UPDATE sessions SET line_count = (
+        SELECT COUNT(*) FROM lines WHERE lines.file_path = sessions.file_path
+      )
+    `);
+
+    console.error('[db] Migration v9→v10 complete');
+    console.error('[db] Tip: Run VACUUM to reclaim disk space (sqlite3 db.path VACUUM)');
+    currentVersion = 10;
+  }
 }
 
 /**
@@ -568,6 +624,13 @@ export function indexTranscriptFile(
         if (timestamp) lastTimestamp = timestamp;
 
         const type = parsed.type || 'unknown';
+
+        // Skip non-searchable types (no content, only raw blob)
+        if (SKIP_TYPES.has(type)) {
+          lineNumber++;
+          continue;
+        }
+
         const content = extractTextFromParsed(parsed);
 
         insertLine.run(
@@ -583,7 +646,7 @@ export function indexTranscriptFile(
           parsed.message?.model || null,
           parsed.cwd || null,
           content,
-          rawLine,
+          trimRawTranscriptLine(parsed),
           filePath,
           null, // turn_id - will be correlated later
           null, // turn_sequence - will be correlated later
@@ -1015,16 +1078,18 @@ export function indexHookFile(
         const gitBranch = gitState?.branch || null;
         const gitDirty = gitState?.isDirty != null ? (gitState.isDirty ? 1 : 0) : null;
 
+        const toolNameStr = parsed.toolName || '';
+
         insertEvent.run(
           parsed.sessionId || '',
           timestamp,
           parsed.eventType || '',
           parsed.toolUseId || null,
-          parsed.toolName || null,
+          toolNameStr || null,
           parsed.decision || null,
-          parsed.handlerResults ? JSON.stringify(parsed.handlerResults) : null,
-          parsed.input ? JSON.stringify(parsed.input) : null,
-          parsed.context ? JSON.stringify(parsed.context) : null,
+          parsed.handlerResults ? trimHandlerResults(parsed.handlerResults) : null,
+          parsed.input ? trimInputJson(parsed.input, toolNameStr) : null,
+          parsed.context ? trimContextJson(parsed.context) : null,
           filePath,
           lineNumber,
           turnId,

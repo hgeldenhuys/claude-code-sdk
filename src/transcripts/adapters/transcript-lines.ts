@@ -12,9 +12,19 @@ import type { Database } from 'bun:sqlite';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BaseAdapter, initCursorSchema } from './base';
+import { trimRawTranscriptLine } from './content-trimmer';
 import type { EntryContext, ProcessEntryResult, SearchableTable, WatchPath } from './types';
 
 const DEFAULT_PROJECTS_DIR = join(process.env.HOME || '~', '.claude', 'projects');
+
+/**
+ * Line types that have zero searchable content and only consume raw storage.
+ * Skipped during indexing to save ~44% of database size.
+ * - progress: streaming tool execution updates (partial stdout, elapsed time)
+ * - file-history-snapshot: git file snapshots
+ * - queue-operation: internal queue operations
+ */
+const SKIP_TYPES = new Set(['progress', 'file-history-snapshot', 'queue-operation']);
 
 /**
  * Extract searchable text from a parsed transcript entry
@@ -167,6 +177,12 @@ export class TranscriptLinesAdapter extends BaseAdapter {
       const sessionId = (entry.sessionId as string) || context.sessionId || '';
       const slug = (entry.slug as string) || null;
       const type = (entry.type as string) || 'unknown';
+
+      // Skip non-searchable types (no content, only raw blob)
+      if (SKIP_TYPES.has(type)) {
+        return { success: true, entryType: type };
+      }
+
       const timestamp = (entry.timestamp as string) || '';
       const content = extractTextFromParsed(entry);
 
@@ -186,7 +202,7 @@ export class TranscriptLinesAdapter extends BaseAdapter {
         message?.model || null,
         (entry.cwd as string) || null,
         content,
-        context.rawLine,
+        trimRawTranscriptLine(entry),
         context.filePath,
         null, // turn_id - will be correlated later
         null, // turn_sequence - will be correlated later

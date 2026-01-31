@@ -10,8 +10,16 @@ use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::path::Path;
 
 use crate::connection::IndexerError;
+use crate::content_trimmer::trim_raw_transcript_line;
 use crate::discovery;
 use crate::text_extract::extract_searchable_text;
+
+/// Line types that have zero searchable content and only consume raw storage.
+/// These are skipped during indexing to save ~44% of database size.
+/// - `progress`: streaming tool execution updates (partial stdout, elapsed time)
+/// - `file-history-snapshot`: git file snapshots
+/// - `queue-operation`: internal queue operations
+const SKIP_TYPES: &[&str] = &["progress", "file-history-snapshot", "queue-operation"];
 
 /// Result of indexing a single transcript file
 #[derive(Debug, Default)]
@@ -148,6 +156,12 @@ pub fn index_transcript_file(
             .unwrap_or("unknown")
             .to_string();
 
+        // Skip non-searchable types (no content, only raw blob)
+        if SKIP_TYPES.contains(&entry_type.as_str()) {
+            line_number += 1;
+            continue;
+        }
+
         let content = extract_searchable_text(&parsed);
 
         let uuid = parsed
@@ -184,6 +198,7 @@ pub fn index_transcript_file(
             .map(|s| s.to_string());
 
         let file_path_str = file_path.to_string_lossy().to_string();
+        let trimmed_raw = trim_raw_transcript_line(&parsed);
 
         insert_stmt.execute(rusqlite::params![
             session_id,
@@ -198,7 +213,7 @@ pub fn index_transcript_file(
             model,
             cwd,
             content,
-            raw_line,
+            trimmed_raw,
             file_path_str,
             Option::<String>::None, // turn_id
             Option::<i64>::None,    // turn_sequence
@@ -455,6 +470,44 @@ not valid json
 
         let result = index_transcript_file(&conn, &file_path, 0, 1).unwrap();
         assert_eq!(result.lines_indexed, 2);
+    }
+
+    #[test]
+    fn test_skip_non_searchable_types() {
+        let conn = setup_db();
+        let tmp = tempfile::tempdir().unwrap();
+        let file_path = tmp.path().join("transcript.jsonl");
+
+        // Mix of searchable and non-searchable types
+        let lines = vec![
+            r#"{"sessionId":"sess-1","uuid":"uuid-1","type":"user","timestamp":"2024-01-01T00:00:00Z","message":{"content":"Hello world","role":"user"}}"#,
+            r#"{"sessionId":"sess-1","uuid":"uuid-2","type":"progress","timestamp":"2024-01-01T00:00:01Z","data":{"elapsed":1.5}}"#,
+            r#"{"sessionId":"sess-1","uuid":"uuid-3","type":"file-history-snapshot","timestamp":"2024-01-01T00:00:02Z","data":{"files":["a.ts"]}}"#,
+            r#"{"sessionId":"sess-1","uuid":"uuid-4","type":"queue-operation","timestamp":"2024-01-01T00:00:03Z","data":{"op":"push"}}"#,
+            r#"{"sessionId":"sess-1","uuid":"uuid-5","type":"assistant","timestamp":"2024-01-01T00:00:04Z","message":{"content":"Hi there","role":"assistant","model":"claude-3"}}"#,
+        ];
+        fs::write(&file_path, lines.join("\n") + "\n").unwrap();
+
+        let result = index_transcript_file(&conn, &file_path, 0, 1).unwrap();
+
+        // Only user + assistant should be indexed (2 out of 5)
+        assert_eq!(result.lines_indexed, 2);
+
+        // Verify no skipped types in DB
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM lines WHERE type IN ('progress', 'file-history-snapshot', 'queue-operation')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 0);
+
+        // Verify searchable types are present
+        let total: i64 = conn
+            .query_row("SELECT COUNT(*) FROM lines", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(total, 2);
     }
 
     #[test]
