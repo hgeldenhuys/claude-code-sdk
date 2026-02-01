@@ -32,19 +32,45 @@ export type {
   PreToolUseOutput,
   PostToolUseInput,
   PostToolUseOutput,
+  PostToolUseFailureInput,
   StopInput,
   StopOutput,
   SubagentStartInput,
   SubagentStopInput,
+  SubagentStopOutput,
   UserPromptSubmitInput,
   UserPromptSubmitOutput,
   PreCompactInput,
   PreCompactOutput,
+  SetupInput,
+  SetupOutput,
+  SetupTrigger,
+  NotificationInput,
+  NotificationType,
   PermissionRequestInput,
   PermissionRequestOutput,
   HookResult,
   HookEnvironment,
+  HookEvent,
+  CommandHookConfig,
+  PromptHookConfig,
+  AgentHookConfig,
+  HookConfig,
+  PromptHookResponse,
+  BashToolInput,
+  WriteToolInput,
+  EditToolInput,
+  ReadToolInput,
+  GlobToolInput,
+  GrepToolInput,
+  WebFetchToolInput,
+  WebSearchToolInput,
+  TaskToolInput,
+  ToolInputMap,
 } from './types';
+
+// Tool input type guard
+export { isToolInput } from './types';
 
 // Session management
 export {
@@ -109,6 +135,11 @@ export {
   injectContext,
   blockPrompt,
   sessionStartContext,
+  // Config builders (2.1.17+ prompt, 2.1.29+ agent)
+  agentHook,
+  promptHook,
+  approveAction,
+  denyAction,
   // Types
   type SessionAwareOptions,
   type HookContext,

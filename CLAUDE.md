@@ -69,7 +69,7 @@ src/
 │   └── tracker.ts     # DocsTracker - fetch, cache, delta detection
 ├── hooks/             # Hooks SDK for building Claude Code hooks
 │   ├── index.ts       # Main hooks exports
-│   ├── types.ts       # Hook event type definitions (10 events)
+│   ├── types.ts       # Hook event type definitions (13 events)
 │   ├── helpers.ts     # Hook creators and I/O utilities
 │   └── sessions/      # Session naming module
 │       ├── store.ts   # SessionStore - name-centric session storage
@@ -155,7 +155,7 @@ createSessionStartHook(({ sessionName }) => {
 ```
 
 **Key features:**
-- Type definitions for all 10 hook events
+- Type definitions for all 13 hook events
 - Session naming that persists across compact/clear
 - Hook creators with automatic session tracking
 - Common patterns (blockTool, injectContext, etc.)
@@ -633,6 +633,8 @@ cd apps/tapestry-observer && bun dev  # Real-time web dashboard
 - **Auto-compaction drops headless turns**: When resuming a large session (200K+ context) headlessly, auto-compaction can silently drop recent small headless turns, causing memory loss between routed messages. Solution: fork a lightweight branch session.
 - **`--fork-session` creates branch sessions**: `claude --resume <id> --fork-session` creates a new session inheriting the parent's context but with its own transcript. Combined with `--output-format json`, the forked session ID is returned in the `session_id` field.
 - **`--output-format json` structured output**: Returns `{result, session_id, is_error, duration_ms, usage}` instead of raw text. Essential for programmatic CLI usage.
+- **`--output-format stream-json` streaming**: For real-time streaming, use `--output-format stream-json --verbose --include-partial-messages`. Returns incremental JSON messages as they arrive.
+- **Agent SDK branding (2.1.18+)**: Headless/programmatic mode is now officially branded as "Agent SDK" with documentation at `platform.claude.com`. The TypeScript and Python SDKs are the recommended integration points.
 - **`onDiscordReady` must register before `connect()`**: The Gateway READY event fires during connection. Callbacks registered after `connect()` resolves will miss it. Bot user ID (needed for permission overwrites) comes from READY data.
 
 **System Prompt Injection:**

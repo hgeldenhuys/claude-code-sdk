@@ -112,7 +112,7 @@ Skills for building Claude Code extensions (hooks, MCP servers, plugins, etc.):
 | Skill | Description |
 |-------|-------------|
 | [claude-code-reference](skills/claude-code-reference/SKILL.md) | Reference guide for Claude Code extensions |
-| [creating-hooks](skills/creating-hooks/SKILL.md) | All 10 hook events with examples |
+| [creating-hooks](skills/creating-hooks/SKILL.md) | All 13 hook events with examples |
 | [creating-mcp-servers](skills/creating-mcp-servers/SKILL.md) | MCP server development and integration |
 | [creating-plugins](skills/creating-plugins/SKILL.md) | Full plugin bundling and distribution |
 | [creating-subagents](skills/creating-subagents/SKILL.md) | Custom Task tool agents |

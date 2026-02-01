@@ -5,7 +5,7 @@ Utilities and helpers for building Claude Code hooks.
 ## Overview
 
 The Hooks SDK provides:
-- **Type definitions** for all 10 hook events
+- **Type definitions** for all 13 hook events
 - **Session naming** - Human-friendly names that persist across compactions
 - **Hook creators** - Type-safe handlers with automatic session tracking
 - **I/O utilities** - Read stdin, write stdout, exit codes

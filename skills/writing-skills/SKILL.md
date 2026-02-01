@@ -38,8 +38,9 @@ model: sonnet  # Optional: opus, sonnet, haiku
 | `description` | Yes | Third person. Max 1024 chars. Include when to use |
 | `allowed-tools` | No | Restricts which tools the skill can use |
 | `model` | No | Force specific model (opus, sonnet, haiku) |
-| `context` | No | Set to `fork` to run in sub-agent context |
-| `agent` | No | Agent type when `context: fork` (requires context) |
+| `run-in` | No | `subagent` to run in isolated sub-agent (2.1.29+, replaces `context: fork`) |
+| `context` | No | **Deprecated:** Set to `fork` for sub-agent context. Use `run-in: subagent` instead |
+| `agent` | No | Agent type when `run-in: subagent` or `context: fork` |
 | `hooks` | No | Lifecycle-scoped hooks (PreToolUse, PostToolUse, Stop) |
 | `user-invocable` | No | `false` hides from slash menu but allows Skill tool |
 | `disable-model-invocation` | No | `true` blocks Skill tool invocation |
@@ -236,18 +237,20 @@ Before finalizing a skill:
 
 ## Advanced Configuration
 
-### Forked Context
+### Subagent Execution (2.1.29+)
 
-Run skills in an isolated sub-agent context using `context: fork`:
+Run skills in an isolated sub-agent context using `run-in: subagent`:
 
 ```yaml
 ---
 name: complex-analysis
 description: Deep analysis that benefits from isolated context
-context: fork
+run-in: subagent
 agent: Explore  # Optional: specify agent type
 ---
 ```
+
+> **Note:** `run-in: subagent` replaces the older `context: fork` pattern. Both still work, but prefer `run-in: subagent` for new skills.
 
 **When to use:**
 - Long-running analysis that shouldn't pollute main context
@@ -288,6 +291,24 @@ hooks:
         - type: command
           command: "./validate.sh"
           once: true
+---
+```
+
+#### Agent-based hooks (2.1.29+)
+
+Agent hooks spawn a subagent that can use tools to verify conditions:
+
+```yaml
+---
+name: safe-deploy
+description: Deploy with agent verification
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: agent
+          prompt: "Check if $ARGUMENTS[0] is a safe deployment command. Return {ok: true} or {ok: false, reason: '...'}."
+          timeout: 60
 ---
 ```
 

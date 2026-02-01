@@ -384,7 +384,7 @@ For detailed implementation guidance, install these companion skills:
 
 | Skill | Purpose | Install |
 |-------|---------|---------|
-| `creating-hooks` | All 10 hook events with examples | `cp -r skills/creating-hooks ~/.claude/skills/` |
+| `creating-hooks` | All 13 hook events with examples | `cp -r skills/creating-hooks ~/.claude/skills/` |
 | `creating-mcp-servers` | MCP server creation and integration | `cp -r skills/creating-mcp-servers ~/.claude/skills/` |
 | `transcript-intelligence` | Search past sessions | `cp -r skills/transcript-intelligence ~/.claude/skills/` |
 | `writing-skills` | Best practices for skill creation | `cp -r skills/writing-skills ~/.claude/skills/` |

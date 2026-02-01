@@ -60,6 +60,8 @@ export interface DeltaResult {
   checkedAt: Date;
   /** Diff summary if changes detected */
   diffSummary?: DiffSummary;
+  /** True if the document returned 404 (page removed/relocated) */
+  removed?: boolean;
 }
 
 /**
@@ -337,13 +339,6 @@ export const CLAUDE_CODE_DOCS: DocSource[] = [
     category: 'reference',
     tags: ['cli', 'commands', 'flags'],
     priority: 9,
-  },
-  {
-    id: 'slash-commands',
-    url: 'https://code.claude.com/docs/en/slash-commands.md',
-    category: 'reference',
-    tags: ['commands', 'slash', 'shortcuts'],
-    priority: 8,
   },
   {
     id: 'interactive-mode',

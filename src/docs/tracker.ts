@@ -235,6 +235,17 @@ export class DocsTracker {
         },
       });
 
+      if (response.status === 404) {
+        return {
+          url,
+          hasChanges: !!existingMeta,
+          previousHash,
+          newHash: '',
+          checkedAt: new Date(),
+          removed: true,
+        };
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }

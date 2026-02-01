@@ -8,24 +8,32 @@
 import { getSessionName, trackSession } from './sessions';
 import type { TrackingResult } from './sessions';
 import type {
+  AgentHookConfig,
   BaseHookInput,
   HookEventName,
+  NotificationInput,
   PermissionRequestInput,
   PermissionRequestOutput,
+  PostToolUseFailureInput,
   PostToolUseInput,
   PostToolUseOutput,
   PreCompactInput,
   PreCompactOutput,
   PreToolUseInput,
   PreToolUseOutput,
+  PromptHookConfig,
+  PromptHookResponse,
   SessionEndInput,
   SessionSource,
   SessionStartInput,
   SessionStartOutput,
+  SetupInput,
+  SetupOutput,
   StopInput,
   StopOutput,
   SubagentStartInput,
   SubagentStopInput,
+  SubagentStopOutput,
   UserPromptSubmitInput,
   UserPromptSubmitOutput,
 } from './types';
@@ -428,6 +436,48 @@ export function sessionStartContext(
 }
 
 // ============================================================================
+// Hook Config Builders (2.1.17+ prompt hooks, 2.1.29+ agent hooks)
+// ============================================================================
+
+/**
+ * Build an agent-based hook configuration (2.1.29+).
+ * Agent hooks spawn a subagent that can use tools to verify conditions.
+ */
+export function agentHook(
+  prompt: string,
+  opts?: { model?: string; timeout?: number }
+): AgentHookConfig {
+  return { type: 'agent', prompt, ...opts };
+}
+
+/**
+ * Build a prompt-based hook configuration (2.1.17+).
+ * Prompt hooks use an LLM to evaluate decisions without shell commands.
+ */
+export function promptHook(
+  prompt: string,
+  opts?: { model?: string; timeout?: number; statusMessage?: string; once?: boolean }
+): PromptHookConfig {
+  return { type: 'prompt', prompt, ...opts };
+}
+
+/**
+ * Approve an action (prompt/agent hook response).
+ * Returns `{ ok: true }` per the PromptHookResponse schema.
+ */
+export function approveAction(): PromptHookResponse {
+  return { ok: true };
+}
+
+/**
+ * Deny an action with a reason (prompt/agent hook response).
+ * Returns `{ ok: false, reason }` per the PromptHookResponse schema.
+ */
+export function denyAction(reason: string): PromptHookResponse {
+  return { ok: false, reason };
+}
+
+// ============================================================================
 // Generic Hook Runner
 // ============================================================================
 
@@ -436,11 +486,14 @@ type HookInputMap = {
   SessionEnd: SessionEndInput;
   PreToolUse: PreToolUseInput;
   PostToolUse: PostToolUseInput;
+  PostToolUseFailure: PostToolUseFailureInput;
   Stop: StopInput;
   SubagentStart: SubagentStartInput;
   SubagentStop: SubagentStopInput;
   UserPromptSubmit: UserPromptSubmitInput;
   PreCompact: PreCompactInput;
+  Setup: SetupInput;
+  Notification: NotificationInput;
   PermissionRequest: PermissionRequestInput;
 };
 
@@ -449,11 +502,14 @@ type HookOutputMap = {
   SessionEnd: undefined;
   PreToolUse: PreToolUseOutput;
   PostToolUse: PostToolUseOutput;
+  PostToolUseFailure: PostToolUseOutput;
   Stop: StopOutput;
   SubagentStart: undefined;
-  SubagentStop: undefined;
+  SubagentStop: SubagentStopOutput;
   UserPromptSubmit: UserPromptSubmitOutput;
   PreCompact: PreCompactOutput;
+  Setup: SetupOutput;
+  Notification: undefined;
   PermissionRequest: PermissionRequestOutput;
 };
 

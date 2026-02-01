@@ -365,6 +365,126 @@ export type HookEvent =
   | NotificationInput
   | PermissionRequestInput;
 
+// ============================================================================
+// Typed Tool Input Interfaces
+// ============================================================================
+
+/**
+ * Bash tool input (command execution)
+ */
+export interface BashToolInput {
+  command: string;
+  description?: string;
+  timeout?: number;
+  run_in_background?: boolean;
+}
+
+/**
+ * Write tool input (file creation/overwrite)
+ */
+export interface WriteToolInput {
+  file_path: string;
+  content: string;
+}
+
+/**
+ * Edit tool input (string replacement)
+ */
+export interface EditToolInput {
+  file_path: string;
+  old_string: string;
+  new_string: string;
+  replace_all?: boolean;
+}
+
+/**
+ * Read tool input (file reading)
+ */
+export interface ReadToolInput {
+  file_path: string;
+  offset?: number;
+  limit?: number;
+}
+
+/**
+ * Glob tool input (file pattern matching)
+ */
+export interface GlobToolInput {
+  pattern: string;
+  path?: string;
+}
+
+/**
+ * Grep tool input (content search)
+ */
+export interface GrepToolInput {
+  pattern: string;
+  path?: string;
+  glob?: string;
+  type?: string;
+  output_mode?: 'content' | 'files_with_matches' | 'count';
+}
+
+/**
+ * WebFetch tool input (URL fetching)
+ */
+export interface WebFetchToolInput {
+  url: string;
+  prompt: string;
+}
+
+/**
+ * WebSearch tool input (web searching)
+ */
+export interface WebSearchToolInput {
+  query: string;
+  allowed_domains?: string[];
+  blocked_domains?: string[];
+}
+
+/**
+ * Task tool input (subagent spawning)
+ */
+export interface TaskToolInput {
+  prompt: string;
+  description: string;
+  subagent_type: string;
+  model?: string;
+  run_in_background?: boolean;
+}
+
+/**
+ * Map of tool names to their typed input interfaces
+ */
+export interface ToolInputMap {
+  Bash: BashToolInput;
+  Write: WriteToolInput;
+  Edit: EditToolInput;
+  Read: ReadToolInput;
+  Glob: GlobToolInput;
+  Grep: GrepToolInput;
+  WebFetch: WebFetchToolInput;
+  WebSearch: WebSearchToolInput;
+  Task: TaskToolInput;
+}
+
+/**
+ * Type guard to narrow tool_input to a specific tool's typed input.
+ * Existing `Record<string, unknown>` on hook inputs is unchanged —
+ * use this helper to safely narrow in hook handlers.
+ */
+export function isToolInput<T extends keyof ToolInputMap>(
+  toolName: string,
+  input: Record<string, unknown>,
+  expectedTool: T
+): input is ToolInputMap[T] & Record<string, unknown> {
+  return toolName === expectedTool;
+}
+
+// ============================================================================
+// Hook Configuration Types
+// ============================================================================
+
 /**
  * Prompt-based hook configuration (2.1.17+)
  * Uses LLM to evaluate decisions instead of bash commands

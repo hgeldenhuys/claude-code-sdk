@@ -590,7 +590,7 @@ hooks:
 |--------|----------------|-------------------|
 | Location | `settings.json` | Skill/Agent/Command YAML |
 | Scope | Global or project | Component lifecycle |
-| Events | All 10 events | PreToolUse, PostToolUse, Stop |
+| Events | All 13 events | PreToolUse, PostToolUse, Stop |
 | Cleanup | Manual | Automatic |
 | `once` option | No | Yes |
 

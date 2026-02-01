@@ -129,7 +129,34 @@ export interface SDKConfig {
   telemetry?: boolean;
 }
 
-// Claude Code Settings types (aligned with 2.0.74 docs)
+/**
+ * Spinner verb overrides per tool
+ */
+export interface SpinnerVerbsConfig {
+  [toolName: string]: string;
+}
+
+/**
+ * File suggestion behavior configuration
+ */
+export interface FileSuggestionConfig {
+  /** Whether file suggestions are enabled */
+  enabled?: boolean;
+  /** Maximum number of suggestions to show */
+  maxSuggestions?: number;
+}
+
+/**
+ * MCP server spec for allow/deny lists
+ */
+export interface McpServerSpec {
+  /** Server name as registered in MCP config */
+  name: string;
+  /** Optional namespace or scope */
+  scope?: string;
+}
+
+// Claude Code Settings types (aligned with 2.1.29 docs)
 export interface ClaudeCodeSettings {
   permissions?: PermissionSettings;
   env?: Record<string, string>;
@@ -142,6 +169,45 @@ export interface ClaudeCodeSettings {
   strictKnownMarketplaces?: MarketplaceSourceSpec[]; // Enterprise: allowlist of marketplaces
   attribution?: AttributionSettings;
   sandbox?: SandboxSettings;
+  // --- Fields added in 2.1.18-2.1.29 ---
+  /** Spinner verb overrides per tool (e.g., { "Bash": "Executing" }) */
+  spinnerVerbs?: SpinnerVerbsConfig;
+  /** Auto-update channel: 'stable' | 'beta' | 'none' */
+  autoUpdatesChannel?: 'stable' | 'beta' | 'none';
+  /** Whether spinner tips are shown */
+  spinnerTipsEnabled?: boolean;
+  /** Whether the terminal progress bar is shown */
+  terminalProgressBarEnabled?: boolean;
+  /** Whether to show turn duration after each response */
+  showTurnDuration?: boolean;
+  /** Directory for plan files */
+  plansDirectory?: string;
+  /** UI language override */
+  language?: string;
+  /** File suggestion behavior */
+  fileSuggestion?: FileSuggestionConfig;
+  /** Whether to respect .gitignore when searching */
+  respectGitignore?: boolean;
+  /** Force a specific login method (e.g., 'oauth', 'api-key') */
+  forceLoginMethod?: string;
+  /** Force login to a specific org by UUID */
+  forceLoginOrgUUID?: string;
+  /** Enable all MCP servers from .mcp.json files in project */
+  enableAllProjectMcpServers?: boolean;
+  /** Enabled servers from .mcp.json (allowlist) */
+  enabledMcpjsonServers?: McpServerSpec[];
+  /** Disabled servers from .mcp.json (blocklist) */
+  disabledMcpjsonServers?: McpServerSpec[];
+  /** Allowed MCP servers (enterprise allowlist) */
+  allowedMcpServers?: McpServerSpec[];
+  /** Denied MCP servers (enterprise blocklist) */
+  deniedMcpServers?: McpServerSpec[];
+  /** AWS auth refresh settings */
+  awsAuthRefresh?: boolean;
+  /** AWS credential export settings */
+  awsCredentialExport?: boolean;
+  /** Whether "always thinking" mode is enabled */
+  alwaysThinkingEnabled?: boolean;
 }
 
 export interface PermissionSettings {

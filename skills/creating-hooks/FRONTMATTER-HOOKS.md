@@ -182,7 +182,7 @@ When multiple hooks match the same event:
 |---------|----------------|-------------------|
 | **Location** | `settings.json` | Component YAML frontmatter |
 | **Scope** | Global/project-wide | Component lifecycle only |
-| **Events** | All 10 events | PreToolUse, PostToolUse, Stop |
+| **Events** | All 13 events | PreToolUse, PostToolUse, Stop |
 | **Active** | Always (when enabled) | Only during component execution |
 | **Cleanup** | Manual management | Automatic |
 | **`once` option** | Not supported | Supported |
