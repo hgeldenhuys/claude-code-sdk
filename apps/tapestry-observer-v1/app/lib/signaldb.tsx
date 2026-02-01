@@ -4,6 +4,12 @@
  * Provides SignalDB connection state and data to the component tree.
  * No API keys are stored client-side — the BFF proxy handles credentials.
  * On mount, fetches /api/config to check if the server is configured.
+ *
+ * IMPORTANT: Only COMMS data (agents, channels, messages) is streamed globally.
+ * Transcript lines and hook events are NOT streamed here — they're too large
+ * and would cause constant re-renders across the entire app. Instead, we poll
+ * lightweight counts for sidebar badges, and each route creates its own local
+ * stream with sensible maxItems caps.
  */
 
 import {
@@ -15,7 +21,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useAgents, useChannels, useMessages } from "./sse-hooks";
+import { useAgents, useChannels, useCollectionCounts, useMessages } from "./sse-hooks";
 import type { Agent, Channel, ConnectionState, Message, StreamMode } from "./types";
 
 // ============================================================================
@@ -29,10 +35,17 @@ interface SignalDBContextValue {
   apiHost: string | null;
   connected: ConnectionState;
 
-  // Data
+  // COMMS Data (streamed via SSE)
   agents: Agent[];
   channels: Channel[];
   messages: Message[];
+
+  // Transcript Counts (lightweight polling, NOT full data)
+  transcriptCounts: {
+    lines: number;
+    hookEvents: number;
+    sessions: number;
+  };
 
   // Errors
   errors: {
@@ -96,12 +109,18 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
     [configured]
   );
 
-  // Subscribe to all tables
+  // Subscribe to COMMS tables only (small, bounded collections)
   const agentsStream = useAgents(sseOptions);
   const channelsStream = useChannels(sseOptions);
   const messagesStream = useMessages(sseOptions);
 
-  // Connection state — derive overall mode from individual streams
+  // Lightweight count polling for transcript data (every 30s)
+  const { counts, refreshCounts } = useCollectionCounts({
+    enabled: configured,
+    intervalMs: 30_000,
+  });
+
+  // Connection state — derive overall mode from COMMS streams only
   const connected = useMemo<ConnectionState>(() => {
     const modes = [agentsStream.mode, channelsStream.mode, messagesStream.mode];
     let overallMode: StreamMode = "offline";
@@ -136,7 +155,18 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
     agentsStream.refresh();
     channelsStream.refresh();
     messagesStream.refresh();
-  }, [agentsStream, channelsStream, messagesStream]);
+    refreshCounts();
+  }, [agentsStream, channelsStream, messagesStream, refreshCounts]);
+
+  // Transcript counts
+  const transcriptCounts = useMemo(
+    () => ({
+      lines: counts.transcriptLines,
+      hookEvents: counts.hookEvents,
+      sessions: counts.sessions,
+    }),
+    [counts.transcriptLines, counts.hookEvents, counts.sessions]
+  );
 
   // Context value
   const value = useMemo<SignalDBContextValue>(
@@ -148,6 +178,7 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
       agents: agentsStream.data,
       channels: channelsStream.data,
       messages: messagesStream.data,
+      transcriptCounts,
       errors,
       refresh,
     }),
@@ -159,6 +190,7 @@ export function SignalDBProvider({ children }: SignalDBProviderProps) {
       agentsStream.data,
       channelsStream.data,
       messagesStream.data,
+      transcriptCounts,
       errors,
       refresh,
     ]

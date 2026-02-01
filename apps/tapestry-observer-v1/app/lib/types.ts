@@ -262,3 +262,100 @@ export function formatTime(timestamp: string | null | undefined): string {
     hour12: false,
   });
 }
+
+// ============================================================================
+// Transcript Types
+// ============================================================================
+
+export interface TranscriptLine {
+  id: string;
+  machineId: string;
+  sessionId: string;
+  sessionName: string | null;
+  slug: string | null;
+  lineNumber: number;
+  timestamp: string;
+  type: string;
+  subtype: string | null;
+  role: string | null;
+  content: string;
+  turnId: string | null;
+  gitHash: string | null;
+  gitBranch: string | null;
+  sourceFile: string;
+  syncedAt: string;
+}
+
+export interface HookEvent {
+  id: string;
+  machineId: string;
+  sessionId: string;
+  sessionName: string | null;
+  eventType: string;
+  toolName: string | null;
+  turnId: string | null;
+  timestamp: string;
+  inputJson: string | null;
+  handlerResultsJson: string | null;
+  decision: string | null;
+  gitHash: string | null;
+  gitBranch: string | null;
+  sourceFile: string;
+  syncedAt: string;
+}
+
+// ============================================================================
+// Transcript Helpers
+// ============================================================================
+
+const lineTypeColors: Record<string, string> = {
+  user: "text-blue-400",
+  assistant: "text-green-400",
+  system: "text-gray-400",
+  summary: "text-amber-400",
+};
+
+const lineTypeBgColors: Record<string, string> = {
+  user: "bg-blue-900/40 text-blue-300",
+  assistant: "bg-green-900/40 text-green-300",
+  system: "bg-gray-800 text-gray-400",
+  summary: "bg-amber-900/40 text-amber-300",
+};
+
+export function getLineTypeColor(type: string): string {
+  return lineTypeColors[type] || "text-gray-500";
+}
+
+export function getLineTypeBgColor(type: string): string {
+  return lineTypeBgColors[type] || "bg-gray-800 text-gray-400";
+}
+
+const eventTypeColors: Record<string, string> = {
+  PreToolUse: "bg-blue-900/50 text-blue-400",
+  PostToolUse: "bg-green-900/50 text-green-400",
+  UserPromptSubmit: "bg-purple-900/50 text-purple-400",
+  Stop: "bg-red-900/50 text-red-400",
+  SubagentStop: "bg-orange-900/50 text-orange-400",
+  SessionStart: "bg-cyan-900/50 text-cyan-400",
+  SessionEnd: "bg-gray-700 text-gray-300",
+};
+
+export function getEventTypeColor(eventType: string): string {
+  return eventTypeColors[eventType] || "bg-gray-800 text-gray-400";
+}
+
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m`;
+}
+
+export function truncateContent(s: string | null | undefined, max: number): string {
+  if (!s) return "";
+  if (s.length <= max) return s;
+  return `${s.slice(0, max)}…`;
+}

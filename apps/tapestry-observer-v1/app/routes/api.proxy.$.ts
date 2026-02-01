@@ -79,17 +79,6 @@ export async function getProxyApiUrl(): Promise<string> {
   return _apiUrl || "https://api.signaldb.live";
 }
 
-/** Get API credentials for direct server-side calls (used by loaders) */
-export async function getApiCredentials(): Promise<{ apiUrl: string; apiKey: string }> {
-  await loadEnv();
-  return {
-    apiUrl: _apiUrl || "https://api.signaldb.live",
-    apiKey: _apiKey || "",
-  };
-}
-
-export { loadEnv };
-
 async function proxyRequest(request: Request, params: { "*": string }) {
   await loadEnv();
 

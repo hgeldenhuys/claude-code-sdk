@@ -9,14 +9,18 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Agent, Channel, Message } from "./types";
+import type { Agent, Channel, HookEvent, Message, TranscriptLine } from "./types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-interface UseSSEOptions {
+export interface UseSSEOptions {
   enabled?: boolean;
+  maxItems?: number;
+  fetchLimit?: number;
+  /** Set false to skip SSE streaming — only does an initial REST fetch. Default: true. */
+  stream?: boolean;
 }
 
 export type StreamMode = "live" | "polling" | "offline";
@@ -28,7 +32,7 @@ interface SSEState<T> {
   mode: StreamMode;
 }
 
-type EntityType = "agents" | "channels" | "messages";
+type EntityType = "agents" | "channels" | "messages" | "transcript_lines" | "hook_events";
 
 // All requests go through the BFF proxy
 const BASE_URL = "/api/proxy";
@@ -134,7 +138,11 @@ export function useTableStream<T extends { id: string }>(
   table: EntityType,
   options: UseSSEOptions
 ): SSEState<T> & { refresh: () => void } {
-  const { enabled = true } = options;
+  const { enabled = true, maxItems = 0, fetchLimit = 500, stream = true } = options;
+  const maxItemsRef = useRef(maxItems);
+  maxItemsRef.current = maxItems;
+  const fetchLimitRef = useRef(fetchLimit);
+  fetchLimitRef.current = fetchLimit;
 
   const [state, setState] = useState<SSEState<T>>({
     data: [],
@@ -195,7 +203,8 @@ export function useTableStream<T extends { id: string }>(
   // Fetch initial data (no auth header — proxy handles it)
   const fetchInitialData = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/v1/${table}?limit=500`, {
+      const limit = fetchLimitRef.current;
+      const response = await fetch(`${BASE_URL}/v1/${table}?limit=${limit}&sort=-synced_at`, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -205,7 +214,13 @@ export function useTableStream<T extends { id: string }>(
 
       const json = await response.json();
       const data = json.data || json;
-      const converted = convertKeysToCamelCase<T[]>(data);
+      let converted = convertKeysToCamelCase<T[]>(data);
+
+      // Apply maxItems cap to initial data
+      const cap = maxItemsRef.current;
+      if (cap > 0 && converted.length > cap) {
+        converted = converted.slice(0, cap);
+      }
 
       if (mountedRef.current) {
         setState((prev) => ({ ...prev, data: converted, error: null }));
@@ -346,6 +361,12 @@ export function useTableStream<T extends { id: string }>(
               }
             }
 
+            // Cap array size — drop oldest items when over limit
+            const cap = maxItemsRef.current;
+            if (cap > 0 && newData.length > cap) {
+              newData = newData.slice(newData.length - cap);
+            }
+
             return { ...prev, data: newData };
           });
         }
@@ -407,13 +428,17 @@ export function useTableStream<T extends { id: string }>(
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // Initial data fetch and SSE connection
+  // Initial data fetch and (optionally) SSE connection
   useEffect(() => {
     mountedRef.current = true;
 
     if (enabled) {
       fetchInitialData();
-      connect();
+      // Only open an SSE stream if `stream` is true (default).
+      // Transcript routes set stream:false to avoid connect/cancel spam.
+      if (stream) {
+        connect();
+      }
     }
 
     return () => {
@@ -425,7 +450,7 @@ export function useTableStream<T extends { id: string }>(
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [enabled, fetchInitialData, connect, clearKeepalive, stopPolling]);
+  }, [enabled, stream, fetchInitialData, connect, clearKeepalive, stopPolling]);
 
   return { ...state, refresh };
 }
@@ -444,4 +469,97 @@ export function useChannels(options: UseSSEOptions) {
 
 export function useMessages(options: UseSSEOptions) {
   return useTableStream<Message>("messages", options);
+}
+
+export function useTranscriptLines(options: UseSSEOptions) {
+  return useTableStream<TranscriptLine>("transcript_lines", options);
+}
+
+export function useHookEvents(options: UseSSEOptions) {
+  return useTableStream<HookEvent>("hook_events", options);
+}
+
+// ============================================================================
+// Lightweight Count Hook (no SSE, just polls counts)
+// ============================================================================
+
+interface CollectionCounts {
+  transcriptLines: number;
+  hookEvents: number;
+  sessions: number;
+}
+
+/**
+ * Lightweight polling hook that only fetches record counts.
+ * Used by the global provider / sidebar to avoid streaming large collections.
+ */
+export function useCollectionCounts(options: { enabled?: boolean; intervalMs?: number }) {
+  const { enabled = true, intervalMs = 30_000 } = options;
+  const [counts, setCounts] = useState<CollectionCounts>({ transcriptLines: 0, hookEvents: 0, sessions: 0 });
+  const mountedRef = useRef(true);
+
+  const fetchCounts = useCallback(async () => {
+    if (!enabled) return;
+    try {
+      // Fetch minimal data just to get counts
+      const [tlResp, heResp] = await Promise.all([
+        fetch(`${BASE_URL}/v1/transcript_lines?limit=0`),
+        fetch(`${BASE_URL}/v1/hook_events?limit=0`),
+      ]);
+
+      let tlCount = 0;
+      let heCount = 0;
+      let sessionCount = 0;
+
+      if (tlResp.ok) {
+        const json = await tlResp.json();
+        tlCount = json.total ?? json.count ?? (json.data ? json.data.length : 0);
+        // If the API doesn't return total, fetch a small set to count unique sessions
+        if (tlCount === 0 && json.data) {
+          tlCount = json.data.length;
+        }
+      }
+
+      if (heResp.ok) {
+        const json = await heResp.json();
+        heCount = json.total ?? json.count ?? (json.data ? json.data.length : 0);
+        if (heCount === 0 && json.data) {
+          heCount = json.data.length;
+        }
+      }
+
+      // Get unique session count from a small sample
+      try {
+        const sessResp = await fetch(`${BASE_URL}/v1/transcript_lines?limit=500&fields=session_id`);
+        if (sessResp.ok) {
+          const sessJson = await sessResp.json();
+          const data = sessJson.data || sessJson;
+          const sessionSet = new Set<string>();
+          for (let i = 0; i < data.length; i++) {
+            const sid = data[i].session_id || data[i].sessionId;
+            if (sid) sessionSet.add(sid);
+          }
+          sessionCount = sessionSet.size;
+          // Use data length as better count estimate if we got data
+          if (data.length > tlCount) tlCount = data.length;
+        }
+      } catch { /* ignore */ }
+
+      if (mountedRef.current) {
+        setCounts({ transcriptLines: tlCount, hookEvents: heCount, sessions: sessionCount });
+      }
+    } catch { /* ignore errors for counts */ }
+  }, [enabled]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchCounts();
+    const interval = setInterval(fetchCounts, intervalMs);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+    };
+  }, [fetchCounts, intervalMs]);
+
+  return { counts, refreshCounts: fetchCounts };
 }

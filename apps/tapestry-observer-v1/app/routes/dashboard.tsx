@@ -9,6 +9,7 @@ import { Link } from "react-router";
 import { MachineCard } from "~/components/MachineCard";
 import { buildHierarchy } from "~/lib/hierarchy";
 import { useSignalDB } from "~/lib/signaldb";
+import { useTranscriptLines } from "~/lib/sse-hooks";
 import {
   deriveAgentStatus,
   formatTime,
@@ -18,7 +19,10 @@ import {
 } from "~/lib/types";
 
 export default function Dashboard() {
-  const { agents, channels, messages, connected } = useSignalDB();
+  const { agents, channels, messages, connected, transcriptCounts, configured } = useSignalDB();
+
+  // Small fetch-only load for "Recent Sessions" (no SSE stream)
+  const localTranscriptStream = useTranscriptLines({ enabled: configured, maxItems: 100, fetchLimit: 100, stream: false });
 
   // Build machine hierarchy
   const machines = useMemo(() => buildHierarchy(agents), [agents]);
@@ -66,13 +70,33 @@ export default function Dashboard() {
     return map;
   }, [agents]);
 
+  // Recent sessions (from the small local stream)
+  const recentSessions = useMemo(() => {
+    const lines = localTranscriptStream.data;
+    const map = new Map<string, { name: string | null; lastActive: string; lineCount: number }>();
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      const existing = map.get(line.sessionId);
+      if (!existing) {
+        map.set(line.sessionId, { name: line.sessionName, lastActive: line.timestamp, lineCount: 1 });
+      } else {
+        existing.lineCount++;
+        if (line.timestamp > existing.lastActive) existing.lastActive = line.timestamp;
+        if (!existing.name && line.sessionName) existing.name = line.sessionName;
+      }
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => new Date(b[1].lastActive).getTime() - new Date(a[1].lastActive).getTime())
+      .slice(0, 5);
+  }, [localTranscriptStream.data]);
+
   const allConnected =
     connected.agents && connected.channels && connected.messages;
 
   return (
     <div className="p-6 space-y-6 max-w-6xl">
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-4">
         <StatCard
           label="Agents"
           value={agents.length}
@@ -98,6 +122,21 @@ export default function Dashboard() {
           label="Memos"
           value={messageCounts.memo}
           color="amber"
+        />
+        <StatCard
+          label="Sessions"
+          value={transcriptCounts.sessions}
+          color="indigo"
+        />
+        <StatCard
+          label="Lines"
+          value={transcriptCounts.lines}
+          color="teal"
+        />
+        <StatCard
+          label="Hook Events"
+          value={transcriptCounts.hookEvents}
+          color="rose"
         />
         <StatCard
           label="SSE"
@@ -171,6 +210,46 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      {/* Recent sessions */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-300">
+            Recent Sessions
+          </h2>
+          <Link
+            to="/sessions"
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            View all
+          </Link>
+        </div>
+        {recentSessions.length === 0 ? (
+          <div className="text-sm text-gray-500 bg-gray-900 border border-gray-800 rounded-lg p-4">
+            No sessions yet. Transcript data will appear when synced.
+          </div>
+        ) : (
+          <div className="bg-gray-900 border border-gray-800 rounded-lg divide-y divide-gray-800/50">
+            {recentSessions.map(([sessionId, data]) => (
+              <Link
+                key={sessionId}
+                to={`/sessions/${encodeURIComponent(sessionId)}`}
+                className="px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-gray-800/30 transition-colors block"
+              >
+                <span className="text-gray-300 truncate flex-1 min-w-0">
+                  {data.name || sessionId.slice(0, 16)}
+                </span>
+                <span className="text-xs text-gray-500 font-mono flex-shrink-0">
+                  {data.lineCount} lines
+                </span>
+                <span className="text-xs text-gray-600 font-mono flex-shrink-0">
+                  {formatTime(data.lastActive)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
@@ -198,6 +277,9 @@ function StatCard({
     amber: "border-amber-800",
     green: "border-green-800",
     yellow: "border-yellow-800",
+    indigo: "border-indigo-800",
+    teal: "border-teal-800",
+    rose: "border-rose-800",
   };
 
   const textColor: Record<string, string> = {
@@ -208,6 +290,9 @@ function StatCard({
     amber: "text-amber-400",
     green: "text-green-400",
     yellow: "text-yellow-400",
+    indigo: "text-indigo-400",
+    teal: "text-teal-400",
+    rose: "text-rose-400",
   };
 
   return (

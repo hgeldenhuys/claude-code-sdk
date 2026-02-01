@@ -1,26 +1,13 @@
 import {
-  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  isRouteErrorResponse,
 } from "react-router";
 import type { Route } from "./+types/root";
 import "./app.css";
-
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
-  },
-];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,10 +15,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-950 text-gray-100 font-sans antialiased">
+      <body
+        className="bg-gray-950 text-gray-100 antialiased"
+        style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+      >
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -45,32 +45,31 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
+  let title = "Error";
+  let message = "An unexpected error occurred.";
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
+    title = `${error.status} ${error.statusText}`;
+    message = error.data?.toString() || message;
+  } else if (error instanceof Error) {
+    title = "Application Error";
+    message = error.message;
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-red-500 mb-4">{message}</h1>
-        <p className="text-gray-400 mb-4">{details}</p>
-        {stack && (
-          <pre className="text-left text-xs bg-gray-900 p-4 rounded-lg overflow-auto max-w-2xl">
-            {stack}
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="max-w-lg w-full bg-gray-900 rounded-xl border border-red-500/30 p-8">
+        <h1 className="text-2xl font-bold text-red-400 mb-2">{title}</h1>
+        <p className="text-gray-400 mb-4">{message}</p>
+        {error instanceof Error && error.stack && (
+          <pre
+            className="text-xs text-gray-500 bg-gray-950 rounded-lg p-4 overflow-auto max-h-64"
+            style={{ fontFamily: "'JetBrains Mono', monospace" }}
+          >
+            {error.stack}
           </pre>
         )}
       </div>
-    </main>
+    </div>
   );
 }
