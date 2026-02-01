@@ -62,7 +62,7 @@ export interface SessionStartOutput {
 export interface SessionEndInput extends BaseHookInput {
   hook_event_name: 'SessionEnd';
   /** Reason for session ending */
-  reason: 'clear' | 'logout' | 'prompt_input_exit' | 'other';
+  reason: 'clear' | 'logout' | 'prompt_input_exit' | 'bypass_permissions_disabled' | 'other';
 }
 
 // SessionEnd has no output (session is already ending)
@@ -289,6 +289,8 @@ export interface PermissionRequestInput extends BaseHookInput {
   tool_name: string;
   tool_input: Record<string, unknown>;
   tool_use_id: string;
+  /** Suggested "always allow" options the user would normally see (2.1.29+) */
+  permission_suggestions?: Array<{ type: string; tool: string }>;
 }
 
 export interface PermissionRequestOutput {
@@ -371,8 +373,14 @@ export interface PromptHookConfig {
   type: 'prompt';
   /** Prompt text sent to LLM. Use $ARGUMENTS for hook input JSON placeholder */
   prompt: string;
+  /** Model to use for evaluation (defaults to a fast model) */
+  model?: string;
   /** Timeout in seconds (default: 30) */
   timeout?: number;
+  /** Custom spinner message displayed while hook runs */
+  statusMessage?: string;
+  /** If true, runs only once per session then removed (skills only) */
+  once?: boolean;
 }
 
 /**
@@ -382,14 +390,34 @@ export interface CommandHookConfig {
   type: 'command';
   /** Bash command to execute */
   command: string;
-  /** Timeout in seconds */
+  /** Timeout in seconds (default: 600) */
+  timeout?: number;
+  /** If true, runs in the background without blocking */
+  async?: boolean;
+  /** Custom spinner message displayed while hook runs */
+  statusMessage?: string;
+  /** If true, runs only once per session then removed (skills only) */
+  once?: boolean;
+}
+
+/**
+ * Agent-based hook configuration (2.1.29+)
+ * Spawns a subagent that can use tools to verify conditions before returning a decision
+ */
+export interface AgentHookConfig {
+  type: 'agent';
+  /** Prompt text sent to agent. Use $ARGUMENTS for hook input JSON placeholder */
+  prompt: string;
+  /** Model to use for evaluation */
+  model?: string;
+  /** Timeout in seconds (default: 60) */
   timeout?: number;
 }
 
 /**
- * Hook configuration (can be command or prompt-based)
+ * Hook configuration (can be command, prompt, or agent-based)
  */
-export type HookConfig = CommandHookConfig | PromptHookConfig;
+export type HookConfig = CommandHookConfig | PromptHookConfig | AgentHookConfig;
 
 /**
  * Prompt-based hook response schema

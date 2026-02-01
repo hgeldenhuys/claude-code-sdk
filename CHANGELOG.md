@@ -5,6 +5,12 @@ All notable changes to the Claude Code SDK will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Agent-based hook type (`AgentHookConfig`) with `type: "agent"` for multi-turn verification hooks
+- `permission_suggestions` field on `PermissionRequestInput` for "always allow" options
+- `async` field on `CommandHookConfig` for background hook execution
+- `statusMessage` and `once` fields on all hook config types (command, prompt, agent)
+- `model` field on `PromptHookConfig` for model selection
+- `bypass_permissions_disabled` reason variant on `SessionEndInput`
 - Documentation sync command (`/docs-sync`) for automated doc tracking workflow
 - New documentation sources from docs.claude.com:
   - Agent Skills overview, best practices, and quickstart
@@ -33,6 +39,17 @@ All notable changes to the Claude Code SDK will be documented in this file.
 - `transcript-tui`: Markdown renderer compatibility with marked v17
 - `transcript-tui`: Include cache tokens in usage calculations
 
+### Tracked Claude Code Changes (2.1.18-2.1.29)
+- **2.1.29**: Fixed startup performance for sessions with `saved_hook_context`
+- **2.1.27**: `--from-pr` flag for PR-linked sessions, auto-PR linking via `gh pr create`, VSCode OAuth fix
+- **2.1.25**: Fixed beta header validation for gateway users on Bedrock/Vertex
+- **2.1.23**: Customizable spinner verbs (`spinnerVerbs` setting), mTLS/proxy fixes, async hook cancellation on headless end
+- **2.1.22**: Fixed structured outputs for non-interactive (`-p`) mode
+- **2.1.21**: Auto-compact timing fix for large output models, Python venv auto-activation in VSCode
+- **2.1.20**: PR review status indicator, `--add-dir` CLAUDE.md loading, task deletion via `TaskUpdate`
+- **2.1.19**: Shorthand `$0`/`$1` for command arguments, skills without extra permissions auto-allowed, `$ARGUMENTS[0]` bracket syntax
+- **2.1.18**: Customizable keyboard shortcuts (`/keybindings`)
+
 ### Tracked Claude Code Changes (2.1.13-2.1.17)
 - **2.1.17**: Fixed crashes on processors without AVX instruction support
 - **2.1.16**: New task management system with dependency tracking, VSCode plugin management, OAuth session browsing
@@ -46,6 +63,21 @@ All notable changes to the Claude Code SDK will be documented in this file.
 - **2.0.73**: Clickable image links, alt-y yank-pop, plugin discover search filtering
 - **2.0.72**: Claude in Chrome (Beta), reduced terminal flickering, improved @ mention speed
 - **2.0.71**: /config toggle for prompt suggestions, /settings alias
+
+### Documentation Patterns Noted (2.1.29)
+- **Hooks reference overhaul**: Complete rewrite with annotated resolution flow, tool input schemas for all tools
+- **Agent-based hooks**: New `type: "agent"` hooks that spawn subagents with tool access for verification
+- **Hooks guide rewrite**: Separate guide page with step-by-step setup, examples, and troubleshooting
+- **Headless → Agent SDK rename**: CLI `-p` mode now branded as "Agent SDK", docs reference platform.claude.com SDK
+- **Stream responses**: New `--output-format stream-json --verbose --include-partial-messages` for token streaming
+- **Memory: additional directories**: `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1` with `--add-dir` loads memory from extra dirs
+- **Settings: new fields**: `spinnerVerbs`, `autoUpdatesChannel`, `spinnerTipsEnabled`, `terminalProgressBarEnabled`, `showTurnDuration`, `plansDirectory`, `language`
+- **Settings: attribution**: New `attribution` setting replaces deprecated `includeCoAuthoredBy`
+- **Settings: file suggestion**: `fileSuggestion` for custom `@` autocomplete via command
+- **Interactive mode: PR review status**: Colored dot + clickable link showing PR state in prompt footer
+- **Slash commands removal**: `slash-commands.md` returns 404, merged into skills system
+- **Skills: subagent execution**: `run-in: subagent` frontmatter option
+- **SubagentStop matcher**: Now documented as supporting same values as `SubagentStart`
 
 ### Documentation Patterns Noted (2.1.17)
 - **Hooks lifecycle diagram**: New visual documentation of hook execution flow

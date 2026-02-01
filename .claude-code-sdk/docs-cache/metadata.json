@@ -8,11 +8,11 @@
       "description": "## Documentation Index",
       "category": "development",
       "tags": [],
-      "contentHash": "7b7dfefd84f74fbab00466dc068763b2ee6eb26a97d3777cc74e3d2cfa18d21f",
+      "contentHash": "b0bd7363c123224e76da393c12af219fced510c566cc8626bc05e617181baecd",
       "firstCached": "2025-12-15T03:39:00.381Z",
-      "lastFetched": "2026-01-26T18:14:28.264Z",
-      "lastChanged": "2026-01-24T17:18:11.744Z",
-      "version": 10
+      "lastFetched": "2026-02-01T00:45:01.593Z",
+      "lastChanged": "2026-02-01T00:45:01.593Z",
+      "version": 11
     }
   ],
   [
@@ -20,15 +20,15 @@
     {
       "url": "https://code.claude.com/docs/en/hooks-guide.md",
       "localPath": ".claude-code-sdk/docs-cache/content/https___code_claude_com_docs_en_hooks_guide_md.md",
-      "title": "Get started with Claude Code hooks",
+      "title": "Automate workflows with hooks",
       "description": "## Documentation Index",
       "category": "development",
       "tags": [],
-      "contentHash": "22840088f17755edbc745443762358f0a8428d38204b68c18eb8a74cffeb848e",
+      "contentHash": "be435222a4572da5bc9a503aaf4a4a5d0fb22e43e4bd66f21b8a9ced1a99add9",
       "firstCached": "2025-12-15T03:39:00.610Z",
-      "lastFetched": "2026-01-26T18:14:28.556Z",
-      "lastChanged": "2026-01-24T17:18:12.213Z",
-      "version": 4
+      "lastFetched": "2026-02-01T00:45:02.049Z",
+      "lastChanged": "2026-02-01T00:45:02.049Z",
+      "version": 5
     }
   ],
   [
@@ -40,11 +40,11 @@
       "description": "## Documentation Index",
       "category": "development",
       "tags": [],
-      "contentHash": "e41fbe7a793909edc7b6ee63986830fbac4fcd70fb0fb02dba3d45386626d394",
+      "contentHash": "693c21dbe6a4aa431bcef3924ccf34417492948316eada4e978a05ff68e8b7ce",
       "firstCached": "2025-12-15T03:39:00.847Z",
-      "lastFetched": "2026-01-26T18:14:28.805Z",
-      "lastChanged": "2026-01-24T17:18:12.480Z",
-      "version": 9
+      "lastFetched": "2026-02-01T00:45:02.357Z",
+      "lastChanged": "2026-02-01T00:45:02.357Z",
+      "version": 10
     }
   ],
   [
@@ -56,11 +56,11 @@
       "description": "## Documentation Index",
       "category": "development",
       "tags": [],
-      "contentHash": "27b26e38af8be8da03aa20d73227e6897f316af19bbe06682b0df5c539149075",
+      "contentHash": "51eddbd0cc26281d2a78dd656684d8d67cde4271f66d2003acf502b1890377bc",
       "firstCached": "2025-12-15T03:39:01.054Z",
-      "lastFetched": "2026-01-26T18:14:29.030Z",
-      "lastChanged": "2026-01-24T17:18:12.706Z",
-      "version": 10
+      "lastFetched": "2026-02-01T00:45:02.602Z",
+      "lastChanged": "2026-02-01T00:45:02.602Z",
+      "version": 11
     }
   ],
   [
@@ -72,11 +72,11 @@
       "description": "## Documentation Index",
       "category": "development",
       "tags": [],
-      "contentHash": "295f959efb8796a3904d080558cfaff924c101d368732228a2e134d271e6d1ff",
+      "contentHash": "c28fcfe17242f5c9f1ef31154ea771d33ee6e8cd13c3bad049dd276f97e52d87",
       "firstCached": "2025-12-15T03:39:01.421Z",
-      "lastFetched": "2026-01-26T18:14:29.259Z",
-      "lastChanged": "2026-01-24T17:18:12.934Z",
-      "version": 5
+      "lastFetched": "2026-02-01T00:45:02.835Z",
+      "lastChanged": "2026-02-01T00:45:02.835Z",
+      "version": 6
     }
   ],
   [
@@ -88,11 +88,11 @@
       "description": "## Documentation Index",
       "category": "reference",
       "tags": [],
-      "contentHash": "7131f8cb7aa7464ab0bbfd2620b4d327a7f23b3671c8a2ab1c4a7b4e8bdc6f47",
+      "contentHash": "46263db24fca3d46c800e5793c31e571bbee7577b037933b99d9c8bd38d836b9",
       "firstCached": "2025-12-15T03:39:01.643Z",
-      "lastFetched": "2026-01-26T18:14:29.495Z",
-      "lastChanged": "2026-01-24T17:18:13.138Z",
-      "version": 8
+      "lastFetched": "2026-02-01T00:45:03.035Z",
+      "lastChanged": "2026-02-01T00:45:03.035Z",
+      "version": 9
     }
   ],
   [
@@ -104,11 +104,11 @@
       "description": "## Documentation Index",
       "category": "development",
       "tags": [],
-      "contentHash": "3e7f51c5f6619d0d957121a8460e9a0c48fd26bc366cbc4fda757ab452caf7d2",
+      "contentHash": "00815a715c67ca86199360c61e6c6f135d3905aca0eb88207b4eca58f95d01ef",
       "firstCached": "2025-12-15T03:39:01.850Z",
-      "lastFetched": "2026-01-26T18:14:29.992Z",
-      "lastChanged": "2026-01-24T17:18:13.559Z",
-      "version": 6
+      "lastFetched": "2026-02-01T00:45:03.531Z",
+      "lastChanged": "2026-02-01T00:45:03.531Z",
+      "version": 7
     }
   ],
   [
@@ -122,7 +122,7 @@
       "tags": [],
       "contentHash": "649a8996b86124b05c538b1ba671d54b15196209e77c0df880e55dad895cdb6b",
       "firstCached": "2025-12-15T03:39:02.061Z",
-      "lastFetched": "2026-01-26T18:14:30.214Z",
+      "lastFetched": "2026-02-01T00:45:03.738Z",
       "lastChanged": "2026-01-24T17:18:13.781Z",
       "version": 9
     }
@@ -136,11 +136,11 @@
       "description": "## Documentation Index",
       "category": "configuration",
       "tags": [],
-      "contentHash": "0903fbf5c504c08a1213c0427a028da5140b1f230ddce72cd29466c14934e1a6",
+      "contentHash": "339b856e672be3dbfa9c43484a6ff813a1c0f828ebc8ce713a5f15b64a59a564",
       "firstCached": "2025-12-15T03:39:02.444Z",
-      "lastFetched": "2026-01-26T18:14:30.447Z",
-      "lastChanged": "2026-01-26T18:14:30.447Z",
-      "version": 17
+      "lastFetched": "2026-02-01T00:45:03.962Z",
+      "lastChanged": "2026-02-01T00:45:03.962Z",
+      "version": 18
     }
   ],
   [
@@ -152,11 +152,11 @@
       "description": "## Documentation Index",
       "category": "configuration",
       "tags": [],
-      "contentHash": "6027b005e0f01c6dda657f6a21750965f520e4fb6621621340d64888dd243993",
+      "contentHash": "347e794f6305861cda88afad914ccd5636fcf5a569ce9e2d912da1ba038b3143",
       "firstCached": "2025-12-15T03:39:02.651Z",
-      "lastFetched": "2026-01-26T18:14:30.660Z",
-      "lastChanged": "2026-01-24T17:18:14.250Z",
-      "version": 6
+      "lastFetched": "2026-02-01T00:45:04.165Z",
+      "lastChanged": "2026-02-01T00:45:04.165Z",
+      "version": 7
     }
   ],
   [
@@ -170,7 +170,7 @@
       "tags": [],
       "contentHash": "ce223e334097b51cea46e9273e5c166d86f8a51e749ce58023956624bfdc0245",
       "firstCached": "2025-12-15T03:39:02.871Z",
-      "lastFetched": "2026-01-26T18:14:30.931Z",
+      "lastFetched": "2026-02-01T00:45:04.364Z",
       "lastChanged": "2026-01-24T17:18:14.480Z",
       "version": 2
     }
@@ -186,7 +186,7 @@
       "tags": [],
       "contentHash": "05cb816ef206e526e429cd2fcd5f01125f4334e0aece8c3bcfdbfff1d08bc65f",
       "firstCached": "2025-12-15T03:39:03.061Z",
-      "lastFetched": "2026-01-26T18:14:31.186Z",
+      "lastFetched": "2026-02-01T00:45:04.614Z",
       "lastChanged": "2026-01-24T17:18:14.680Z",
       "version": 3
     }
@@ -202,7 +202,7 @@
       "tags": [],
       "contentHash": "bba9ff34db2ba66cfdf8e0343a42162af77db44b99f13d96b6cdb060fd3eef2d",
       "firstCached": "2025-12-15T03:39:03.280Z",
-      "lastFetched": "2026-01-26T18:14:31.407Z",
+      "lastFetched": "2026-02-01T00:45:04.823Z",
       "lastChanged": "2026-01-24T17:18:14.905Z",
       "version": 3
     }
@@ -218,7 +218,7 @@
       "tags": [],
       "contentHash": "df02e3bfee1f82973a62b98cbd7d9fff1d2809a6969397d34c4496eb76919065",
       "firstCached": "2025-12-15T03:39:03.482Z",
-      "lastFetched": "2026-01-26T18:14:31.642Z",
+      "lastFetched": "2026-02-01T00:45:05.017Z",
       "lastChanged": "2026-01-24T17:18:15.105Z",
       "version": 4
     }
@@ -232,11 +232,11 @@
       "description": "## Documentation Index",
       "category": "reference",
       "tags": [],
-      "contentHash": "472fa3b133dc0e6080b11e275265a5ff64ed200d689c773339c71b4c984340a1",
+      "contentHash": "d7cf3886dec61877db68b563386a0cde5cbab8a6a3b162836f1eb1374fd7107f",
       "firstCached": "2025-12-15T03:39:03.693Z",
-      "lastFetched": "2026-01-26T18:14:31.873Z",
-      "lastChanged": "2026-01-24T17:18:15.331Z",
-      "version": 10
+      "lastFetched": "2026-02-01T00:45:05.250Z",
+      "lastChanged": "2026-02-01T00:45:05.250Z",
+      "version": 11
     }
   ],
   [
@@ -264,11 +264,11 @@
       "description": "## Documentation Index",
       "category": "reference",
       "tags": [],
-      "contentHash": "df3d0aab7aed717ccd42db9bdaeb65cd469f9e60ef4de10ad303db30fa8d0c50",
+      "contentHash": "95700823f78d873e8bb523d284e9115496517cae16c93f29ac27b5f55fc86b3a",
       "firstCached": "2025-12-15T03:39:04.121Z",
-      "lastFetched": "2026-01-26T18:14:32.475Z",
-      "lastChanged": "2026-01-24T17:18:15.905Z",
-      "version": 7
+      "lastFetched": "2026-02-01T00:45:05.855Z",
+      "lastChanged": "2026-02-01T00:45:05.855Z",
+      "version": 8
     }
   ],
   [
@@ -282,7 +282,7 @@
       "tags": [],
       "contentHash": "4cf5e22c4d83cc8ff0b697b2ed3f8ee2b71f1b962d460e6a9b09a9e1a0a80df3",
       "firstCached": "2025-12-15T03:39:04.325Z",
-      "lastFetched": "2026-01-26T18:14:32.708Z",
+      "lastFetched": "2026-02-01T00:45:06.035Z",
       "lastChanged": "2026-01-24T17:18:16.119Z",
       "version": 3
     }
@@ -298,7 +298,7 @@
       "tags": [],
       "contentHash": "e2c8ed23515f5e238514939713fe3302fbf3affbbebb05d12e7be4277a7c2a0a",
       "firstCached": "2025-12-15T03:39:04.542Z",
-      "lastFetched": "2026-01-26T18:14:32.921Z",
+      "lastFetched": "2026-02-01T00:45:06.267Z",
       "lastChanged": "2026-01-24T17:18:16.422Z",
       "version": 3
     }
@@ -314,7 +314,7 @@
       "tags": [],
       "contentHash": "35d135909a864653a39f1fa5b2f606453332ac12ea49c5cafdf99c754cc9f7a2",
       "firstCached": "2025-12-15T03:39:04.754Z",
-      "lastFetched": "2026-01-26T18:14:33.158Z",
+      "lastFetched": "2026-02-01T00:45:06.463Z",
       "lastChanged": "2026-01-24T17:18:16.631Z",
       "version": 4
     }
@@ -330,7 +330,7 @@
       "tags": [],
       "contentHash": "133f0a875c614419f41c0f03b6296696ab338e2490c092726514b0677d6ee5b9",
       "firstCached": "2025-12-15T03:39:04.972Z",
-      "lastFetched": "2026-01-26T18:14:33.376Z",
+      "lastFetched": "2026-02-01T00:45:06.692Z",
       "lastChanged": "2026-01-24T17:18:16.887Z",
       "version": 2
     }
@@ -346,7 +346,7 @@
       "tags": [],
       "contentHash": "6af9e76d8ee4e03f8a790cd918b34cbcd31cbac8c0863939ce6a022aab179953",
       "firstCached": "2025-12-15T03:39:05.234Z",
-      "lastFetched": "2026-01-26T18:14:33.625Z",
+      "lastFetched": "2026-02-01T00:45:06.868Z",
       "lastChanged": "2026-01-24T17:18:17.118Z",
       "version": 2
     }
@@ -360,11 +360,11 @@
       "description": "## Documentation Index",
       "category": "troubleshooting",
       "tags": [],
-      "contentHash": "a5c489320552a0252f8e19f7bd068a14b88c7a6d7462cda3aa8ad707a1915b7b",
+      "contentHash": "7d52de4f8cbf7c6061cedef72f858aab721d37cc237abcc153647e515acf7fe3",
       "firstCached": "2025-12-15T03:39:05.475Z",
-      "lastFetched": "2026-01-26T18:14:34.081Z",
-      "lastChanged": "2026-01-24T17:18:17.598Z",
-      "version": 8
+      "lastFetched": "2026-02-01T00:45:07.268Z",
+      "lastChanged": "2026-02-01T00:45:07.268Z",
+      "version": 9
     }
   ],
   [
@@ -376,11 +376,11 @@
       "description": "",
       "category": "core",
       "tags": [],
-      "contentHash": "3327625fb5b4ebc9aeac9cfe7f8a361d9739d2f85a45ca171498829e422c8968",
+      "contentHash": "3e5bb8e7114163265119b40be41cf09ceb4074410f9cb813152da17589327f2b",
       "firstCached": "2025-12-16T15:40:41.903Z",
-      "lastFetched": "2026-01-26T18:14:34.321Z",
-      "lastChanged": "2026-01-24T17:18:17.813Z",
-      "version": 13
+      "lastFetched": "2026-02-01T00:45:07.407Z",
+      "lastChanged": "2026-02-01T00:45:07.407Z",
+      "version": 14
     }
   ],
   [
@@ -394,7 +394,7 @@
       "tags": [],
       "contentHash": "ca4d42d6792bb8c02a0bd3cd6edc18e54d2978cf3f5fe5768d5564be2bccc03f",
       "firstCached": "2026-01-02T20:02:44.679Z",
-      "lastFetched": "2026-01-26T18:14:34.908Z",
+      "lastFetched": "2026-02-01T00:45:07.791Z",
       "lastChanged": "2026-01-06T21:22:32.329Z",
       "version": 2
     }
@@ -410,7 +410,7 @@
       "tags": [],
       "contentHash": "ebcc593fba18290ddce3ff3c856457929580538c4929047dff2a7a71b972e9dd",
       "firstCached": "2026-01-02T20:02:44.890Z",
-      "lastFetched": "2026-01-26T18:14:35.211Z",
+      "lastFetched": "2026-02-01T00:45:08.122Z",
       "lastChanged": "2026-01-02T20:02:44.890Z",
       "version": 1
     }
@@ -426,7 +426,7 @@
       "tags": [],
       "contentHash": "28e54e937f6cb2ac3af754dd2861fdbbc1e79d82b7a9e7d943a435bd8a94a887",
       "firstCached": "2026-01-02T20:02:45.092Z",
-      "lastFetched": "2026-01-26T18:14:35.482Z",
+      "lastFetched": "2026-02-01T00:45:08.393Z",
       "lastChanged": "2026-01-06T21:22:32.752Z",
       "version": 2
     }
@@ -442,7 +442,7 @@
       "tags": [],
       "contentHash": "5945216cb8f4dc746276ada5b7fbf2a61b180c3ff32abc0a7c786e5774d52857",
       "firstCached": "2026-01-02T20:02:45.297Z",
-      "lastFetched": "2026-01-26T18:14:35.838Z",
+      "lastFetched": "2026-02-01T00:45:08.638Z",
       "lastChanged": "2026-01-06T21:22:32.985Z",
       "version": 2
     }
@@ -456,11 +456,11 @@
       "description": "",
       "category": "development",
       "tags": [],
-      "contentHash": "544dc24e4302adbc1b786a548011614a04dac8f1f992005b8490a1b0e1c67379",
+      "contentHash": "0a5c202fa4352ab100a9fd709ad3220f522002112ab1a2a63d1a68405e1eb931",
       "firstCached": "2026-01-02T20:02:45.630Z",
-      "lastFetched": "2026-01-26T18:14:36.308Z",
-      "lastChanged": "2026-01-26T18:14:36.308Z",
-      "version": 21
+      "lastFetched": "2026-02-01T00:45:09.166Z",
+      "lastChanged": "2026-02-01T00:45:09.166Z",
+      "version": 22
     }
   ],
   [
@@ -472,11 +472,11 @@
       "description": "## Documentation Index",
       "category": "development",
       "tags": [],
-      "contentHash": "297245e855d8989ec54d0c46aea028de8f5d053234c17210e888d4eda4dd2a08",
+      "contentHash": "bae3f212ee3969cd496d2d324389419487b2b85fc5a077a347c14c377e2aa38c",
       "firstCached": "2026-01-07T04:50:39.009Z",
-      "lastFetched": "2026-01-26T18:14:29.759Z",
-      "lastChanged": "2026-01-24T17:18:13.351Z",
-      "version": 7
+      "lastFetched": "2026-02-01T00:45:03.292Z",
+      "lastChanged": "2026-02-01T00:45:03.292Z",
+      "version": 8
     }
   ],
   [
@@ -490,7 +490,7 @@
       "tags": [],
       "contentHash": "2586febcfb732ac39ba20bb4606859b0dfe7ac1458346b0387ab88be07152bc3",
       "firstCached": "2026-01-13T19:51:39.091Z",
-      "lastFetched": "2026-01-26T18:14:33.852Z",
+      "lastFetched": "2026-02-01T00:45:07.078Z",
       "lastChanged": "2026-01-24T17:18:17.364Z",
       "version": 4
     }

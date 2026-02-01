@@ -175,7 +175,7 @@ All fields are optional. Only `description` is recommended so Claude knows when 
 | `model`                    | No          | Model to use when this skill is active.                                                                                                               |
 | `context`                  | No          | Set to `fork` to run in a forked subagent context.                                                                                                    |
 | `agent`                    | No          | Which subagent type to use when `context: fork` is set.                                                                                               |
-| `hooks`                    | No          | Hooks scoped to this skill's lifecycle. See [Hooks](/en/hooks) for configuration format.                                                              |
+| `hooks`                    | No          | Hooks scoped to this skill's lifecycle. See [Hooks in skills and agents](/en/hooks#hooks-in-skills-and-agents) for configuration format.              |
 
 #### Available string substitutions
 
@@ -184,6 +184,8 @@ Skills support string substitution for dynamic values in the skill content:
 | Variable               | Description                                                                                                                                  |
 | :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
 | `$ARGUMENTS`           | All arguments passed when invoking the skill. If `$ARGUMENTS` is not present in the content, arguments are appended as `ARGUMENTS: <value>`. |
+| `$ARGUMENTS[N]`        | Access a specific argument by 0-based index, such as `$ARGUMENTS[0]` for the first argument.                                                 |
+| `$N`                   | Shorthand for `$ARGUMENTS[N]`, such as `$0` for the first argument or `$1` for the second.                                                   |
 | `${CLAUDE_SESSION_ID}` | The current session ID. Useful for logging, creating session-specific files, or correlating skill output with sessions.                      |
 
 **Example using substitutions:**
@@ -298,6 +300,30 @@ When you run `/fix-issue 123`, Claude receives "Fix GitHub issue 123 following o
 
 If you invoke a skill with arguments but the skill doesn't include `$ARGUMENTS`, Claude Code appends `ARGUMENTS: <your input>` to the end of the skill content so Claude still sees what you typed.
 
+To access individual arguments by position, use `$ARGUMENTS[N]` or the shorter `$N`:
+
+```yaml  theme={null}
+---
+name: migrate-component
+description: Migrate a component from one framework to another
+---
+
+Migrate the $ARGUMENTS[0] component from $ARGUMENTS[1] to $ARGUMENTS[2].
+Preserve all existing behavior and tests.
+```
+
+Running `/migrate-component SearchBar React Vue` replaces `$ARGUMENTS[0]` with `SearchBar`, `$ARGUMENTS[1]` with `React`, and `$ARGUMENTS[2]` with `Vue`. The same skill using the `$N` shorthand:
+
+```yaml  theme={null}
+---
+name: migrate-component
+description: Migrate a component from one framework to another
+---
+
+Migrate the $0 component from $1 to $2.
+Preserve all existing behavior and tests.
+```
+
 ## Advanced patterns
 
 ### Inject dynamic context
@@ -312,7 +338,7 @@ name: pr-summary
 description: Summarize changes in a pull request
 context: fork
 agent: Explore
-allowed-tools: Bash(gh:*)
+allowed-tools: Bash(gh *)
 ---
 
 ## Pull request context
@@ -383,7 +409,7 @@ The `agent` field specifies which subagent configuration to use. Options include
 
 ### Restrict Claude's skill access
 
-By default, Claude can invoke any skill that doesn't have `disable-model-invocation: true` set. Built-in commands like `/compact` and `/init` are not available through the Skill tool.
+By default, Claude can invoke any skill that doesn't have `disable-model-invocation: true` set. Skills that define `allowed-tools` grant Claude access to those tools without per-use approval when the skill is active. Your [permission settings](/en/iam) still govern baseline approval behavior for all other tools. Built-in commands like `/compact` and `/init` are not available through the Skill tool.
 
 Three ways to control which skills Claude can invoke:
 
@@ -399,13 +425,13 @@ Skill
 ```
 # Allow only specific skills
 Skill(commit)
-Skill(review-pr:*)
+Skill(review-pr *)
 
 # Deny specific skills
-Skill(deploy:*)
+Skill(deploy *)
 ```
 
-Permission syntax: `Skill(name)` for exact match, `Skill(name:*)` for prefix match with any arguments.
+Permission syntax: `Skill(name)` for exact match, `Skill(name *)` for prefix match with any arguments.
 
 **Hide individual skills** by adding `disable-model-invocation: true` to their frontmatter. This removes the skill from Claude's context entirely.
 
@@ -439,7 +465,7 @@ Create `~/.claude/skills/codebase-visualizer/SKILL.md`. The description tells Cl
 ---
 name: codebase-visualizer
 description: Generate an interactive collapsible tree visualization of your codebase. Use when exploring a new repo, understanding project structure, or identifying large files.
-allowed-tools: Bash(python:*)
+allowed-tools: Bash(python *)
 ---
 
 # Codebase Visualizer
