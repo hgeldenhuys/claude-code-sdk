@@ -4,7 +4,9 @@ export default [
   layout("routes/layout.tsx", [
     index("routes/home.tsx"),
     route("agents", "routes/agents.tsx"),
+    route("agents/:agentId", "routes/agents.detail.tsx"),
     route("channels", "routes/channels.tsx"),
+    route("channels/:channelId", "routes/channels.detail.tsx"),
     route("messages", "routes/messages.tsx"),
     route("messages/thread/:threadId", "routes/messages.thread.tsx"),
   ]),

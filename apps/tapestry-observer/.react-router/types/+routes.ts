@@ -17,8 +17,18 @@ type Pages = {
   "/agents": {
     params: {};
   };
+  "/agents/:agentId": {
+    params: {
+      "agentId": string;
+    };
+  };
   "/channels": {
     params: {};
+  };
+  "/channels/:channelId": {
+    params: {
+      "channelId": string;
+    };
   };
   "/messages": {
     params: {};
@@ -41,11 +51,11 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/agents" | "/channels" | "/messages" | "/messages/thread/:threadId" | "/api/proxy/*" | "/api/config";
+    page: "/" | "/agents" | "/agents/:agentId" | "/channels" | "/channels/:channelId" | "/messages" | "/messages/thread/:threadId" | "/api/proxy/*" | "/api/config";
   };
   "routes/layout.tsx": {
     id: "routes/layout";
-    page: "/" | "/agents" | "/channels" | "/messages" | "/messages/thread/:threadId";
+    page: "/" | "/agents" | "/agents/:agentId" | "/channels" | "/channels/:channelId" | "/messages" | "/messages/thread/:threadId";
   };
   "routes/home.tsx": {
     id: "routes/home";
@@ -55,9 +65,17 @@ type RouteFiles = {
     id: "routes/agents";
     page: "/agents";
   };
+  "routes/agents.detail.tsx": {
+    id: "routes/agents.detail";
+    page: "/agents/:agentId";
+  };
   "routes/channels.tsx": {
     id: "routes/channels";
     page: "/channels";
+  };
+  "routes/channels.detail.tsx": {
+    id: "routes/channels.detail";
+    page: "/channels/:channelId";
   };
   "routes/messages.tsx": {
     id: "routes/messages";
@@ -82,7 +100,9 @@ type RouteModules = {
   "routes/layout": typeof import("./app/routes/layout.tsx");
   "routes/home": typeof import("./app/routes/home.tsx");
   "routes/agents": typeof import("./app/routes/agents.tsx");
+  "routes/agents.detail": typeof import("./app/routes/agents.detail.tsx");
   "routes/channels": typeof import("./app/routes/channels.tsx");
+  "routes/channels.detail": typeof import("./app/routes/channels.detail.tsx");
   "routes/messages": typeof import("./app/routes/messages.tsx");
   "routes/messages.thread": typeof import("./app/routes/messages.thread.tsx");
   "routes/api.proxy.$": typeof import("./app/routes/api.proxy.$.ts");

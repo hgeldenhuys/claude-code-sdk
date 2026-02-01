@@ -30,8 +30,9 @@ import {
   parseOneMessage,
   formatRelativeTime,
   truncateContent,
-  shortSenderId,
+  getSenderInfo,
 } from "../lib/utils";
+import { DiscordIcon } from "../lib/icons";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -614,7 +615,7 @@ function MessageCard({ message, channelName, animate, isNew, clickable }: {
     ? MESSAGE_STATUS_COLORS[message.status]
     : { dot: "bg-gray-500", text: "text-gray-400", label: message.status || "unknown" };
 
-  const senderDisplay = shortSenderId(message.senderId);
+  const sender = getSenderInfo(message);
   const channelDisplay = channelName || (message.channelId ? message.channelId.slice(0, 12) : "\u2014");
   const contentPreview = truncateContent(message.content);
 
@@ -633,11 +634,15 @@ function MessageCard({ message, channelName, animate, isNew, clickable }: {
       {/* Header: sender + badges */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 min-w-0 mr-2">
-          {/* Sender icon */}
-          <svg className="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-          </svg>
-          <span className="text-sm font-medium text-gray-200 truncate">{senderDisplay}</span>
+          {/* Sender icon — Discord (blue) or generic user (gray) */}
+          {sender.isDiscord ? (
+            <DiscordIcon className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+          ) : (
+            <svg className="w-3.5 h-3.5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+          )}
+          <span className={`text-sm font-medium truncate ${sender.isDiscord ? "text-blue-300" : "text-gray-200"}`}>{sender.name}</span>
           <span className="text-gray-600 shrink-0">&rarr;</span>
           {/* Channel */}
           <span className="text-xs text-gray-500 shrink-0">#</span>
